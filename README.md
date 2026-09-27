@@ -20,7 +20,7 @@ Current work items: [Issues](https://github.com/flair-agency/architecture-decisi
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. See [docs/README.md](docs/README.md) and [docs/decisions/README.md](docs/decisions/README.md) for documentation and decision-record guidance.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. See the [proposed product and artifact contract](docs/architecture.md), the [proposal template](docs/templates/architecture-decision-proposal.md), and [decision-record guidance](docs/decisions/README.md).
 
 ## Community and security
 

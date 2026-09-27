@@ -10,4 +10,6 @@ Decision records capture a question, context, alternatives, a proposed outcome, 
 
 A status label is not authentication or proof of approval. Record who adopted a decision and where the authorization is evidenced according to the project's process. Until that process is established, treat records as proposals.
 
-Do not add the project's first ADR until the scope and decision-record contract tracked by [Issue #2](https://github.com/flair-agency/architecture-decision-authoring/issues/2) is resolved.
+The initial Proposed record is [0001 — Use a Markdown-first, source-mapped proposal contract](0001-markdown-first-proposal-contract.md). It records a candidate product choice for owner review; it does not resolve the adoption process or establish an adopted architecture decision.
+
+Use the [Architecture Decision Proposal template](../templates/architecture-decision-proposal.md) for reviewable proposals. Keep a decision record's scope, applicability conditions, exceptions, time bounds, source mapping, and trade-offs explicit. If information or owner choices are missing, record the gap rather than silently deciding it.
