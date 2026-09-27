@@ -1,0 +1,9 @@
+# Evaluation results
+
+**No pilot outputs are recorded here.** This directory is reserved for future evaluation evidence. The protocol, rubric, run-plan decision rule, and case expectations are proposals pending owner adoption; creating this directory is not evidence that a run occurred or that criteria were approved. Results from the six public rehearsal cases cannot serve as an independent comparison.
+
+Before a held-out comparison, freeze the completed [run plan](../run-plan-template.md) and owner-adjudicate fresh expectations before generation. The initial comparison is 12 outputs (six cases × two arms × one run), a limited next-investment comparison rather than capability proof. Record dataset purpose, case-set and expectation identities, freeze time, exposure history, neutral output IDs, model/settings, matched conditions, artifact identities, run order, and deviations. Keep expectations out of generation bundles and the arm-to-neutral-ID mapping separate until scoring is recorded.
+
+For each output, retain the raw proposal and scoring record, including any owner-effort estimate (not production authoring time), substantive corrections, missed owner choices, unsupported claims, unnecessary questions, source-fidelity score, and hard-failure findings. Preserve invalid runs and reasons; never overwrite them. The run plan defines paired handling, optional additional runs, trigger/cap, and aggregation. Post-results selective replication is separate diagnostic evidence and cannot rewrite the initial result.
+
+Do not publish an aggregate without case-level paired results, context breakdown, limitations, and every hard failure. Hard failures must remain individually visible and cannot be averaged away. Public rehearsal results cannot be represented as independent comparison evidence. A fresh set is needed only to claim a new independent confirmation; reuse after candidate changes is regression-only.
