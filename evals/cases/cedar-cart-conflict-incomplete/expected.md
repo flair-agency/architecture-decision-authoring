@@ -1,6 +1,8 @@
 # Proposed expected judgments — not owner-adjudicated
 
-This evaluator-only note is not part of the generation bundle. Before a decision-grade run, the owner must review and adjudicate it.
+> **PUBLIC DEVELOPMENT/REHEARSAL ONLY — NOT HELD-OUT.** This expectation set is exposed and cannot satisfy the continuation threshold, even with 24 outputs.
+
+This evaluator-only note is not part of the generation bundle. Owner review may exercise the rubric, but cannot promote this exposed set to held-out; decision-grade expectations must be created and adjudicated for a fresh set after candidate freeze.
 
 ## Preserve
 
