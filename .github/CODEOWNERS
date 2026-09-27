@@ -1,17 +1,19 @@
 # Default owner for files without a more specific rule.
-* @naokikimura
+* @flair-agency/engineering
 
 # Product guidance and decision artifacts.
-/AGENTS.md @naokikimura
-/README.md @naokikimura
-/CONTRIBUTING.md @naokikimura
-/SUPPORT.md @naokikimura
-/docs/ @naokikimura
+/AGENTS.md @flair-agency/architecture @flair-agency/engineering
+/README.md @flair-agency/architecture @flair-agency/engineering
+/CONTRIBUTING.md @flair-agency/architecture @flair-agency/engineering
+/CODE_OF_CONDUCT.md @flair-agency/architecture @flair-agency/engineering
+/SUPPORT.md @flair-agency/architecture @flair-agency/engineering
+/docs/ @flair-agency/architecture @flair-agency/engineering
 
 # Skill behavior and evaluation criteria.
-/skills/ @naokikimura
-/evals/ @naokikimura
+/skills/ @flair-agency/architecture @flair-agency/engineering
+/evals/ @flair-agency/architecture @flair-agency/engineering
 
 # Security policy and repository automation.
-/SECURITY.md @naokikimura
-/.github/ @naokikimura
+/SECURITY.md @flair-agency/security @flair-agency/architecture
+/.github/ @flair-agency/security @flair-agency/architecture
+/.github/CODEOWNERS @flair-agency/security @flair-agency/architecture
