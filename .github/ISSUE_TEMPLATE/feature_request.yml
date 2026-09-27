@@ -1,0 +1,30 @@
+name: Design proposal
+description: Propose a project capability or design direction for discussion.
+title: "[Proposal]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is in the design and pre-pilot phase. Submissions are proposals and do not establish adopted decisions.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Who encounters what problem, and in what context?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed direction
+      description: Describe the outcome you suggest and alternatives considered.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence, assumptions, and open questions
+      description: Link supporting sources and identify what remains uncertain or needs owner input.
+    validations:
+      required: false
