@@ -18,6 +18,10 @@ The current work is tracked in the [GitHub Project](https://github.com/orgs/flai
 
 Current work items: [Issues](https://github.com/flair-agency/architecture-decision-authoring/issues).
 
+## Skill prototype
+
+The [Architecture Decision Authoring Skill prototype](skills/architecture-decision-authoring/SKILL.md) is a reviewable implementation experiment. Its [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates intended use; it is not an automated or independent evaluation. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. The [product and artifact contract](docs/architecture.md) and its [initial decision record](docs/decisions/0001-markdown-first-proposal-contract.md) are adopted for the initial pilot and will be reassessed after the comparative pilot. See also the [proposal template](docs/templates/architecture-decision-proposal.md) and [decision-record guidance](docs/decisions/README.md).
