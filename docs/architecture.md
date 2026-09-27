@@ -1,6 +1,6 @@
 # Product and artifact contract
 
-**Document status: Proposed.** This document is the canonical place for the product contract once adopted by the authorized owner. Its location and status label do not themselves establish adoption. Until then, treat the contract below as a reviewable proposal.
+**Document status: Adopted for the initial pilot on 2026-09-28.** Scope: this repository's standalone authoring boundary and Markdown-first, source-mapped pilot contract, subject to reassessment after the comparative pilot. Owner: repository owner. Authorization evidence: [public owner decision record](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038). The linked comment is a coordinator transcription of the owner decision, not independent owner authentication.
 
 ## Purpose and boundary
 
@@ -13,11 +13,10 @@ The project is in design and pre-pilot. No capability or evaluation result is cl
 ## Status of statements in this contract
 
 - **Project facts:** this is a standalone, pre-pilot project; its stated purpose is to help prepare one decision proposal at a time; outputs are for human review.
-- **Existing project scope statements:** the README says the project does not make decisions for owners or automatically approve/adopt proposals. It also describes a standalone product boundary. No separate evidence of formal owner adoption for these statements is recorded yet; do not treat their publication as proof of adoption.
-- **Explicit non-goals in the current scope:** automatic architecture selection or approval enforcement, a Gatekeeper-specific core domain model or runtime, and treating generation, commit, merge, or a status label as adoption.
+- **Adopted initial pilot contract:** the product prepares decision-ready proposals but does not decide or adopt architecture for owners; it uses Markdown-first artifacts with source mapping, subject to reassessment after the comparative pilot. See the [owner decision record](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038).
+- **Adopted non-goals and boundaries:** automatic architecture selection or approval enforcement; a Gatekeeper-specific core domain model or runtime; and treating generation, commit, merge, or a status label as adoption. Architecture Gatekeeper remains optional downstream.
 - **Assumptions:** owners and proposers can provide or identify relevant source material; the intended reviewer can resolve or route unresolved choices. These assumptions need evaluation during the pilot.
-- **Proposed contract:** the input classes, minimum proposal structure, lifecycle, and downstream boundary in this document and the linked template.
-- **Unresolved owner choices:** the authorized owner and evidence/recording mechanism for adoption; any required review or approval roles; how a consumer-specific canonical architecture is maintained; which conditional analyses the pilot should evaluate.
+- **Follow-up questions:** which conditional analyses provide enough value to include for different decision contexts, and whether comparative-pilot findings justify changing the minimum contract. Consumer-specific canonical architecture and governance remain each consumer's responsibility.
 
 These categories must not be collapsed. In particular, an asserted fact may be unverified, an assumption is not a fact, and neither is an owner decision.
 
@@ -60,10 +59,10 @@ The proposal structure borrows a small set of familiar decision-record sections 
 2. Map material claims to sources and identify gaps or conflicts.
 3. Develop options and compare their consequences, conditions, exceptions, and trade-offs.
 4. Produce a proposal, complete or explicitly incomplete, for human review.
-5. The authorized owner reviews it, resolves or routes owner choices, and decides whether to adopt, amend, defer, or reject it through the consumer's process.
+5. The authorized owner reviews it, resolves or routes owner choices, and decides whether to adopt, amend, defer, or reject it through the consumer's process. Review roles, if any, belong to the consumer's process.
 6. If adopted, the owner records the authorization and updates the consumer's current canonical architecture or other authoritative record. A decision record explains a decision and its rationale; it is not automatically the current architecture description.
 
-Generation, saving, committing, merging, or changing a document's status label does not by itself mean a proposal was approved or adopted. Until the owner and evidence are recorded through an agreed process, adoption is unresolved. The product must leave an adoption record blank or explicitly pending rather than fabricate one.
+Generation, saving, committing, merging, or changing a document's status label does not by itself mean a proposal was approved or adopted. For each consumer, adoption remains unresolved until the owner and evidence are recorded through that consumer's process. The product must leave an adoption record blank or explicitly pending rather than fabricate one. This repository's own bootstrap process is documented in [Decision records](decisions/README.md); it does not govern consumer decisions.
 
 An adopted decision record is historical evidence of a decision in its stated scope and at its stated time. A consumer's current canonical architecture describes the currently adopted state. A downstream selected policy, contract, or authority artifact is separately owned and must be explicitly derived or adopted by that consumer. These artifacts may link to one another, but they are not interchangeable.
 

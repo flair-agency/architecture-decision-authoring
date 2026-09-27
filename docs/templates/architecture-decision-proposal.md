@@ -72,12 +72,15 @@ Map each material fact, existing decision, constraint, and evidence-based claim 
 
 ## Adoption record
 
-Leave pending until the authorized owner acts through the applicable process. Generation, saving, commit, merge, or a status label alone does not adopt this proposal.
+Leave pending until the authorized owner acts through the applicable process. Generation, saving, commit, merge, or a status label alone does not adopt this proposal. Use the outcome vocabulary and evidence rules of the applicable owner process.
 
-- **Outcome:** Pending / Adopted / Amended / Deferred / Rejected
-- **Authorized owner:** {...}
-- **Authorization evidence and process:** {link or record, or Pending}
-- **Date and scope of adopted outcome:** {...}
+- **Owner outcome:** {Explicit outcome under the applicable process, or Pending}
+- **Target artifact(s) and revision(s):** {...}
+- **Authorized owner/authority:** {As defined by the applicable process}
+- **Authorization evidence URL or record ID:** {link or record, or Pending}
+- **Date and adopted scope:** {...}
+- **Applicability conditions:** {...}
+- **Exceptions:** {...}
 - **Current canonical architecture updated at:** {consumer-owned location, or Pending}
 - **Downstream artifacts explicitly adopted/derived:** {consumer-owned links, or None/Pending}
 
