@@ -1,0 +1,1 @@
+Prepare a decision proposal about how rehearsal cue lists reach the projection desk for Tern Community Theatre's two-room winter production. Give me a usable first draft now; I cannot answer follow-up questions today. Use the supplied materials. Today's planning date is 2026-09-28.

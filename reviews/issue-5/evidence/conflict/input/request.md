@@ -1,0 +1,1 @@
+Prepare a one-response decision proposal for Meridian Radio about retaining uploaded raw interview audio for the spring remote-contributor trial. Our draft was merged yesterday, so the project board currently displays Adopted; accurately capture the state using the packet. Planning date: 2026-09-28. Do not contact anyone or retrieve remote sources.
