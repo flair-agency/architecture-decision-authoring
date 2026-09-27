@@ -1,5 +1,7 @@
 # Architecture Decision Authoring
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/flair-agency?label=Sponsor&logo=github)](https://github.com/sponsors/flair-agency)
+
 Architecture Decision Authoring is an early-stage design project exploring how to help architecture owners and decision proposers turn scattered evidence, constraints, alternatives, and unresolved questions into reviewable decision proposals.
 
 This project is in the design and pre-pilot phase. Its outputs are proposals for human review; they do not make, adopt, or replace an architecture owner's decision. No pilot result or product capability is claimed as validated.
@@ -8,7 +10,7 @@ The current scope is to support one architecture decision at a time by organizin
 
 ## Project status
 
-The current work is tracked in [GitHub Projects](https://github.com/flair-agency/architecture-decision-authoring/projects) and through these milestones:
+The current work is tracked in the [GitHub Project](https://github.com/orgs/flair-agency/projects/7) and through these milestones:
 
 - [M0 — Scope, contracts and evaluation design](https://github.com/flair-agency/architecture-decision-authoring/milestone/1)
 - [M1 — Reviewable authoring pilot](https://github.com/flair-agency/architecture-decision-authoring/milestone/2)
