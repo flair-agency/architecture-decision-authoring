@@ -1,6 +1,6 @@
 # Synthetic case inventory
 
-**Status: Proposed. These six published cases are public development/rehearsal material only, not held-out.** Their `expected.md` files are visible and not owner-adjudicated. Outputs from this set cannot satisfy the continuation threshold, even with 24 outputs. Each case directory contains a bounded generation packet under `input/` and a separate evaluator-only `expected.md`; keep it out of every generation bundle, prompt, model context, and Skill source.
+**Status: Proposed. These six published cases are public development/rehearsal material only, not held-out.** Their `expected.md` files are visible and not owner-adjudicated. Outputs from this set cannot serve as an independent comparison, regardless of the number of runs. Each case directory contains a bounded generation packet under `input/` and a separate evaluator-only `expected.md`; keep it out of every generation bundle, prompt, model context, and Skill source.
 
 All contexts, people/roles, decisions, documents, dates, constraints, and metrics below are fictional and created for this evaluation. They are not derived from external sources or real organization data. No case requires one mandatory architecture recommendation.
 
@@ -13,4 +13,4 @@ All contexts, people/roles, decisions, documents, dates, constraints, and metric
 | Juniper Field Notes | [juniper-field-notes-revision](juniper-field-notes-revision/) | Revision | Preserve an adopted correction rule while considering a requested amendment. |
 | Juniper Field Notes | [juniper-field-notes-conflict-incomplete](juniper-field-notes-conflict-incomplete/) | Conflict/incomplete | Distinguish an adopted retention decision from a conflicting unsigned note. |
 
-`input/` is the only case-specific source bundle. The shared template and baseline prompt live outside the case folders. Build generation bundles from `input/` only; exclude every `expected.md` and this inventory. Hash inputs and record exact revisions before a rehearsal run. Decision-grade evaluation requires a materially fresh held-out set created after candidate freeze in an independent work context, as specified in [the protocol](../protocol.md).
+`input/` is the only case-specific source bundle. The shared template and baseline prompt live outside the case folders. Build generation bundles from `input/` only; exclude every `expected.md` and this inventory. Identify the exact materials used for any rehearsal. Decision-grade evaluation requires a materially fresh held-out set created after candidate freeze in an independent work context, as specified in [the protocol](../protocol.md).

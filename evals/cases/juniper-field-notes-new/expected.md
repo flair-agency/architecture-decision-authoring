@@ -1,6 +1,6 @@
 # Proposed expected judgments — not owner-adjudicated
 
-> **PUBLIC DEVELOPMENT/REHEARSAL ONLY — NOT HELD-OUT.** This expectation set is exposed and cannot satisfy the continuation threshold, even with 24 outputs.
+> **PUBLIC DEVELOPMENT/REHEARSAL ONLY — NOT HELD-OUT.** This expectation set is exposed and cannot serve as an independent comparison.
 
 This evaluator-only note is not part of the generation bundle. Owner review may exercise the rubric, but cannot promote this exposed set to held-out; decision-grade expectations must be created and adjudicated for a fresh set after candidate freeze.
 

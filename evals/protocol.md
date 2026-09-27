@@ -1,6 +1,6 @@
 # Comparative authoring pilot protocol
 
-**Status: Proposed; owner adoption required before any decision-grade run.** This document predefines a narrow evaluation of the adopted initial pilot contract. It is a design proposal, not a report of conducted testing. Issue #3 remains incomplete until fresh held-out expectations and run conditions are owner-adjudicated before generation. The continuation threshold is proposed and not adopted.
+**Status: Proposed; owner adoption required before any decision-grade run.** This document defines a limited next-investment comparison, not a capability proof or a report of conducted testing. Issue #3 remains open: the protocol design and rehearsal artifacts can be reviewed now, but owner-adjudicated held-out expectations and a frozen run plan remain necessary under the issue's acceptance criteria.
 
 ## Purpose and limits
 
@@ -21,17 +21,17 @@ See [case inventory](cases/README.md). The only generation sources are the local
 
 ## Dataset exposure and decision-grade sequence
 
-The six cases currently published under `evals/cases/`, including their `expected.md` files, are **development/rehearsal material only**. They are public and may be inspected by Skill authors or selectors. They are not held-out, and no result from them can satisfy any continuation threshold, even if all six cases receive 24 outputs. They can be used to exercise the procedure, refine instructions, and find defects; label any such results `rehearsal`.
+The six cases currently published under `evals/cases/`, including their `expected.md` files, are **development/rehearsal material only**. They are public and may be inspected by Skill authors or selectors. They are not held-out, and no result from them can be presented as an independent comparison. They can be used to exercise the procedure, refine instructions, and find defects; label any such results `rehearsal`.
 
 A decision-grade comparison must follow this order:
 
-1. **Freeze the candidate first.** The owner adopts and freezes the exact Skill revision, shared prompt, ADR template, model/provider/version and settings, tool/turn/context/output budgets, rubric, and continuation threshold. Record revisions, digests, and freeze time before case selection. No candidate output may exist yet for these cases.
-2. **Create a fresh held-out set in an independent work context.** After the freeze, create six materially new synthetic cases in two new product contexts, covering the same matrix (new decision, revision, and conflict/incomplete per context). Do not rename, paraphrase, reuse source facts/documents, or make superficial variants of Cedar Cart or Juniper Field Notes. The case-selection context must not use candidate outputs or rehearsal expected judgments. Keep a record of who had access to held-out material and when.
-3. **Adjudicate expectations before generation.** The authorized owner reviews the six new source packets and proposed expected judgments, resolves what counts as preserved decisions/source limits/owner choices/conflicts/gaps, acceptable multiple recommendations, and prohibited claims, then freezes the expectation revision. Candidate outputs must not influence case or expectation selection or adjudication. Record the expectation digest and owner-adjudication time before the first generation.
+1. **Freeze the candidate and run plan first.** Before results exist, record the exact Skill revision, shared prompt, ADR template, model/provider/version and settings, practical budgets, artifact identities, and the minimum benefit/continuation rule. The [run-plan template](run-plan-template.md) also records any paired additional-run trigger/cap/aggregation, ordering, and invalid-run handling.
+2. **Create a fresh held-out set in an independent work context.** After the freeze, create six materially new synthetic cases in two new product contexts, covering the same matrix (new decision, revision, and conflict/incomplete per context). Do not rename, paraphrase, reuse source facts/documents, or make superficial variants of Cedar Cart or Juniper Field Notes. The case-selection context must not use candidate outputs or rehearsal expected judgments. Record exposure history.
+3. **Adjudicate expectations before generation.** The authorized owner reviews the six new source packets and proposed expected judgments, resolves what counts as preserved decisions/source limits/owner choices/conflicts/gaps, acceptable multiple recommendations, and prohibited claims, then freezes the expectation revision. Candidate outputs must not influence case or expectation selection or adjudication.
 4. **Generate from inputs only.** Build each generation bundle from the fresh held-out case request and `input/` source snapshots, the already-frozen shared prompt/template, and (for the Skill arm) the already-frozen Skill. Keep held-out `expected.md`, rubric scoring notes, and owner evaluation notes out of every generation bundle and model context.
 5. **Score with expectations visible, arm mapping hidden.** Scorers receive the held-out source packet, frozen and owner-adjudicated expectations, rubric, and neutral-ID outputs. Hide only the mapping from neutral IDs to arms until scoring and adjudication are recorded. Keep that mapping separately controlled and log any suspected arm identity.
 
-The full 24-output design and all continuation criteria apply **only** to this fresh held-out set. Candidate outputs from rehearsal or case/expectation design must not inform the choice or wording of held-out cases. Once results have been seen, that held-out set is exposed: any Skill revision makes it regression-only. A fresh independent comparison of a revised Skill requires a new materially fresh held-out set selected and adjudicated after the revised candidate is frozen. Never describe a reused holdout as independent confirmation.
+The initial held-out comparison is **6 cases × 2 arms × 1 run = 12 outputs**. It is a limited next-investment comparison, not capability proof. Candidate outputs from rehearsal or case/expectation design must not inform the choice or wording of held-out cases. After results are seen, the set is exposed; reuse after a candidate change is regression-only. A new set is needed only when claiming a new independent confirmation, not for every edit. Selective post-results replication is a separate diagnostic and cannot rewrite the initial 12-output result; paired replication planned before results may be included as specified in the frozen run plan.
 
 ## Arms and controlled conditions
 
@@ -40,15 +40,15 @@ Each run uses one case and one arm in a fresh, isolated context:
 1. **General-purpose baseline:** the shared [baseline prompt](baseline-prompt.md), the case request and its `input/` source snapshots, and the repository's [Architecture Decision Proposal template](../docs/templates/architecture-decision-proposal.md). No authoring Skill instructions are supplied.
 2. **Skill:** the exact same prompt, request, source snapshots, template, and environment, plus one frozen revision of the authoring Skill instructions. Those instructions are the only intended arm difference.
 
-For each decision-grade held-out run, record and preserve:
+For each held-out run, identify and preserve:
 
 - provider and exact model/version, system/developer messages, sampling settings, and output limit;
-- the commit SHA and SHA-256 digest for the shared prompt, template, every case input file, and the Skill instruction revision;
+- immutable identities/revisions for the shared prompt, template, case inputs, and Skill instruction revision (the run plan chooses an appropriate recording method);
 - identical source access (the source snapshots and shared template are supplied verbatim in the model context with their repository-relative file paths), one user request, one assistant response, no follow-up turns, and no external network or additional tools;
 - a fixed per-run context/token budget, including the baseline prompt and all input material. The Skill instructions consume the Skill arm's same budget; they do not receive extra context or output tokens. If the Skill does not fit, record the limitation rather than increasing its budget;
 - the arm order, case order, run identifier, start/end time, and any provider interruption.
 
-The case-specific request is in `input/request.md`. For each run, construct model context in a fixed order: common system/developer messages, the complete shared baseline prompt, the case request, all remaining files in that case's `input/` in lexical path order, then the shared template verbatim. Label each snapshot with its repository-relative path. The Skill arm receives the exact same context plus the frozen Skill instructions in the same declared location on every run. **Never put `expected.md`, this inventory, rubric notes, or owner evaluation notes in a generation bundle or model context.** Record evaluator-only hashes separately from the generation manifest. Freeze the prompt, template, inputs, Skill revision, rubric, and expectations before comparing outputs; any change creates a new protocol version and a new run set.
+The case-specific request is in `input/request.md`. Use the same source packet, prompt, template, model/settings, tools, and practical budgets for both arms; the Skill instructions are the only intended difference and count against its budget. Identify the exact artifacts and record exposure. **Never put `expected.md`, this inventory, rubric notes, or owner evaluation notes in a generation bundle or model context.** The run plan specifies operational details.
 
 No Skill instruction revision is included in this evaluation-design change. A candidate must be selected and frozen before a held-out set is created; until then, there is no complete Skill arm and no decision-grade evaluation is ready to execute.
 
@@ -56,9 +56,9 @@ Use one exact model configuration for both arms. A result is comparable only whe
 
 ## Run plan, ordering, and blinding
 
-For the fresh held-out set only, the recommended design is **6 cases × 2 arms × 2 independent runs = 24 outputs**. Each repetition starts in a fresh context; no conversation history or output from another run may be reused. Randomize case/arm execution order with a recorded seed. Run both arms for the same case close enough in time to avoid configuration drift.
+The initial comparison is **6 cases × 2 arms × 1 run = 12 outputs**. Each run starts in a fresh context; no conversation history or output from another run may be reused. Randomize or otherwise predefine case/arm execution order. Run both arms for the same case close enough in time to avoid configuration drift.
 
-If resources only allow **12 outputs** on the fresh held-out set (one run per case per arm), label the set *exploratory*. It can surface usability issues but cannot satisfy the continuation threshold or support a decision-grade comparative claim. Do not treat extra runs of selected cases as a substitute for the paired full design.
+Do not imply that twelve outputs establish general capability. They provide a bounded comparison to inform whether more investment is warranted. Any paired additional runs must follow the trigger, cap, and aggregation frozen in the run plan. Selective replication after seeing outcomes is reported separately as diagnostic evidence and cannot change the initial comparison.
 
 Before review, replace run/arm labels with neutral randomized IDs. Scorers receive the source packet, frozen expectations, rubric, and neutral-ID outputs so they can assess source fidelity and missed owner choices consistently. Hide only the arm-to-ID mapping until scoring and adjudication are recorded. Skill wording may make perfect arm blinding impossible; note any guessed arm assignment and do not claim successful blinding if identity was apparent.
 
@@ -66,33 +66,26 @@ Before review, replace run/arm labels with neutral randomized IDs. Scorers recei
 
 Each run produces one proposal using the shared template. The assistant must distinguish facts, assumptions, existing decisions, constraints/evidence, options, proposed decisions, and unresolved owner choices; map material claims to source locations; preserve scope, conditions, exceptions, time bounds, and trade-offs; and make missing information explicit. The run ends after its one response. Questions for the owner are recorded in the output rather than answered interactively.
 
-The owner scores each output using the [rubric](rubric.md) and frozen expectations. Record owner active effort in minutes, substantive corrections, missed owner choices, unsupported claims, unnecessary questions, source fidelity, and any hard failure. Exclude common expectation-familiarization time from owner effort; include per-output source checking, correction, and scoring. Do not equate polished prose, length, confident tone, or number of recommendations with decision quality.
+The owner scores each output using the [rubric](rubric.md) and frozen expectations. Record owner effort, substantive corrections, missed owner choices, unsupported claims, unnecessary questions, source fidelity, and any hard failure. Effort includes per-output checking/scoring where useful, but is not production authoring time. Do not equate polished prose, length, confident tone, or number of recommendations with decision quality.
 
-Before timing outputs, allow one shared familiarization pass over the frozen rubric and expectations for the whole held-out set; record but exclude that time. Start a separate timer when the scorer begins each neutral-ID output. Per-output reading, source verification, correction, and scoring count toward owner effort.
+If effort is measured, use a consistent practical method and sensible precision; do not imply that small timing differences are meaningful. A shared expectations-familiarization pass may be excluded consistently. Per-output source checking, correction, and scoring may be included, but must not be described as production authoring time.
 
 Store future manifests, raw outputs, scoring, and invalid-run records according to [results guidance](results/README.md). No results are created by this protocol-design change.
 
-The current public rehearsal judgments are proposed only. Before held-out generation, the authorized owner must adjudicate and freeze each held-out expectation set. Do not call rehearsal notes owner-adjudicated, infer adoption from their presence in Git, or inspect comparative results before the threshold and shared conditions are frozen.
+The current public rehearsal judgments are proposed only. Before held-out generation, the authorized owner must adjudicate and freeze each held-out expectation set. Do not call rehearsal notes owner-adjudicated or infer adoption from their presence in Git.
 
-## Continuation threshold — Proposed
+## Decision use and hard failures
 
-Continue this Skill design to another pilot stage only if every condition below is met on the full 24-output **held-out** design. Rehearsal outputs never count toward this threshold:
-
-1. The Skill arm has **zero hard failures**. A hard failure is never averaged away, offset by time savings, or waived because the baseline also failed.
-2. Compared with baseline, the Skill has no worsening in source fidelity, missed owner choices, or substantive corrections, both in the pooled six-case comparison and within either product context. Sum the two owner-choice/correction counts per output across valid paired runs; compare the arithmetic mean of the 0–3 source-fidelity scores. Lower counts and a higher fidelity score are favorable.
-3. Total owner active effort is reduced by **at least 20%** across the six paired cases, using the sum of the two valid runs per case and arm: `(baseline minutes − Skill minutes) / baseline minutes`.
-4. Owner active effort is lower for the Skill arm in **each** product context when valid run minutes are summed within that context.
-
-These are proposed decision rules pending owner adoption. If adopted and any condition fails, do not advance the Skill unchanged: simplify, revise and re-freeze it for a new comparison, or stop. Threshold failure is not proof that all Skills or architecture-authoring workflows lack value. If a hard failure occurs, stop the current Skill candidate and preserve the output for owner review before any rerun or revision.
+Before results, the owner must record in the run plan what practical minimum benefit warrants the next investment and what evidence would count. Do not treat one universal percentage as a validated threshold. A hard failure is never averaged away. The run plan must state how a candidate hard failure affects candidate success and whether other observations continue for learning. The result informs only the next scoped investment decision; it is not a capability proof. The current public rehearsal judgments are proposed only; owner-adjudicated held-out expectations and a completed run plan are still needed for Issue #3.
 
 ## Invalid runs, reruns, and product stops
 
 An invalid run is caused by a protocol/control failure outside the candidate's behavior: wrong model/settings, wrong or changed source bundle, expected-judgment leakage, extra tool/network access, mismatched budget/template/prompt, or a documented provider/platform interruption. Keep its manifest and any partial output, label it invalid with a reason, and exclude it from comparison.
 
-Treat each replication as a paired block containing one baseline and one Skill output for the same case. If either output in a block is invalid, exclude both outputs in that block and rerun both arms in fresh contexts under the same frozen configuration; this preserves balanced pairs. Allow one paired rerun per invalid block. If the same control failure recurs, pause the evaluation, repair the protocol, issue a new version, and restart the affected design; do not silently replace results. Model behavior such as unsupported claims, omissions, refusal, or poor output under valid conditions is a product result, not an invalid run.
+Handle invalid runs according to the paired policy frozen in the run plan. Preserve invalid and partial outputs with reasons; never silently replace them. A control failure is distinct from poor model behavior under otherwise valid conditions, which is an evaluation finding, not an invalid run.
 
-A Skill hard failure is a product stop for that frozen Skill revision; preserve it and do not average or rerun it away. A valid 12-output exploratory set or a threshold miss cannot authorize continuation. Any changed Skill, prompt, source, template, model configuration, rubric, or expectation requires a new frozen evaluation revision before another comparison.
+A Skill hard failure's impact on candidate success and whether remaining observations continue must be stated in the frozen run plan. Preserve the finding; never average it away or let later selective replication rewrite the initial 12-output comparison. A changed candidate does not require new cases for every edit: the same held-out set may be used for regression checks. Create a fresh set only for a new claim of independent confirmation.
 
 ## Limitations
 
-This is a small, synthetic, two-context evaluation with six intentionally bounded cases, one fixed general-purpose prompt, one model configuration at a time, and an owner-centered scoring approach. Two runs per arm/case do not support broad statistical conclusions. The owner's familiarity and the difficulty of complete blinding can affect effort and ratings. Source fidelity and decision preservation matter more than prose polish; passing this protocol would support only the next scoped pilot decision, not general capability, release readiness, or Gatekeeper acceptance.
+This is a small, synthetic, two-context evaluation with six intentionally bounded cases, one fixed general-purpose prompt, one model configuration at a time, and owner-centered scoring. A single paired run per case cannot support broad capability or statistical claims. The owner's familiarity and the difficulty of complete blinding can affect effort and ratings. Source fidelity and decision preservation matter more than prose polish; the comparison can inform only whether a next scoped investment is warranted, not general capability, release readiness, or Gatekeeper acceptance.
