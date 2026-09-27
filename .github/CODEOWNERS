@@ -1,0 +1,17 @@
+# Default owner for files without a more specific rule.
+* @naokikimura
+
+# Product guidance and decision artifacts.
+/AGENTS.md @naokikimura
+/README.md @naokikimura
+/CONTRIBUTING.md @naokikimura
+/SUPPORT.md @naokikimura
+/docs/ @naokikimura
+
+# Skill behavior and evaluation criteria.
+/skills/ @naokikimura
+/evals/ @naokikimura
+
+# Security policy and repository automation.
+/SECURITY.md @naokikimura
+/.github/ @naokikimura
