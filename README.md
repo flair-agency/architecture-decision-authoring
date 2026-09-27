@@ -1,8 +1,10 @@
 # Architecture Decision Authoring
 
-Architecture Decision Authoring is an early-stage design project exploring how to help architecture owners prepare reviewable decision proposals from evidence, constraints, alternatives, and unresolved questions.
+Architecture Decision Authoring is an early-stage design project exploring how to help architecture owners and decision proposers turn scattered evidence, constraints, alternatives, and unresolved questions into reviewable decision proposals.
 
 This project is in the design and pre-pilot phase. Its outputs are proposals for human review; they do not make, adopt, or replace an architecture owner's decision. No pilot result or product capability is claimed as validated.
+
+The current scope is to support one architecture decision at a time by organizing its context and trade-offs. The project does not aim to generate a complete architecture, make decisions for owners, or automatically approve or adopt proposals.
 
 ## Project status
 
