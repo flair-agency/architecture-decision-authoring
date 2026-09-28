@@ -12,6 +12,7 @@ This directory contains design materials for a project that is still in the desi
 - [Issue #5 diagnostic review](../reviews/issue-5/README.md) — evidence and findings for the exact candidate; all diagnostic material is public/exposed and is not held-out pilot data.
 - [Manual Architecture Gatekeeper dogfood](gatekeeper-manual-dogfood.md) — optional, local development feedback only; not an acceptance or adoption mechanism.
 - [Optional Architecture Gatekeeper CI observation](gatekeeper-observation-ci.md) — non-required PR feedback under a pinned Gatekeeper workflow; not merge acceptance or adoption.
+- [Gatekeeper CI observation log](gatekeeper-observation-log.md) — diagnostic run metadata, including the skipped bootstrap attempt; not acceptance or adoption evidence.
 - [Issue #7 manual Gatekeeper dogfood](../reviews/issue-7/README.md) — includes an incomplete initial attempt and a separate validated native Skill E2E; both are diagnostic only, not acceptance or adoption.
 
 Use `decisions/` for decision records. A status such as proposed, adopted, or superseded is descriptive metadata, not authentication of who approved a decision. This repository's bootstrap adoption rule is documented in [decisions/README.md](decisions/README.md). Generation, commit, merge, and a status label alone do not imply adoption.
