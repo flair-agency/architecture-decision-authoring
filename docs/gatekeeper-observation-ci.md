@@ -64,6 +64,15 @@ or incomplete reason, and the Actions run/comment links. Do not copy secrets
 or represent incomplete runs as decisions. Preserve the distinction between
 this diagnostic record and an owner adoption record.
 
+The first reported bootstrap attempt, Actions run `36418779734` for PR #19,
+was skipped with zero steps even though the PR was reported as non-draft,
+targeting `main`, and authored by an account with `MEMBER` association. This
+does not match the intended trusted-author condition. The membership-expression
+evaluation is a suspected cause, not a confirmed diagnosis. The caller now
+uses explicit equality checks for the allowed associations; this change is
+not verified until a subsequent run against the protected base starts for an
+eligible PR. Do not count the skipped run as a completed observation.
+
 ## Focused checks
 
 Before merge, inspect the rendered workflow and confirm the five PR event
