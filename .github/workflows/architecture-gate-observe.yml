@@ -1,13 +1,74 @@
 name: Architecture Gate Observation
 
+permissions: {}
+
 on:
   pull_request_target:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review, edited]
 
 jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    outputs:
+      allowed: ${{ steps.authorize.outputs.allowed }}
+      reason: ${{ steps.authorize.outputs.reason }}
+    steps:
+      - id: authorize
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gate_json="$(jq -er '
+            def invalid: error("invalid pull_request_target event payload");
+            if type != "object" then invalid
+            elif (.action | type) != "string" then invalid
+            elif (.action | IN("opened", "synchronize", "reopened", "ready_for_review", "edited") | not) then invalid
+            elif (.pull_request | type) != "object" then invalid
+            elif (.pull_request.base | type) != "object" then invalid
+            elif (.pull_request.base.ref | type) != "string" then invalid
+            elif (.pull_request.draft | type) != "boolean" then invalid
+            elif (.pull_request.author_association | type) != "string" then invalid
+            elif (.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "NONE") | not) then invalid
+            else
+              . as $event
+              | ($event.pull_request.author_association as $association
+                | ($event.pull_request.base.ref == "main"
+                   and $event.pull_request.draft == false
+                   and ($association | IN("OWNER", "MEMBER", "COLLABORATOR")))) as $allowed
+              | {
+                  allowed: ($allowed | tostring),
+                  reason: (if $event.pull_request.base.ref != "main" then "wrong_base"
+                           elif $event.pull_request.draft then "draft"
+                           elif ($event.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR") | not) then "author_association"
+                           else "eligible" end),
+                  action: $event.action,
+                  draft: ($event.pull_request.draft | tostring),
+                  association: $event.pull_request.author_association,
+                  base: (if $event.pull_request.base.ref == "main" then "main" else "other" end)
+                }
+            end
+          ' "$GITHUB_EVENT_PATH")"
+
+          allowed="$(jq -r '.allowed' <<<"$gate_json")"
+          reason="$(jq -r '.reason' <<<"$gate_json")"
+          action="$(jq -r '.action' <<<"$gate_json")"
+          draft="$(jq -r '.draft' <<<"$gate_json")"
+          association="$(jq -r '.association' <<<"$gate_json")"
+          base="$(jq -r '.base' <<<"$gate_json")"
+
+          printf 'allowed=%s\nreason=%s\n' "$allowed" "$reason" >> "$GITHUB_OUTPUT"
+          {
+            printf '### Architecture Gate authorization preflight\n\n'
+            printf -- '- Event action: `%s`\n- Base category: `%s`\n- Draft: `%s`\n- Author association: `%s`\n- Model review: `%s`\n' \
+              "$action" "$base" "$draft" "$association" "$([[ "$allowed" == "true" ]] && printf 'eligible' || printf 'skipped')"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   architecture-gate-observe:
-    if: ${{ github.event.pull_request.draft == false && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'COLLABORATOR') }}
+    needs: authorize
+    if: needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true'
     permissions:
       contents: read
       pull-requests: write
