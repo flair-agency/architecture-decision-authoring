@@ -1,0 +1,22 @@
+name: Architecture Gate Observation
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+jobs:
+  architecture-gate-observe:
+    if: github.event.pull_request.draft == false && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: flair-agency/architecture-gatekeeper/.github/workflows/architecture-gate.yml@58bbdbb3119736e53a849388a025e74589ab8664
+    with:
+      policy-path: .codex/gatekeeper/ci-policy.json
+      prompt-path: .codex/gatekeeper/ci-prompt.md
+      schema-path: .codex/gatekeeper/decision.schema.json
+      validation-path: .codex/gatekeeper/decision.validation.json
+      protected-review-instructions: true
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "default": {
+    "mode": "local-only"
+  },
+  "branches": {
+    "main": {
+      "mode": "enforced",
+      "model": "gpt-6-sol",
+      "reasoningEffort": "low",
+      "authorityManifestPath": ".codex/gatekeeper/authorities.json",
+      "authorityLimits": {
+        "maxManifestBytes": 16384,
+        "maxMembers": 16,
+        "maxFileBytes": 65536,
+        "maxTotalBytes": 262144,
+        "maxPromptBytes": 131072
+      }
+    }
+  }
+}
