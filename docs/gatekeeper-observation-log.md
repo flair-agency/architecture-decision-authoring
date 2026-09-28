@@ -68,6 +68,26 @@ for scope, safeguards, and interpretation.
 | Provider cost | Unavailable/not produced |
 | Notes | PR #22 carried the two-stage preflight, but this run used the protected-base workflow at `2120aa3…`, which predates that preflight. This run cannot verify the new design. |
 
+### PR #23 / attempt 1
+
+| Field | Value |
+| --- | --- |
+| Run / jobs | [run 36428196058](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058) / [authorize job 108947317875](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058/job/108947317875); [model job 108947355003](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058/job/108947355003) |
+| Event / action | `pull_request_target`; action subtype unavailable |
+| PR author association / draft | `MEMBER`; non-draft |
+| Base SHA | `0b3ea0be09402301e58fc64abb34c6ecdd9d9a5b` (`main`), verified from PR metadata |
+| Head SHA | `ca004975279c95a4a6baf3f66a47309361afbd6f`, verified from run metadata and PR commit history |
+| Protected workflow source revision | `0b3ea0be09402301e58fc64abb34c6ecdd9d9a5b` (`main` base; workflow source for `pull_request_target`) |
+| Reviewed merge SHA | Not produced (model job skipped) |
+| Configured model / effort | `gpt-6-sol` / `low` (protected CI policy) |
+| Result / incomplete reason | Authorize job succeeded and recorded that `allowed` and `reason` outputs were set; their values were not exposed in retrieved metadata. Model job skipped; cause unknown. No semantic decision produced. |
+| Protected policy digest | Not produced (model job skipped) |
+| Authority provenance / digest | Not produced (model job skipped) |
+| Comment URL | Gatekeeper comment not produced (model job skipped) |
+| Run timestamps / model latency | Run created 2026-09-28T13:22:50Z and updated 2026-09-28T13:22:57Z; authorize job 13:22:53Z–13:22:56Z. Model job timestamps are inconsistent (`startedAt` 13:22:57Z, `completedAt` 13:22:56Z) and it had zero steps; no reliable model latency (model job skipped). |
+| Provider cost | Unavailable/not produced |
+| Notes | No evidence establishes whether propagated `allowed` was `true`, empty, or another value. The model job condition required `allowed == 'true'`; it was skipped. GitHub reports its completion one second before its start, so those job timestamps are retained as reported but not treated as a valid duration. The diagnostic job is intended to expose validated propagated values safely. See [runbook details](gatekeeper-observation-ci.md#bootstrap-and-records). |
+
 ## Record format for subsequent runs
 
 Add one separate two-column `Field` / `Value` table for each workflow attempt,
@@ -96,9 +116,10 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-The pull request carrying this observation-log addition is intended to be a
-post-fix verification probe. PR #21 already recorded the explicit equality-OR
-condition, but its job skipped before executing any steps, so it did not verify
-the fix. Record this pull request's run only after GitHub evaluates the
-workflow from the protected base. A successful start alone verifies only
-trigger/gate execution, not a valid semantic review or adoption.
+PR #23 is the latest recorded observation attempt. Its authorize job succeeded,
+but the model job skipped and the retrieved metadata did not expose the
+propagated authorization values. The cause remains unknown, so this attempt
+does not verify a semantic review. Record later attempts here only after
+GitHub evaluates the workflow from the protected base. A successful start
+alone verifies only trigger/gate execution, not a valid semantic review or
+adoption.
