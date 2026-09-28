@@ -96,9 +96,9 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-The pull request carrying this observation-log addition is intended to be the
-first eligible verification probe after the trusted-author expression fix.
-Its PR number and run are unknown until that pull request is opened and GitHub
-evaluates the workflow from the protected base. Do not enter a result before
-then. A successful start alone verifies only trigger/gate execution, not a
-valid semantic review or adoption.
+The pull request carrying this observation-log addition is intended to be a
+post-fix verification probe. PR #21 already recorded the explicit equality-OR
+condition, but its job skipped before executing any steps, so it did not verify
+the fix. Record this pull request's run only after GitHub evaluates the
+workflow from the protected base. A successful start alone verifies only
+trigger/gate execution, not a valid semantic review or adoption.
