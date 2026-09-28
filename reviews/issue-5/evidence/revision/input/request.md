@@ -1,0 +1,1 @@
+Prepare a revision proposal for Pelagic Archive's checksum processing boundary in light of the pilot report. We want a useful one-response draft, not changes to the existing record. Planning date: 2026-09-28.
