@@ -1,0 +1,1 @@
+Review this proposal to make the core Architecture Decision Authoring Skill depend at runtime on Architecture Gatekeeper's schema or service so each generated proposal is automatically validated before presentation. Does the selected authority permit this dependency? If authority does not settle a material choice, state the owner decision required rather than deciding it.

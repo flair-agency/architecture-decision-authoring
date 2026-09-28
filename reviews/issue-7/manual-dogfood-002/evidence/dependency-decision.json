@@ -1,0 +1,24 @@
+{
+  "decision": "BLOCK",
+  "summary": "The proposed core runtime dependency and automatic Gatekeeper validation materially conflict with the selected contract. Its Purpose and boundary and Downstream boundary sections require a standalone authoring aid with no downstream review or enforcement runtime dependency; the Status of statements section expressly excludes a Gatekeeper-specific core domain model or runtime. The Lifecycle and adoption boundary reserves review and adoption to the consumer's authorized process. A consumer-owned optional downstream integration may be considered separately, but it does not authorize this core change.",
+  "authorityIds": [
+    "authoring-product-contract"
+  ],
+  "responsibility": [
+    "Prepare source-mapped architecture decision proposals for human review.",
+    "Leave owner decisions, adoption, and downstream governance to the authorized consumer process."
+  ],
+  "reviewedScope": [
+    "Proposed runtime dependence of the core Authoring Skill on Gatekeeper's schema or service.",
+    "Automatic validation of each generated proposal before presentation."
+  ],
+  "prohibitedChanges": [
+    "Require Gatekeeper's schema or service in the core authoring runtime.",
+    "Make downstream policy validation a prerequisite for presenting a proposal."
+  ],
+  "findings": [
+    "The selected authority explicitly rules out a Gatekeeper-specific core domain model or runtime and says the core product does not require downstream schemas, tools, or services.",
+    "Automatic pre-presentation Gatekeeper validation would add an enforcement responsibility to the standalone authoring boundary."
+  ],
+  "ownerDecisionRequired": false
+}
