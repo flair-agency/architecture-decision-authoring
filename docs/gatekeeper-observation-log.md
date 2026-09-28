@@ -8,7 +8,9 @@ for scope, safeguards, and interpretation.
 
 ## Recorded runs
 
-| Field | PR #19 / attempt 1 |
+### PR #19 / attempt 1
+
+| Field | Value |
 | --- | --- |
 | Run / job | [run 36418779734](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734) / [job 108916190828](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734/job/108916190828) |
 | Event / action | `pull_request_target`; action subtype unavailable |
@@ -28,15 +30,17 @@ for scope, safeguards, and interpretation.
 
 ## Record format for subsequent runs
 
-Add one row per workflow attempt. Use exact values from GitHub run/job metadata,
-the protected policy and authority artifacts, and any completed workflow
-output. If a value is absent or the workflow did not reach the relevant stage,
-write `Unavailable` or `Not produced` with a short reason; do not infer it.
-For failed, skipped, cancelled, timed-out, or otherwise incomplete runs, record
-the observed status and specific incomplete reason instead of a semantic
-decision.
+Add one separate two-column `Field` / `Value` table for each workflow attempt,
+under a heading of the form `### PR #N / attempt N`. Do not add attempts as
+new columns or mix multiple attempts into one table. Use exact values from
+GitHub run/job metadata, the protected policy and authority artifacts, and
+any completed workflow output. If a value is absent or the workflow did not
+reach the relevant stage, write `Unavailable` or `Not produced` with a short
+reason; do not infer it. For failed, skipped, cancelled, timed-out, or otherwise
+incomplete runs, record the observed status and specific incomplete reason
+instead of a semantic decision.
 
-Each row should include:
+Each attempt table should include these fields:
 
 - PR number, run attempt, run URL, and job URL;
 - event and action subtype when available; PR author association and draft
