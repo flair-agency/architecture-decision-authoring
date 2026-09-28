@@ -88,6 +88,26 @@ for scope, safeguards, and interpretation.
 | Provider cost | Unavailable/not produced |
 | Notes | No evidence establishes whether propagated `allowed` was `true`, empty, or another value. The model job condition required `allowed == 'true'`; it was skipped. GitHub reports its completion one second before its start, so those job timestamps are retained as reported but not treated as a valid duration. The diagnostic job is intended to expose validated propagated values safely. See [runbook details](gatekeeper-observation-ci.md#bootstrap-and-records). |
 
+### PR #24 / attempt 1
+
+| Field | Value |
+| --- | --- |
+| Run / jobs | [run 36434359700](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36434359700) / [authorize job 108968319525](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36434359700/job/108968319525); [model job 108968370306](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36434359700/job/108968370306) |
+| Event / action | `pull_request_target`; action subtype unavailable |
+| PR author association / draft | `MEMBER`; non-draft |
+| Base SHA | `b03f7c39c7e3b1012d832b17c944831327d259d6` (`main`) |
+| Head SHA | `dc687f4c3bcaba8067775e0fa7ae46cdc6c700a6` |
+| Protected workflow source revision | `b03f7c39c7e3b1012d832b17c944831327d259d6` (`main` base, before PR #24 merged) |
+| Reviewed merge SHA | Not produced (model job skipped) |
+| Configured model / effort | `gpt-6-sol` / `low` (protected CI policy) |
+| Result / incomplete reason | Authorize job succeeded; model job was skipped. No semantic decision was produced. |
+| Protected policy digest | Not produced (model job skipped) |
+| Authority provenance / digest | Not produced (model job skipped) |
+| Comment URL | Gatekeeper comment not produced (model job skipped) |
+| Run timestamps / model latency | Run created 2026-09-28T14:13:31Z and updated 2026-09-28T14:13:40Z; no model latency (model job skipped) |
+| Provider cost | Unavailable/not produced |
+| Notes | This run used the protected-base workflow at `b03f7c3…`, which predates PR #24. It had the authorize and model jobs but no `diagnose-authorization` job, so it cannot test PR #24's output-diagnostic change. This new PR is the first probe whose protected base contains that job. |
+
 ## Record format for subsequent runs
 
 Add one separate two-column `Field` / `Value` table for each workflow attempt,
@@ -116,10 +136,10 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-PR #23 is the latest recorded observation attempt. Its authorize job succeeded,
-but the model job skipped and the retrieved metadata did not expose the
-propagated authorization values. The cause remains unknown, so this attempt
-does not verify a semantic review. Record later attempts here only after
-GitHub evaluates the workflow from the protected base. A successful start
-alone verifies only trigger/gate execution, not a valid semantic review or
-adoption.
+PR #24 is the latest recorded observation attempt. Its authorize job succeeded,
+but the model job skipped. Because that run used the protected workflow from
+before PR #24, it did not include the output-diagnostic job and cannot verify
+that change. This PR is the first probe of the merged diagnostic workflow;
+record its result only after GitHub evaluates it from the protected base. A
+successful start alone verifies only trigger/gate execution, not a valid
+semantic review or adoption.
