@@ -24,12 +24,21 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Sources[Source materials] -->|classified into| Statements[Material statements: facts, assumptions, existing decisions, constraints or evidence]
-  Statements -->|claims mapped to locators in| SourceMap[Source map]
-  SourceMap -.->|preserves provenance; does not certify authenticity or authority| Statements
-  Statements --> Proposal[Architecture Decision Proposal]
-  Options[Options and trade-offs] --> Proposal
-  OpenChoices[Unresolved owner choices and missing evidence] --> Proposal
+  Sources[Source materials] --> Classes
+  subgraph Classes[Seven statement classes]
+    Fact[Fact]
+    Assumption[Assumption]
+    Existing[Existing decision]
+    Constraint[Constraint or evidence]
+    Option[Option]
+    Proposed[Proposed decision]
+    Unresolved[Unresolved owner choice]
+  end
+  Classes -->|material claims mapped to locators| SourceMap[Source map]
+  SourceMap -.->|preserves provenance; does not certify authenticity or authority| Classes
+  Classes -->|may inform; none is required in every proposal| Proposal[Architecture Decision Proposal artifact]
+  NoRecommendation[May contain no recommendation when evidence does not support one]
+  Proposal -.-> NoRecommendation
   Proposal -->|may be| Complete[Complete]
   Proposal -->|may be| Incomplete[Explicitly incomplete but useful]
   Proposal -->|for owner action| Process[Authorized owner acting through consumer-owned process]
