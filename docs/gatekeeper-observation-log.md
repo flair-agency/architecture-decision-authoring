@@ -129,6 +129,48 @@ for scope, safeguards, and interpretation.
 | Later PR API association observation | A subsequent REST PR read reported `MEMBER`. This later PR metadata observation is separate from the `CONTRIBUTOR` association in the opened-event payload and does not change the event record. |
 | Notes | The authorization output diagnostic validated the deny-path propagation (`allowed=false`, `reason=author_association`) and kept the model job skipped. This verifies that denial path only; it does not exercise the eligible `MEMBER` route or a model review. |
 
+### PR #25 / attempt 2
+
+| Field | Value |
+| --- | --- |
+| Run / jobs | [run 36435619797](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435619797) / [authorize job 108972664049](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435619797/job/108972664049); [diagnose job 108972717672](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435619797/job/108972717672); [model job 108972751426](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435619797/job/108972751426) |
+| Event / action | `pull_request_target` / `synchronize` |
+| PR author association / draft in event payload | `CONTRIBUTOR`; non-draft |
+| Base SHA | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main`) |
+| Head SHA | `23bb137ecacda9fbcaa1811ceb3a5d56732f0706` |
+| Protected workflow source revision | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main` base) |
+| Reviewed merge SHA | Not produced (model job skipped) |
+| Configured model / effort | `gpt-6-sol` / `low` (protected CI policy) |
+| Result / incomplete reason | Authorize succeeded with `allowed=false`, `reason=author_association`; diagnose succeeded and validated the propagated outputs; model job was skipped with zero steps. No semantic decision was produced. |
+| Protected policy digest | Not produced (model job skipped) |
+| Authority provenance / digest | Not produced (model job skipped) |
+| Comment URL | Gatekeeper comment not produced (model job skipped) |
+| Run timestamps / model latency | Run created/started 2026-09-28T14:23:36Z and updated 2026-09-28T14:23:49Z; authorize 14:23:39Z–14:23:44Z; diagnose 14:23:46Z–14:23:48Z. The model job has zero steps and anomalous API timestamps (started 14:23:49Z, completed 14:23:48Z); no model latency. |
+| Provider cost | Unavailable/not produced |
+| Later PR API association observation | A subsequent REST PR read reported `MEMBER`. This later PR metadata observation is separate from the `CONTRIBUTOR` association in the synchronize-event payload and does not change the event record. |
+| Notes | The authorization diagnostic confirms the event-payload deny path and output propagation for `synchronize`. It does not exercise the eligible `MEMBER` route or a model review. |
+
+### PR #25 / attempt 3
+
+| Field | Value |
+| --- | --- |
+| Run / jobs | [run 36435884264](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435884264) / [authorize job 108973573457](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435884264/job/108973573457); [diagnose job 108973620294](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435884264/job/108973620294); [model job 108973657997](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435884264/job/108973657997) |
+| Event / action | `pull_request_target` / `edited` |
+| PR author association / draft in event payload | `CONTRIBUTOR`; non-draft |
+| Base SHA | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main`) |
+| Head SHA | `23bb137ecacda9fbcaa1811ceb3a5d56732f0706` |
+| Protected workflow source revision | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main` base) |
+| Reviewed merge SHA | Not produced (model job skipped) |
+| Configured model / effort | `gpt-6-sol` / `low` (protected CI policy) |
+| Result / incomplete reason | Authorize succeeded with `allowed=false`, `reason=author_association`; diagnose succeeded and validated the propagated outputs; model job was skipped with zero steps. No semantic decision was produced. |
+| Protected policy digest | Not produced (model job skipped) |
+| Authority provenance / digest | Not produced (model job skipped) |
+| Comment URL | Gatekeeper comment not produced (model job skipped) |
+| Run timestamps / model latency | Run created/started 2026-09-28T14:25:42Z and updated 2026-09-28T14:25:55Z; authorize 14:25:45Z–14:25:48Z; diagnose 14:25:52Z–14:25:54Z. The model job has zero steps and anomalous API timestamps (started 14:25:55Z, completed 14:25:54Z); no model latency. |
+| Provider cost | Unavailable/not produced |
+| Later PR API association observation | A subsequent REST PR read reported `MEMBER`. This later PR metadata observation is separate from the `CONTRIBUTOR` association in the edited-event payload and does not change the event record. |
+| Notes | The authorization diagnostic confirms the event-payload deny path and output propagation for `edited`. It does not exercise the eligible `MEMBER` route or a model review. |
+
 ## Record format for subsequent runs
 
 Add one separate two-column `Field` / `Value` table for each workflow attempt,
@@ -157,10 +199,24 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-PR #25 attempt 1 is the latest recorded observation attempt. Its authorize
-job denied the opened event's `CONTRIBUTOR` association, and the diagnostic
-job successfully validated the propagated denial outputs; the model job was
-skipped. This verifies the diagnostic denial path, not the eligible `MEMBER`
-route. Record a later synchronize attempt separately after GitHub evaluates
-it from the protected base. A successful start alone verifies only
-trigger/gate execution, not a valid semantic review or adoption.
+PR #25 attempt 3 is the latest recorded observation attempt. Attempts 1–3
+record the `opened`, `synchronize`, and `edited` event payloads separately.
+Each authorize job denied the payload's `CONTRIBUTOR` association with
+`allowed=false`, `reason=author_association`; each diagnostic job validated
+the propagated outputs and each model job was skipped. The later REST PR
+association observation of `MEMBER` is recorded separately and is not
+substituted for the event payload. These attempts verify the diagnostic deny
+path, not the eligible `MEMBER` route.
+
+## Observation cutoff and follow-up
+
+This log is updated with a fixed cutoff: record only runs whose run-started
+timestamp is earlier than the start of the documentation commit that updates
+this log. A workflow run triggered by that commit is outside the current
+update's observation window. Record it in a later log update, whose own cutoff
+is set before that later update commit. This keeps recordkeeping finite when
+editing the log itself triggers the observed workflow; it does not define
+workflow eligibility, acceptance, or authorization policy.
+
+A successful start alone verifies only trigger/gate execution, not a valid
+semantic review or adoption.
