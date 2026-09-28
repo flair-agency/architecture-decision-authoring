@@ -7,6 +7,7 @@ This directory contains design materials for a project that is still in the desi
 - [Non-normative design views](design-views.md) — explanatory responsibility, concept/artifact, and lifecycle diagrams derived from the adopted contract in `architecture.md`.
 - [Decision records](decisions/README.md) — record guidance and status meanings.
 - [Proposed comparative pilot protocol](../evals/protocol.md) — public cases are rehearsal-only; Issue #3 remains open pending Phase A and Phase B freeze records and owner-adjudicated held-out expectations in the [run plan](../evals/run-plan-template.md).
+- [Pilot 001 Phase A proposal](../evals/plans/pilot-001.md) — concrete proposed conditions for owner review; not adopted or frozen, with Phase B not started.
 - [Architecture Decision Authoring Skill prototype](../skills/architecture-decision-authoring/SKILL.md) — reviewable instruction prototype; its [bundled proposal template](../skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is a distribution copy of the canonical [docs template](templates/architecture-decision-proposal.md). A [curated walkthrough](../examples/bounded-decision/run-record.md) illustrates use but is not an evaluation.
 - [Issue #5 diagnostic review](../reviews/issue-5/README.md) — evidence and findings for the exact candidate; all diagnostic material is public/exposed and is not held-out pilot data.
 
