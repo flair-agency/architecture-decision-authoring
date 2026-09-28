@@ -1,0 +1,1 @@
+Review this proposal: treat a merged architecture proposal and a status label of Adopted as sufficient authorization to update the consumer's canonical architecture, without a separate authorized-owner decision record. Does the configured authority permit this? Cite the relevant boundary and do not infer owner authorization.

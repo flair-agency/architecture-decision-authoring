@@ -1,0 +1,24 @@
+{
+  "decision": "OWNER_DECISION",
+  "summary": "The hosted, multi-tenant catalog adds cross-consumer storage, discovery, accounts, access, and retention responsibilities beyond the adopted standalone, one-decision-at-a-time authoring contract. The selected authority does not authorize or define those responsibilities; the repository owner must decide whether to expand the product boundary before implementation (Purpose and boundary; Status of statements in this contract; Output contract; Downstream boundary).",
+  "authorityIds": [
+    "authoring-product-contract"
+  ],
+  "responsibility": [
+    "Prepare source-mapped architecture-decision proposals for human review, one decision at a time.",
+    "Keep consumer adoption and governance with each consumer's authorized owner."
+  ],
+  "reviewedScope": [
+    "Proposed hosted, multi-tenant catalog for storing and discovering proposals across consumer products.",
+    "Proposed account, access, and retention responsibilities."
+  ],
+  "prohibitedChanges": [
+    "Do not treat the catalog responsibility as authorized by the current contract.",
+    "Do not infer consumer adoption, approval, or governance authority from catalog storage or discovery."
+  ],
+  "findings": [
+    "The catalog is a material new product and operational responsibility not settled by the selected authority.",
+    "The authorized repository owner must decide whether and how the product boundary expands, including the new account, access, and retention responsibilities."
+  ],
+  "ownerDecisionRequired": true
+}

@@ -1,0 +1,23 @@
+{
+  "decision": "BLOCK",
+  "summary": "The proposal contradicts the selected contract's 'Lifecycle and adoption boundary': merging a proposal or changing its status label does not establish approval or adoption. The authorized owner must decide through the consumer's process, record the authorization, and update the consumer's current canonical architecture or other authoritative record. The 'Purpose and boundary' and 'Downstream boundary' also leave consumer adoption and governance to the consumer; no owner authorization is evidenced here.",
+  "authorityIds": [
+    "authoring-product-contract"
+  ],
+  "responsibility": [
+    "Review proposal adoption behavior against the authoring product contract",
+    "Preserve the consumer owner's authority over canonical architecture"
+  ],
+  "reviewedScope": [
+    "Merged architecture proposal and Adopted status label as claimed authorization",
+    "Update of a consumer's canonical architecture without a recorded authorized-owner decision"
+  ],
+  "prohibitedChanges": [
+    "Treating merge or status label as adoption",
+    "Updating consumer canonical architecture without owner authorization recorded through the consumer's process"
+  ],
+  "findings": [
+    "Material conflict: the proposed shortcut bypasses the explicit owner decision and recorded authorization required by the Lifecycle and adoption boundary."
+  ],
+  "ownerDecisionRequired": false
+}
