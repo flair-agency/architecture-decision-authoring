@@ -22,6 +22,21 @@ Current work items: [Issues](https://github.com/flair-agency/architecture-decisi
 
 The [Architecture Decision Authoring Skill prototype](skills/architecture-decision-authoring/SKILL.md) is a reviewable implementation experiment. Its [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates intended use; it is not an automated or independent evaluation. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
 
+### Install and invoke the Skill
+
+Codex does not install this Skill automatically. To make it available in this repository, copy the complete Skill directory into the repository-scoped skills folder from the repository root:
+
+```sh
+mkdir -p .codex/skills
+cp -R skills/architecture-decision-authoring .codex/skills/
+```
+
+For user-wide availability instead, copy it to `~/.codex/skills/architecture-decision-authoring/`. In either location, the Skill entrypoint is `SKILL.md`. Explicitly activate it with `/skills` or `$architecture-decision-authoring` in your prompt.
+
+For example, after placing your source files in the workspace, ask:
+
+> Use $architecture-decision-authoring to prepare one reviewable proposal from `docs/current-architecture.md` and `docs/constraints.md`. Cite source locations, compare viable options, and leave unsupported facts and owner choices unresolved.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. The [product and artifact contract](docs/architecture.md) and its [initial decision record](docs/decisions/0001-markdown-first-proposal-contract.md) are adopted for the initial pilot and will be reassessed after the comparative pilot. See also the [proposal template](docs/templates/architecture-decision-proposal.md) and [decision-record guidance](docs/decisions/README.md).
