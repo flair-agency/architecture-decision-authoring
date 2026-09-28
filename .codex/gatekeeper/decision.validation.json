@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "when": { "path": "/decision", "equals": "PASS" },
+      "require": { "path": "/ownerDecisionRequired", "equals": false },
+      "message": "PASS must not leave an owner decision unresolved."
+    },
+    {
+      "when": { "path": "/decision", "equals": "BLOCK" },
+      "require": { "path": "/ownerDecisionRequired", "equals": false },
+      "message": "BLOCK must not be reported as an unresolved owner decision."
+    },
+    {
+      "when": { "path": "/decision", "equals": "OWNER_DECISION" },
+      "require": { "path": "/ownerDecisionRequired", "equals": true },
+      "message": "OWNER_DECISION must identify an outstanding owner decision."
+    }
+  ]
+}

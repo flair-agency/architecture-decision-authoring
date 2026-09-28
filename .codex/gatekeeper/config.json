@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "selfRepository": "flair-agency/architecture-decision-authoring",
+  "authorityManifestPath": ".codex/gatekeeper/authorities.json",
+  "authorityLimits": {
+    "maxManifestBytes": 16384,
+    "maxMembers": 16,
+    "maxFileBytes": 65536,
+    "maxTotalBytes": 262144,
+    "maxPromptBytes": 524288
+  },
+  "promptPath": ".codex/gatekeeper/prompt.md",
+  "schemaPath": ".codex/gatekeeper/decision.schema.json",
+  "validationPath": ".codex/gatekeeper/decision.validation.json",
+  "reviewerConfigPath": ".codex/gatekeeper/reviewer.config.json",
+  "requiredPassArrays": [
+    "responsibility",
+    "reviewedScope",
+    "prohibitedChanges"
+  ],
+  "reviewTimeoutMs": 180000
+}
