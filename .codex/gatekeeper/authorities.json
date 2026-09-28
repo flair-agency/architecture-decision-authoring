@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "authorities": [
+    {
+      "id": "authoring-product-contract",
+      "repository": "self",
+      "revision": "authority-revision",
+      "path": "docs/architecture.md"
+    }
+  ]
+}

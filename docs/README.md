@@ -10,6 +10,7 @@ This directory contains design materials for a project that is still in the desi
 - [Pilot 001 Phase A proposal](../evals/plans/pilot-001.md) — concrete proposed conditions for owner review; not adopted or frozen, with Phase B not started.
 - [Architecture Decision Authoring Skill prototype](../skills/architecture-decision-authoring/SKILL.md) — reviewable instruction prototype; its [bundled proposal template](../skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is a distribution copy of the canonical [docs template](templates/architecture-decision-proposal.md). A [curated walkthrough](../examples/bounded-decision/run-record.md) illustrates use but is not an evaluation.
 - [Issue #5 diagnostic review](../reviews/issue-5/README.md) — evidence and findings for the exact candidate; all diagnostic material is public/exposed and is not held-out pilot data.
+- [Manual Architecture Gatekeeper dogfood](gatekeeper-manual-dogfood.md) — optional, local development feedback only; not an acceptance or adoption mechanism.
 
 Use `decisions/` for decision records. A status such as proposed, adopted, or superseded is descriptive metadata, not authentication of who approved a decision. This repository's bootstrap adoption rule is documented in [decisions/README.md](decisions/README.md). Generation, commit, merge, and a status label alone do not imply adoption.
 
