@@ -31,7 +31,7 @@ jobs:
             elif (.pull_request.base.ref | type) != "string" then invalid
             elif (.pull_request.draft | type) != "boolean" then invalid
             elif (.pull_request.author_association | type) != "string" then invalid
-            elif (.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "NONE") | not) then invalid
+            elif (.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "MANNEQUIN", "NONE") | not) then invalid
             else
               . as $event
               | ($event.pull_request.author_association as $association

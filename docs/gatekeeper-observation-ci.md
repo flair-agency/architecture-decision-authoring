@@ -21,6 +21,8 @@ the preflight with `allowed=false` and a fixed reason; they skip the model
 job. Malformed JSON or missing, wrong-type, or unrecognized required fields
 fail the preflight visibly and cannot start the model job. The preflight has
 no token permissions, performs no checkout/API call, and receives no secrets.
+The recognized `MANNEQUIN` association is denied like other non-allowlisted
+associations; arbitrary unknown association strings remain malformed input.
 A collaborator association is allowed even if that collaborator is outside
 the organization.
 
