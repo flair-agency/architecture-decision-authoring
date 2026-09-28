@@ -50,23 +50,28 @@ this diagnostic record and an owner adoption record.
 
 ## Focused checks
 
-Before merge, inspect the rendered workflow and confirm the four PR event
+Before merge, inspect the rendered workflow and confirm the five PR event
 types, `main` target, non-draft condition, exact reusable-workflow SHA,
 permissions, secret mapping, and explicit policy/prompt/schema/validation
 paths. Parse the policy JSON and resolve its `main` entry with the pinned
 Gatekeeper v0.5.1 policy resolver. Confirm that the Authority Set and limits
 match the existing committed manifest/configuration, and that the schema
-requires exact authority IDs. Review the prompt for evidence/authority
-separation and the non-adoption boundary. After merge, inspect the first run
-and record either the validated semantic outcome or the specific incomplete
-failure; do not infer rollout success from workflow presence alone.
+restricts each `authorityIds` item to `authoring-product-contract`. The pinned
+runtime's `validateAuthoritySetDecision` separately checks exact complete-set
+cardinality and rejects missing, duplicate, or extra IDs. The same schema is
+used by local/manual/native review, so confirm those routes still accept the
+selected authority ID. Review the prompt for evidence/authority separation and
+the non-adoption boundary. After merge, inspect the first run and record
+either the validated semantic outcome or the specific incomplete failure; do
+not infer rollout success from workflow presence alone.
 
 The post-merge smoke should confirm that a non-draft PR to `main` starts a
-run and that draft PRs do not; an edit/update should exercise the
-`synchronize` event. Confirm the run uses the protected base policy and
-authority, emits a validated decision or visible incomplete failure, and
-creates or updates the marker-owned comment. Also inspect one incomplete
-path, such as a deliberately unavailable secret in a controlled test
-repository, to verify it remains a failed/incomplete run rather than a
-semantic result. These checks do not make the status required or establish
-that any proposal was adopted.
+run and that draft PRs do not; a commit update should exercise `synchronize`,
+and edits to the PR description or base branch should exercise `edited` (a
+retarget to `main` should start an observation). Confirm the run uses the
+protected base policy and authority, emits a validated decision or visible
+incomplete failure, and creates or updates the marker-owned comment. Also
+inspect one incomplete path, such as a deliberately unavailable secret in a
+controlled test repository, to verify it remains a failed/incomplete run
+rather than a semantic result. These checks do not make the status required or
+establish that any proposal was adopted.
