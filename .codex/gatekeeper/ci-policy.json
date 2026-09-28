@@ -14,7 +14,7 @@
         "maxMembers": 16,
         "maxFileBytes": 65536,
         "maxTotalBytes": 262144,
-        "maxPromptBytes": 524288
+        "maxPromptBytes": 131072
       }
     }
   }

@@ -7,7 +7,7 @@ on:
 
 jobs:
   architecture-gate-observe:
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == false && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     permissions:
       contents: read
       pull-requests: write

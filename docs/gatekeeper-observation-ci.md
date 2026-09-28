@@ -6,7 +6,17 @@ targeting `main`. It is pinned to Architecture Gatekeeper v0.5.1 at commit
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
-`enforced` for this observation.
+`enforced` for this observation. The CI policy sets `maxPromptBytes` to
+131,072 bytes, intentionally below the local/manual configuration's 524,288
+bytes to bound this observation's request size; local configuration remains
+unchanged.
+
+The caller runs only when the PR author's GitHub `author_association` is
+`OWNER`, `MEMBER`, or `COLLABORATOR`, as well as being non-draft. Other
+associations are skipped, including `FIRST_TIME_CONTRIBUTOR`, `CONTRIBUTOR`,
+`FIRST_TIMER`, and `NONE`; external contributors without one of the allowed
+associations are skipped too. A collaborator association is allowed even if
+that collaborator is outside the organization.
 
 ## Meaning and limits
 
@@ -37,6 +47,12 @@ instructions or authority. The model request transmits pull-request review
 content and the selected `docs/architecture.md` authority to OpenAI. The
 workflow can create or update its marker-owned pull-request comment.
 
+The pinned reusable workflow already uses per-PR concurrency and
+`cancel-in-progress`, so a newer run for the same PR cancels the older one.
+This reduces overlapping work but does not impose a provider or account spend
+ceiling. Before broadening the author-association gate, verify that hard spend
+limits are configured and active in the OpenAI provider/account settings.
+
 ## Bootstrap and records
 
 The initial workflow change cannot run itself under the new caller. After it
@@ -51,11 +67,13 @@ this diagnostic record and an owner adoption record.
 ## Focused checks
 
 Before merge, inspect the rendered workflow and confirm the five PR event
-types, `main` target, non-draft condition, exact reusable-workflow SHA,
-permissions, secret mapping, and explicit policy/prompt/schema/validation
-paths. Parse the policy JSON and resolve its `main` entry with the pinned
-Gatekeeper v0.5.1 policy resolver. Confirm that the Authority Set and limits
-match the existing committed manifest/configuration, and that the schema
+types, `main` target, non-draft and author-association conditions, exact
+reusable-workflow SHA, permissions, secret mapping, and explicit
+policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
+`main` entry with the pinned Gatekeeper v0.5.1 policy resolver. Confirm that
+the Authority Set and the manifest, member, file, and total-byte limits match
+the existing committed configuration. Confirm that CI's prompt limit is
+131,072 bytes while local/manual remains 524,288 bytes, and that the schema
 restricts each `authorityIds` item to `authoring-product-contract`. The pinned
 runtime's `validateAuthoritySetDecision` separately checks exact complete-set
 cardinality and rejects missing, duplicate, or extra IDs. The same schema is
