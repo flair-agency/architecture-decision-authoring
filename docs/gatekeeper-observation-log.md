@@ -28,6 +28,46 @@ for scope, safeguards, and interpretation.
 | Provider cost | Unavailable/not produced |
 | Notes | Suspected actor-expression evaluation issue; unconfirmed. See [runbook details](gatekeeper-observation-ci.md#bootstrap-and-records). |
 
+### PR #21 / attempt 1
+
+| Field | Value |
+| --- | --- |
+| Run / job | [run 36422044674](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36422044674) / [job 108926921218](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36422044674/job/108926921218) |
+| Event / action | `pull_request_target`; action subtype unavailable |
+| PR author association / draft | `MEMBER`; non-draft |
+| Base SHA | `2120aa330a276271d45d7d356fd9f0e5ab992650` (`main`) |
+| Head SHA | `a182ace51f5bd67f12ebfc2b9d0dfd5ea154020c` (run metadata) |
+| Protected workflow source revision | `2120aa330a276271d45d7d356fd9f0e5ab992650` |
+| Reviewed merge SHA | Not produced (skipped with zero steps) |
+| Configured model / effort | `gpt-6-sol` / `low` |
+| Result / incomplete reason | **Skipped**, zero steps; no semantic decision produced |
+| Protected policy digest | Not produced (skipped with zero steps) |
+| Authority provenance / digest | Not produced |
+| Comment URL | Gatekeeper comment not produced |
+| Run timestamps / model latency | 2026-09-28T12:28:23Z–12:28:24Z; latency not applicable |
+| Provider cost | Unavailable/not produced |
+| Notes | The protected-base caller contained the explicit equality-OR condition, but the job still skipped. Cause remains unknown; this did not verify that fix. |
+
+### PR #22 / attempt 1
+
+| Field | Value |
+| --- | --- |
+| Run / job | [run 36423392498](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36423392498) / [job 108931423179](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36423392498/job/108931423179) |
+| Event / action | `pull_request_target`; action subtype unavailable |
+| PR author association / draft | `MEMBER`; non-draft |
+| Base SHA | `2120aa330a276271d45d7d356fd9f0e5ab992650` (`main`) |
+| Head SHA | `cf734438a9818243242f40b8c1c79a78876f2335` (run metadata) |
+| Protected workflow source revision | `2120aa330a276271d45d7d356fd9f0e5ab992650` |
+| Reviewed merge SHA | Not produced (skipped with zero steps) |
+| Configured model / effort | `gpt-6-sol` / `low` |
+| Result / incomplete reason | **Skipped**, zero steps; no semantic decision produced |
+| Protected policy digest | Not produced (skipped with zero steps) |
+| Authority provenance / digest | Not produced |
+| Comment URL | Gatekeeper comment not produced |
+| Run timestamps / model latency | 2026-09-28T12:40:55Z–12:40:57Z; latency not applicable |
+| Provider cost | Unavailable/not produced |
+| Notes | PR #22 carried the two-stage preflight, but this run used the protected-base workflow at `2120aa3…`, which predates that preflight. This run cannot verify the new design. |
+
 ## Record format for subsequent runs
 
 Add one separate two-column `Field` / `Value` table for each workflow attempt,
@@ -56,9 +96,9 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-The pull request carrying this observation-log addition is intended to be the
-first eligible verification probe after the trusted-author expression fix.
-Its PR number and run are unknown until that pull request is opened and GitHub
-evaluates the workflow from the protected base. Do not enter a result before
-then. A successful start alone verifies only trigger/gate execution, not a
-valid semantic review or adoption.
+The pull request carrying this observation-log addition is intended to be a
+post-fix verification probe. PR #21 already recorded the explicit equality-OR
+condition, but its job skipped before executing any steps, so it did not verify
+the fix. Record this pull request's run only after GitHub evaluates the
+workflow from the protected base. A successful start alone verifies only
+trigger/gate execution, not a valid semantic review or adoption.
