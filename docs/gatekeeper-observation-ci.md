@@ -64,6 +64,27 @@ or incomplete reason, and the Actions run/comment links. Do not copy secrets
 or represent incomplete runs as decisions. Preserve the distinction between
 this diagnostic record and an owner adoption record.
 
+The first reported bootstrap attempt, [Actions run `36418779734`](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734)
+(attempt 1; [job `108916190828`](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734/job/108916190828)),
+was for PR #19. GitHub run/job metadata records event `pull_request_target`,
+conclusion `skipped`, and zero job steps. The event action subtype
+(`opened`/`synchronize`/etc.) is unavailable in the retrieved run record. The
+PR metadata records non-draft, base `main` at
+`6446adddac48763997b23a99c8a2c136c1a15022`, head
+`75dd7261a7cff3ecb25ab2d46d67fadc81a746fc`, and author association `MEMBER`.
+The run used the protected-base workflow source at that `main` commit; its
+protected CI policy configured `gpt-6-sol` with `low` reasoning. The run was
+created at `2026-09-28T11:57:30Z` and completed at `2026-09-28T11:57:40Z`.
+
+Because the job was skipped before any steps ran, there was no semantic
+decision or completed observation. Authority provenance/digest, model latency,
+provider cost, and a Gatekeeper marker comment were not produced by this run.
+The membership-expression evaluation is a suspected cause, not a confirmed
+diagnosis. The caller now uses explicit equality checks for the allowed
+associations; this change is not verified until a subsequent run against the
+protected base starts for an eligible PR. Do not count the skipped run as a
+completed observation.
+
 ## Focused checks
 
 Before merge, inspect the rendered workflow and confirm the five PR event
