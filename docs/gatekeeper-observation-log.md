@@ -108,6 +108,27 @@ for scope, safeguards, and interpretation.
 | Provider cost | Unavailable/not produced |
 | Notes | This run used the protected-base workflow at `b03f7c3…`, which predates PR #24. It had the authorize and model jobs but no `diagnose-authorization` job, so it cannot test PR #24's output-diagnostic change. This new PR is the first probe whose protected base contains that job. |
 
+### PR #25 / attempt 1
+
+| Field | Value |
+| --- | --- |
+| Run / jobs | [run 36435111794](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435111794) / [authorize job 108970899516](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435111794/job/108970899516); [diagnose job 108970932654](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435111794/job/108970932654); [model job 108970992251](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36435111794/job/108970992251) |
+| Event / action | `pull_request_target` / `opened` |
+| PR author association / draft in event payload | `CONTRIBUTOR`; non-draft |
+| Base SHA | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main`) |
+| Head SHA | `8541248edc4c3284a1dfa2221a6182a6f04d382a` |
+| Protected workflow source revision | `c060eaa06b6f4312a3aab442a60d7dcc93acea77` (`main` base) |
+| Reviewed merge SHA | Not produced (model job skipped) |
+| Configured model / effort | `gpt-6-sol` / `low` (protected CI policy) |
+| Result / incomplete reason | Authorize succeeded with `allowed=false`, `reason=author_association`; diagnostic succeeded with valid propagated outputs; model job skipped. No semantic decision was produced. |
+| Protected policy digest | Not produced (model job skipped) |
+| Authority provenance / digest | Not produced (model job skipped) |
+| Comment URL | Gatekeeper comment not produced (model job skipped) |
+| Run timestamps / model latency | Run created 2026-09-28T14:19:30Z and updated 2026-09-28T14:19:44Z; no model latency (model job skipped) |
+| Provider cost | Unavailable/not produced |
+| Later PR API association observation | A subsequent REST PR read reported `MEMBER`. This later PR metadata observation is separate from the `CONTRIBUTOR` association in the opened-event payload and does not change the event record. |
+| Notes | The authorization output diagnostic validated the deny-path propagation (`allowed=false`, `reason=author_association`) and kept the model job skipped. This verifies that denial path only; it does not exercise the eligible `MEMBER` route or a model review. |
+
 ## Record format for subsequent runs
 
 Add one separate two-column `Field` / `Value` table for each workflow attempt,
@@ -136,10 +157,10 @@ Each attempt table should include these fields:
 - run timestamps and measured model latency when available; and
 - provider cost when available, otherwise `Unavailable`/`Not produced`.
 
-PR #24 is the latest recorded observation attempt. Its authorize job succeeded,
-but the model job skipped. Because that run used the protected workflow from
-before PR #24, it did not include the output-diagnostic job and cannot verify
-that change. This PR is the first probe of the merged diagnostic workflow;
-record its result only after GitHub evaluates it from the protected base. A
-successful start alone verifies only trigger/gate execution, not a valid
-semantic review or adoption.
+PR #25 attempt 1 is the latest recorded observation attempt. Its authorize
+job denied the opened event's `CONTRIBUTOR` association, and the diagnostic
+job successfully validated the propagated denial outputs; the model job was
+skipped. This verifies the diagnostic denial path, not the eligible `MEMBER`
+route. Record a later synchronize attempt separately after GitHub evaluates
+it from the protected base. A successful start alone verifies only
+trigger/gate execution, not a valid semantic review or adoption.
