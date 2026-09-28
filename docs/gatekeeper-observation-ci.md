@@ -18,9 +18,14 @@ GitHub event JSON file, validates the expected event shape and target base,
 and checks that `draft` is a JSON boolean and the author association is an
 exact recognized GitHub value. Draft and external/non-allowlisted PRs complete
 the preflight with `allowed=false` and a fixed reason; they skip the model
-job. Malformed JSON or missing, wrong-type, or unrecognized required fields
-fail the preflight visibly and cannot start the model job. The preflight has
-no token permissions, performs no checkout/API call, and receives no secrets.
+job. A separate no-secret diagnostic job validates and reports the
+authorization job's propagated `result`, `allowed`, and `reason` values. It
+runs even when authorization fails, and fails visibly for missing or invalid
+outputs. The model job requires successful authorization, `allowed=true`, and
+a successful diagnostic job. Malformed JSON or missing, wrong-type, or
+unrecognized required fields fail the preflight visibly and cannot start the
+model job. The preflight and diagnostic jobs have no token permissions,
+perform no checkout/API call, and receive no secrets.
 The recognized `MANNEQUIN` association is denied like other non-allowlisted
 associations; arbitrary unknown association strings remain malformed input.
 A collaborator association is allowed even if that collaborator is outside
@@ -50,11 +55,14 @@ does not itself block merging.
 Top-level permissions are empty. The authorization preflight has empty
 permissions, runs no actions, does not check out pull-request code, and reads
 only the event JSON using `jq`. Event values are validated/allowlisted before
-they enter the step summary; only fixed `allowed` and `reason` outputs are
-passed downstream. Under `pull_request_target`, this separation ensures
-the authorization preflight itself does not execute PR content and preserves
-the existing pinned reviewer/protected-materialization boundary. Reviewer
-execution safety remains dependent on the pinned reusable implementation. The
+they enter ordinary logs/summary; only fixed `allowed` and `reason` outputs
+are passed downstream. The diagnostic job receives those fixed outputs via
+environment variables, validates them, and prints only the validated values
+or a fixed missing/invalid status. It also has empty permissions, no checkout,
+actions, API calls, or secrets. Under `pull_request_target`, the authorization
+preflight itself does not execute PR content and preserves the existing
+pinned reviewer/protected-materialization boundary. Reviewer execution safety
+remains dependent on the pinned reusable implementation. The
 reusable review job alone grants `contents: read` and `pull-requests: write`,
 and passes only `OPENAI_API_KEY`. It does not pass `CI_SOURCE_READ_TOKEN`. The reusable
 workflow uses its own pinned implementation and protected-base materialization;
@@ -112,6 +120,21 @@ The two skipped runs motivate the event-file preflight above; this new design
 is itself unverified until a later eligible PR runs the protected-base
 workflow and the preflight summary and model-job behavior are inspected.
 
+A third attempt, [Actions run `36428196058`](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058)
+(attempt 1; [authorize job `108947317875`](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058/job/108947317875)
+and [model job `108947355003`](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36428196058/job/108947355003)),
+was for PR #23. GitHub metadata records a non-draft PR targeting `main` with
+author association `MEMBER`. The authorize job succeeded and its logs record
+that the `allowed` and `reason` outputs were set, but the retrieved metadata
+does not expose their values. The model job was skipped. The cause is
+therefore unknown; no evidence shows whether the propagated `allowed` value
+was `true`, empty, or another value. Omitting `${{ }}` around a job-level
+`if` is not established as the cause; GitHub documents that wrapper as
+optional. The reviewer condition now uses the explicit wrapper for clarity,
+not as a verified fix. The diagnostic job is intended to expose the
+validated propagated values safely in ordinary logs and a job summary. This
+design remains unverified until a later protected-base run.
+
 ## Focused checks
 
 Before merge, inspect the rendered workflow and confirm the five PR event
@@ -132,9 +155,11 @@ either the validated semantic outcome or the specific incomplete failure; do
 not infer rollout success from workflow presence alone.
 
 The post-merge smoke should confirm that each configured PR event starts the
-no-secret preflight; draft and external-author PRs should report a fixed skip
-reason and not start the model job, while an eligible non-draft member PR
-should set `allowed=true` and start it. A commit update should exercise `synchronize`,
+no-secret preflight and output diagnostic; draft and external-author PRs
+should report a fixed skip reason and not start the model job, while an
+eligible non-draft member PR should report propagated `allowed=true` and start
+it. If the model job is skipped, inspect the diagnostic output before
+attributing a cause. A commit update should exercise `synchronize`,
 and edits to the PR description or base branch should exercise `edited` (a
 retarget to `main` should start an observation). Confirm the run uses the
 protected base policy and authority, emits a validated decision or visible

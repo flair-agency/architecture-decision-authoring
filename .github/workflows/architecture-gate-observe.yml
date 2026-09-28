@@ -59,16 +59,58 @@ jobs:
           association="$(jq -r '.association' <<<"$gate_json")"
           base="$(jq -r '.base' <<<"$gate_json")"
 
+          printf 'Authorization preflight: allowed=%s reason=%s action=%s base=%s draft=%s association=%s\n' \
+            "$allowed" "$reason" "$action" "$base" "$draft" "$association"
           printf 'allowed=%s\nreason=%s\n' "$allowed" "$reason" >> "$GITHUB_OUTPUT"
           {
             printf '### Architecture Gate authorization preflight\n\n'
-            printf -- '- Event action: `%s`\n- Base category: `%s`\n- Draft: `%s`\n- Author association: `%s`\n- Model review: `%s`\n' \
-              "$action" "$base" "$draft" "$association" "$([[ "$allowed" == "true" ]] && printf 'eligible' || printf 'skipped')"
+            printf -- '- allowed: `%s`\n- reason: `%s`\n- action: `%s`\n- base: `%s`\n- draft: `%s`\n- PR author association: `%s`\n' \
+              "$allowed" "$reason" "$action" "$base" "$draft" "$association"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  architecture-gate-observe:
+  diagnose-authorization:
     needs: authorize
-    if: needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true'
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Validate and report propagated authorization outputs
+        shell: bash
+        env:
+          AUTH_RESULT: ${{ needs.authorize.result }}
+          ALLOWED: ${{ needs.authorize.outputs.allowed }}
+          REASON: ${{ needs.authorize.outputs.reason }}
+        run: |
+          set -euo pipefail
+
+          propagation_status="valid"
+          if [[ -z "$AUTH_RESULT" || -z "$ALLOWED" || -z "$REASON" ]]; then
+            propagation_status="missing"
+          elif [[ "$AUTH_RESULT" != "success" ]]; then
+            propagation_status="invalid"
+          elif [[ "$ALLOWED" == "true" && "$REASON" != "eligible" ]]; then
+            propagation_status="invalid"
+          elif [[ "$ALLOWED" == "false" && ! "$REASON" =~ ^(draft|wrong_base|author_association)$ ]]; then
+            propagation_status="invalid"
+          elif [[ "$ALLOWED" != "true" && "$ALLOWED" != "false" ]]; then
+            propagation_status="invalid"
+          fi
+
+          if [[ "$propagation_status" != "valid" ]]; then
+            printf 'Authorization output propagation: %s; model review must remain skipped.\n' "$propagation_status"
+            printf '### Authorization output propagation\n\nStatus: `%s`; model review must remain skipped.\n' "$propagation_status" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          printf 'Authorization output propagation: result=%s allowed=%s reason=%s\n' \
+            "$AUTH_RESULT" "$ALLOWED" "$REASON"
+          printf '### Authorization output propagation\n\n- Authorize result: `%s`\n- allowed: `%s`\n- reason: `%s`\n' \
+            "$AUTH_RESULT" "$ALLOWED" "$REASON" >> "$GITHUB_STEP_SUMMARY"
+
+  architecture-gate-observe:
+    needs: [authorize, diagnose-authorization]
+    if: ${{ needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && needs.diagnose-authorization.result == 'success' }}
     permissions:
       contents: read
       pull-requests: write
