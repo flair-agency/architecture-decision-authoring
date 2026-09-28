@@ -8,9 +8,23 @@ for scope, safeguards, and interpretation.
 
 ## Recorded runs
 
-| PR / attempt | Run / job | Event / actor | Base / head / workflow revision | Configured model | Result / incomplete reason | Authority provenance / digest | Comment | Timing / provider cost | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| #19 / 1 | [run 36418779734](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734) / [job 108916190828](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734/job/108916190828) | `pull_request_target`; action subtype unavailable; actor association `MEMBER`; non-draft | base `main` `6446adddac48763997b23a99c8a2c136c1a15022`; head `75dd7261a7cff3ecb25ab2d46d67fadc81a746fc`; workflow from protected base commit `6446adddac48763997b23a99c8a2c136c1a15022` | `gpt-6-sol` / `low` | **Skipped**, zero steps; no semantic decision produced | Not produced | Gatekeeper comment not produced | 2026-09-28T11:57:30Z–11:57:40Z; latency not applicable; provider cost unavailable/not produced | Suspected actor-expression evaluation issue; unconfirmed. See [runbook details](gatekeeper-observation-ci.md#bootstrap-and-records). |
+| Field | PR #19 / attempt 1 |
+| --- | --- |
+| Run / job | [run 36418779734](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734) / [job 108916190828](https://github.com/flair-agency/architecture-decision-authoring/actions/runs/36418779734/job/108916190828) |
+| Event / action | `pull_request_target`; action subtype unavailable |
+| PR author association / draft | `MEMBER`; non-draft |
+| Base SHA | `6446adddac48763997b23a99c8a2c136c1a15022` (`main`) |
+| Head SHA | `75dd7261a7cff3ecb25ab2d46d67fadc81a746fc` |
+| Protected workflow source revision | `6446adddac48763997b23a99c8a2c136c1a15022` |
+| Reviewed merge SHA | Not produced (skipped with zero steps) |
+| Configured model / effort | `gpt-6-sol` / `low` |
+| Result / incomplete reason | **Skipped**, zero steps; no semantic decision produced |
+| Protected policy digest | Not produced (skipped with zero steps) |
+| Authority provenance / digest | Not produced |
+| Comment URL | Gatekeeper comment not produced |
+| Run timestamps / model latency | 2026-09-28T11:57:30Z–11:57:40Z; latency not applicable |
+| Provider cost | Unavailable/not produced |
+| Notes | Suspected actor-expression evaluation issue; unconfirmed. See [runbook details](gatekeeper-observation-ci.md#bootstrap-and-records). |
 
 ## Record format for subsequent runs
 
@@ -25,9 +39,12 @@ decision.
 Each row should include:
 
 - PR number, run attempt, run URL, and job URL;
-- event and action subtype when available; actor association and draft status;
-- base/head SHAs and protected workflow source revision;
+- event and action subtype when available; PR author association and draft
+  status;
+- base SHA, head SHA, protected workflow source revision, and reviewed merge
+  SHA as separate fields;
 - configured model and reasoning effort;
+- protected policy digest, separate from Authority Set provenance/digest;
 - semantic result only when a decision was actually completed, otherwise the
   incomplete status/reason and observed failure behavior;
 - complete Authority Set provenance and digest only when actually produced;
