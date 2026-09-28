@@ -72,16 +72,16 @@ A failed control run is handled under invalid-run rules, not scored as a product
 
 ## Proposed ordering and blinding
 
-Create fresh held-out cases only after Phase A is Frozen by explicit owner Adopt. Use the following fixed case-matrix slot order for those six cases. Do not execute any evaluation run until Phase B has been owner-adjudicated and Frozen by explicit owner Adopt:
+Create fresh held-out cases only after Phase A is Frozen by explicit owner Adopt. Use the following fixed case-matrix slot order; it balances which arm goes first within each product context and within each decision type, with three baseline-first and three Skill-first pairs overall. This mixes order but does not eliminate order effects statistically. Do not execute any evaluation run until Phase B has been owner-adjudicated and Frozen by explicit owner Adopt:
 
-1. Context A — new decision
-2. Context B — revision
-3. Context A — conflict/incomplete
-4. Context B — new decision
-5. Context A — revision
-6. Context B — conflict/incomplete
+1. Context A — new decision — baseline-first
+2. Context B — new decision — Skill-first
+3. Context B — revision — baseline-first
+4. Context A — revision — Skill-first
+5. Context A — conflict/incomplete — baseline-first
+6. Context B — conflict/incomplete — Skill-first
 
-For each case, run the paired arms consecutively. Alternate arm order across slots, beginning baseline-first, then Skill-first, and continue alternating. Do not update model, prompts, Skill, template, or runtime configuration during the set; any necessary material change invokes the protocol supersession path.
+For each case, run the paired arms consecutively in the stated order. Do not update model, prompts, Skill, template, or runtime configuration during the set; any necessary material change invokes the protocol supersession path.
 
 Assign neutral random IDs per paired case. Keep the arm-to-ID mapping in a separate record. A named custodian is unresolved; the owner must identify the coordinator/custodian and secure context before Phase A adoption. Balance owner scoring order across arms and cases using the neutral IDs. Disclose mapping only after scoring and adjudication are recorded. Scorers log any guessed arm assignment; a guess alone is not an invalid run.
 
