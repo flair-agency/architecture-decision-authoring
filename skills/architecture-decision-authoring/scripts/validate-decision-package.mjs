@@ -327,35 +327,50 @@ if (!record || typeof record !== "object" || Array.isArray(record)) {
   finish("decision package is invalid");
 }
 
-if (!["Adopt", "Amend", "Defer", "Reject"].includes(record.outcome)) {
-  errors.push('outcome must be one of "Adopt", "Amend", "Defer", or "Reject"');
-}
-
-const required = [
-  "schemaVersion", "outcome", "proposal", "owner", "authorizationEvidence",
-  "decisionDate", "scope", "applicabilityConditions", "exceptions",
-  "adoptedContent", "amendedContent"
-];
-for (const key of required) {
-  if (!(key in record)) errors.push(`adoption record missing: ${key}`);
-}
-
+const statusPresent = Object.hasOwn(record, "status");
+const isPending = statusPresent && record.status === "Pending";
+const validOutcomes = ["Adopt", "Amend", "Defer", "Reject"];
 if (record.schemaVersion !== 1) errors.push("schemaVersion must be 1");
-for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
-  if (typeof record[key] !== "string" || record[key].trim() === "") {
-    errors.push(`${key} must be a non-empty string`);
+
+if (isPending) {
+  exactKeys(record, ["schemaVersion", "status", "outcome", "proposal"], "pending adoption record");
+  if (record.outcome !== null) errors.push('Pending adoption record outcome must be null; Pending is a lifecycle status, not an owner outcome');
+} else {
+  if (statusPresent && record.status !== "Decided") {
+    errors.push('adoption record status must be "Pending" or "Decided"');
   }
-}
-if (typeof record.decisionDate === "string" && !validDate(record.decisionDate)) {
-  errors.push("decisionDate must be a valid YYYY-MM-DD date");
-}
-for (const key of ["applicabilityConditions", "exceptions"]) {
-  if (!Array.isArray(record[key])) {
-    errors.push(`${key} must be an array of non-empty strings`);
-  } else {
-    for (const [index, item] of record[key].entries()) {
-      if (typeof item !== "string" || item.trim() === "") {
-        errors.push(`${key}[${index}] must be a non-empty string`);
+  if (statusPresent && record.status === "Decided" && !validOutcomes.includes(record.outcome)) {
+    errors.push('Decided adoption record outcome must be one of "Adopt", "Amend", "Defer", or "Reject"');
+  } else if (!validOutcomes.includes(record.outcome)) {
+    errors.push('outcome must be one of "Adopt", "Amend", "Defer", or "Reject"; use status "Pending" with outcome null before an owner decision');
+  }
+
+  const required = [
+    "schemaVersion", "outcome", "proposal", "owner", "authorizationEvidence",
+    "decisionDate", "scope", "applicabilityConditions", "exceptions",
+    "adoptedContent", "amendedContent"
+  ];
+  if (statusPresent) required.push("status");
+  for (const key of required) {
+    if (!(key in record)) errors.push(`adoption record missing: ${key}`);
+  }
+
+  for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
+    if (typeof record[key] !== "string" || record[key].trim() === "") {
+      errors.push(`${key} must be a non-empty string`);
+    }
+  }
+  if (typeof record.decisionDate === "string" && !validDate(record.decisionDate)) {
+    errors.push("decisionDate must be a valid YYYY-MM-DD date");
+  }
+  for (const key of ["applicabilityConditions", "exceptions"]) {
+    if (!Array.isArray(record[key])) {
+      errors.push(`${key} must be an array of non-empty strings`);
+    } else {
+      for (const [index, item] of record[key].entries()) {
+        if (typeof item !== "string" || item.trim() === "") {
+          errors.push(`${key}[${index}] must be a non-empty string`);
+        }
       }
     }
   }
@@ -378,11 +393,11 @@ const exportable = record.outcome === "Adopt" || record.outcome === "Amend";
 const authorityPath = resolve(root, "authority-set", "authority.md");
 const manifestPath = resolve(root, "authority-set", "manifest.json");
 
-if (!exportable) {
+if (isPending || !exportable) {
   if (await exists(authorityPath) || await exists(manifestPath)) {
-    errors.push(`outcome ${record.outcome ?? "Unknown"} must not leave a consumable Authority Set`);
+    errors.push(`${isPending ? "Pending adoption" : `outcome ${record.outcome ?? "Unknown"}`} must not leave a consumable Authority Set`);
   }
-  finish("no-export outcome is fail-closed");
+  finish(isPending ? "pending adoption is fail-closed" : "no-export outcome is fail-closed");
 }
 
 const boundedAuthorityPath = await inside("authority-set/authority.md", "Authority member path");

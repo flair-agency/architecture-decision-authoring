@@ -36,6 +36,7 @@ async function writeValidAdoptPackage(dir, {
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
+    status: "Decided",
     outcome,
     proposal: { path: "proposal.md", revision, sha256: digest(proposal) },
     owner: "owner",
@@ -63,6 +64,80 @@ async function writeValidAdoptPackage(dir, {
     consumerActivation: { status: "not-performed" }
   } : validationResult));
 }
+
+async function writePendingPackage(dir, { recordOverrides = {}, staleAuthority = false } = {}) {
+  const proposal = Buffer.from("# Proposal\n\nOwner decision not yet recorded.\n");
+  await writeFile(join(dir, "proposal.md"), proposal);
+  if (staleAuthority) {
+    await mkdir(join(dir, "authority-set"));
+    await writeFile(join(dir, "authority-set", "authority.md"), "# stale member\n");
+  }
+  await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
+    schemaVersion: 1,
+    status: "Pending",
+    outcome: null,
+    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
+    ...recordOverrides
+  }));
+}
+
+test("accepts a minimal Pending record bound to exact Proposal bytes", async () => {
+  const dir = await root();
+  await writePendingPackage(dir);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /pending adoption is fail-closed/);
+});
+
+test("rejects Pending records with fabricated decision fields", async () => {
+  for (const field of [
+    { owner: "owner" }, { authorizationEvidence: "record:1" }, { decisionDate: "2026-09-29" },
+    { scope: "decision A" }, { applicabilityConditions: [] }, { exceptions: [] },
+    { adoptedContent: [] }, { amendedContent: null }
+  ]) {
+    const dir = await root();
+    await writePendingPackage(dir, { recordOverrides: field });
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${Object.keys(field)[0]} to fail`);
+    assert.match(result.stderr, /pending adoption record keys must be exactly:/);
+  }
+});
+
+test("rejects inconsistent or unknown adoption states", async () => {
+  const cases = [
+    [{ outcome: "Adopt" }, /Pending adoption record outcome must be null/],
+    [{ status: "Decided", outcome: null }, /Decided adoption record outcome must be one of/],
+    [{ status: "Decided", outcome: "Pending" }, /Decided adoption record outcome must be one of/],
+    [{ status: "Unknown", outcome: "Adopt" }, /status must be "Pending" or "Decided"/]
+  ];
+
+  for (const [recordOverrides, expected] of cases) {
+    const dir = await root();
+    await writePendingPackage(dir, { recordOverrides });
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, expected);
+  }
+});
+
+test("rejects a stale Authority member in a Pending package", async () => {
+  const dir = await root();
+  await writePendingPackage(dir, { staleAuthority: true });
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Pending adoption must not leave a consumable Authority Set/);
+});
+
+test("continues to accept valid legacy decided records without status", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  delete record.status;
+  await writeFile(recordPath, JSON.stringify(record));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
 
 test("accepts a bounded Adopt package", async () => {
   const dir = await root();

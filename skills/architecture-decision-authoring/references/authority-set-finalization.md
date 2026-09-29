@@ -1,6 +1,6 @@
 # Authority Set finalization
 
-Use this workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be exactly one of `Adopt`, `Amend`, `Defer`, or `Reject`; unknown values fail validation.
+Use this workflow with one exact Proposal revision. Before an authorized owner acts, record a `Pending` process state. After the owner acts, record exactly one outcome: `Adopt`, `Amend`, `Defer`, or `Reject`; unknown values fail validation.
 
 ## Finalization gate
 
@@ -14,7 +14,9 @@ Before producing an Authority Set, require all of:
 
 For `Adopt`, use only proposed content explicitly identified by the owner. For `Amend`, require the exact resulting normative content supplied or explicitly approved by the owner, preserve its content snapshot, and record its SHA-256 digest. Never invent an amendment or promote rationale, assumptions, options, unresolved choices, or generated wording into Authority.
 
-For `Defer`, `Reject`, or an adoption gate that is incomplete or ambiguous, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member. `Pending` is not an outcome token; use `Defer` while the owner decision is pending. No-export records still require a structurally valid common record, including the exact Proposal reference, owner, authorization evidence, date, scope, applicability conditions, and exceptions. Adopt/Amend-specific content requirements apply only to those outcomes.
+Before the owner has acted, record `status: "Pending"` and `outcome: null`, with only the exact Proposal reference alongside the version and state fields. Do not fill in owner, authorization evidence, date, scope, conditions, exceptions, adopted content, or amended content. A pending record must not include or leave `authority-set/manifest.json` or an Authority member. Validate its Proposal path, full Git revision, and SHA-256 against the exact Proposal bytes.
+
+After an owner action, use `status: "Decided"` and one of the four outcome tokens. For `Defer`, `Reject`, or a decided record whose adoption gate is incomplete or ambiguous, record the supported outcome and blockers but produce no selector or Authority member. These no-export decided records still require the common evidence, including owner, authorization evidence, date, scope, applicability conditions, and exceptions. Adopt/Amend-specific content requirements apply only to those outcomes. Never use `Defer` as a substitute for a decision that has not happened.
 
 ## Successful package
 
@@ -35,15 +37,35 @@ Preserve the exact owner-targeted Proposal bytes in `proposal.md` and verify tha
 
 ### Adoption record
 
-Use JSON with these fields:
+For a pending decision, use exactly this minimal JSON shape (replace the Proposal revision and digest with the exact values):
+
+```json
+{
+  "schemaVersion": 1,
+  "status": "Pending",
+  "outcome": null,
+  "proposal": {
+    "path": "proposal.md",
+    "revision": "0123456789abcdef0123456789abcdef01234567",
+    "sha256": "<sha256-of-exact-proposal-bytes>"
+  }
+}
+```
+
+This pending record contains no owner-decision fields and no Authority Set. `Pending` with a non-null outcome, `status: "Decided"` with a missing/null/unknown outcome, and `outcome: "Pending"` are invalid.
+
+After the owner acts, use JSON with these fields:
 
 - `schemaVersion`: `1`
+- `status`: `Decided`
 - `outcome`: exactly one of `Adopt`, `Amend`, `Defer`, or `Reject`; `Defer` and `Reject` produce no Authority Set
 - `proposal.path`, `proposal.revision`, and `proposal.sha256`; `proposal.revision` is a full immutable Git commit ID (40- or 64-character hexadecimal)
 - `owner`, `authorizationEvidence`, and `decisionDate`
 - `scope`, `applicabilityConditions`, and `exceptions`; conditions and exceptions are arrays of non-empty strings, with an empty array meaning none are recorded
 - `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`
 - `amendedContent`: `null` for `Adopt`; for `Amend`, the snapshot path and SHA-256 digest of the exact owner-approved normative content
+
+For compatibility, a record with no `status` is treated as a legacy decided record only if it has one of the four explicit outcomes and passes every prior validation. Do not convert an existing `Defer` record to `Pending`.
 
 Do not claim to authenticate the owner or evidence unless a separate trusted mechanism establishes that assurance.
 
