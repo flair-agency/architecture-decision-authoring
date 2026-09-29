@@ -11,7 +11,10 @@ const validator = fileURLToPath(new URL("./validate-decision-package.mjs", impor
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 
 async function root() {
-  return mkdtemp(join(tmpdir(), "decision-package-test-"));
+  const container = await mkdtemp(join(tmpdir(), "decision-package-test-"));
+  const dir = join(container, "decision-package");
+  await mkdir(dir);
+  return dir;
 }
 
 function run(path) {
@@ -26,7 +29,7 @@ test("accepts a bounded Adopt package", async () => {
   await writeFile(join(dir, "authority-set", "authority.md"), "# Authority\n\n## A\n\nClause A.\n");
   await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
     version: 1,
-    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "authority-set/authority.md" }]
+    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
@@ -67,7 +70,7 @@ test("rejects Amend output that differs from the approved snapshot", async () =>
   await writeFile(join(dir, "authority-set", "authority.md"), "rewritten authority");
   await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
     version: 1,
-    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "authority-set/authority.md" }]
+    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
@@ -85,4 +88,51 @@ test("rejects Amend output that differs from the approved snapshot", async () =>
   const result = run(dir);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /exactly match/);
+});
+
+test("rejects a proposal path that does not select proposal.md", async () => {
+  const dir = await root();
+  const authority = Buffer.from("authority");
+  await mkdir(join(dir, "authority-set"));
+  await writeFile(join(dir, "authority-set", "authority.md"), authority);
+  await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
+    version: 1,
+    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
+  }));
+  await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
+    schemaVersion: 1, outcome: "Adopt",
+    proposal: { path: "authority-set/authority.md", revision: "abc", sha256: digest(authority) },
+    owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
+    applicabilityConditions: [], exceptions: [],
+    adoptedContent: [{ clauseId: "A", proposalLocator: "section A" }], amendedContent: null
+  }));
+  await writeFile(join(dir, "traceability.md"), "trace");
+  await writeFile(join(dir, "validation-result.json"), "{}");
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must select the package proposal\.md/);
+});
+
+test("rejects ambiguous adoptedContent entries", async () => {
+  const dir = await root();
+  const proposal = Buffer.from("proposal");
+  await mkdir(join(dir, "authority-set"));
+  await writeFile(join(dir, "proposal.md"), proposal);
+  await writeFile(join(dir, "authority-set", "authority.md"), "authority");
+  await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
+    version: 1,
+    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
+  }));
+  await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
+    schemaVersion: 1, outcome: "Adopt",
+    proposal: { path: "proposal.md", revision: "abc", sha256: digest(proposal) },
+    owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
+    applicabilityConditions: [], exceptions: [], adoptedContent: [{}], amendedContent: null
+  }));
+  await writeFile(join(dir, "traceability.md"), "trace");
+  await writeFile(join(dir, "validation-result.json"), "{}");
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /clauseId must be a non-empty string/);
+  assert.match(result.stderr, /proposalLocator must be a non-empty string/);
 });

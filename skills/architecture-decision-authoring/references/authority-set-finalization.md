@@ -101,4 +101,4 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
 
-Run `node scripts/validate-decision-package.mjs <decision-package-directory>` as the deterministic package-structure and fail-closed check. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
+Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.

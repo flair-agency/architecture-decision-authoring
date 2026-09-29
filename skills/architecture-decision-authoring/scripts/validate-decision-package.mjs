@@ -5,6 +5,7 @@ import { readFile, stat } from "node:fs/promises";
 import { resolve, relative, sep } from "node:path";
 
 const root = resolve(process.argv[2] ?? "decision-package");
+const repositoryRoot = resolve(process.argv[3] ?? resolve(root, ".."));
 const errors = [];
 
 async function bytes(path) {
@@ -44,8 +45,16 @@ function exactKeys(value, expected, label) {
 }
 
 function inside(path, label) {
-  const target = resolve(root, path);
-  const rel = relative(root, target);
+  return insideBase(root, path, label);
+}
+
+function insideBase(base, path, label) {
+  if (typeof path !== "string" || path.trim() === "") {
+    errors.push(`${label} must be a non-empty path`);
+    return null;
+  }
+  const target = resolve(base, path);
+  const rel = relative(base, target);
   if (rel === "" || rel.startsWith(`..${sep}`) || rel === "..") {
     errors.push(`${label} must stay inside the package`);
     return null;
@@ -93,6 +102,9 @@ for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
 
 exactKeys(record.proposal, ["path", "revision", "sha256"], "proposal");
 const proposalPath = record.proposal && inside(record.proposal.path, "proposal.path");
+if (proposalPath && proposalPath !== resolve(root, "proposal.md")) {
+  errors.push("proposal.path must select the package proposal.md");
+}
 const proposal = proposalPath && await bytes(proposalPath);
 if (proposal && sha256(proposal) !== record.proposal.sha256) {
   errors.push("proposal bytes do not match proposal.sha256");
@@ -109,7 +121,7 @@ if (manifest) {
     exactKeys(member, ["id", "repository", "revision", "path"], "manifest member");
     if (member.repository !== "self") errors.push('manifest member repository must be "self"');
     if (member.revision !== "authority-revision") errors.push('manifest member revision must be "authority-revision"');
-    const selected = inside(member.path, "manifest member path");
+    const selected = insideBase(repositoryRoot, member.path, "manifest member path");
     if (selected && resolve(selected) !== authorityPath) errors.push("manifest must select authority-set/authority.md");
   }
 }
@@ -118,6 +130,21 @@ const authority = await bytes(authorityPath);
 if (record.outcome === "Adopt") {
   if (!Array.isArray(record.adoptedContent) || record.adoptedContent.length === 0) {
     errors.push("Adopt requires non-empty adoptedContent");
+  } else {
+    const ids = new Set();
+    for (const [index, entry] of record.adoptedContent.entries()) {
+      exactKeys(entry, ["clauseId", "proposalLocator"], `adoptedContent[${index}]`);
+      if (typeof entry?.clauseId !== "string" || entry.clauseId.trim() === "") {
+        errors.push(`adoptedContent[${index}].clauseId must be a non-empty string`);
+      } else if (ids.has(entry.clauseId)) {
+        errors.push(`duplicate adoptedContent clauseId: ${entry.clauseId}`);
+      } else {
+        ids.add(entry.clauseId);
+      }
+      if (typeof entry?.proposalLocator !== "string" || entry.proposalLocator.trim() === "") {
+        errors.push(`adoptedContent[${index}].proposalLocator must be a non-empty string`);
+      }
+    }
   }
   if (record.amendedContent !== null) errors.push("Adopt requires amendedContent: null");
 }
