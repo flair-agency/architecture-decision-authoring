@@ -31,7 +31,7 @@ decision-package/
   validation-result.json
 ```
 
-Preserve the supplied Proposal bytes in `proposal.md` when possible; otherwise record that it is a faithful copy and retain its immutable identity.
+Preserve the exact owner-targeted Proposal bytes in `proposal.md` and verify that their SHA-256 digest matches the adoption record before finalization. If the exact bytes cannot be obtained, stop and produce no consumable Authority Set; a normalized, reconstructed, or merely faithful copy is not an acceptable substitute.
 
 ### Adoption record
 
@@ -50,6 +50,8 @@ Do not claim to authenticate the owner or evidence unless a separate trusted mec
 ### Authority member
 
 `authority.md` carries the normative meaning. Give every normative clause a stable ID. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
+
+For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If stable IDs or required context are absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
 
 ### Selector
 
@@ -97,4 +99,4 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 
 ## Final check
 
-Before returning a successful package, verify digests, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. State limitations without converting them into success claims.
+Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
