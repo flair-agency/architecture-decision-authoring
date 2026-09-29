@@ -49,7 +49,7 @@ Do not claim to authenticate the owner or evidence unless a separate trusted mec
 
 ### Authority member
 
-`authority.md` carries the normative meaning. Give every normative clause a stable ID. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
+`authority.md` carries the normative meaning. Give every normative clause a stable ID using a standalone marker immediately before its clause, for example `<!-- clause-id: network-timeout -->`. IDs must be unique and stable across revisions. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
 
 For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If stable IDs or required context are absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
 
@@ -74,6 +74,16 @@ Use exactly the Gatekeeper version 1 one-member local selector shape, with no ad
 The manifest selects Markdown. It is not adoption evidence, a semantic rule ontology, Gatekeeper configuration, or policy activation.
 
 ### Traceability
+
+`traceability.md` must contain one row for every Authority clause ID and no other IDs, using this exact header and column order:
+
+```markdown
+| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |
+| --- | --- | --- | --- | --- | --- | --- |
+| network-timeout | clause-id:network-timeout | Adopt | https://example.invalid/decision/1 | abc123 | Proposed decision, “Timeout” | input/operations.md#timeout |
+```
+
+For each row, the Authority locator is `clause-id:<ID>`. Owner outcome, authorization evidence, and Proposal revision must exactly match the adoption record. For `Adopt`, the Proposal locator must exactly match that clause's `adoptedContent` locator. For either exportable outcome, Proposal and source-evidence locators must appear in the exact `proposal.md` bytes; list multiple source locators separated by semicolons, with each locator present in the Proposal. These checks establish a deterministic reference chain, not source authenticity or semantic equivalence.
 
 For every Authority clause, map:
 
@@ -101,4 +111,4 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
 
-Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
+Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. It also requires a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, and Proposal/source locators carried by the Proposal bytes. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.

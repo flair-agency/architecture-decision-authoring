@@ -32,6 +32,50 @@ function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+function markdownTableRows(content, expectedHeader, label) {
+  const lines = content.toString("utf8").split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => tableCells(line)?.join("|") === expectedHeader.join("|"));
+  if (headerIndex < 0) {
+    errors.push(`${label} must contain the required traceability table header`);
+    return [];
+  }
+  const separator = tableCells(lines[headerIndex + 1]);
+  if (!separator || separator.length !== expectedHeader.length || separator.some((cell) => !/^:?-{3,}:?$/.test(cell))) {
+    errors.push(`${label} must have a Markdown separator row after the header`);
+    return [];
+  }
+  const rows = [];
+  for (const [offset, line] of lines.slice(headerIndex + 2).entries()) {
+    if (line.trim() === "") continue;
+    const cells = tableCells(line);
+    if (!cells) {
+      if (line.trim().startsWith("|")) errors.push(`${label} row ${headerIndex + offset + 3} must use pipe-delimited Markdown`);
+      continue;
+    }
+    if (cells.length !== expectedHeader.length) {
+      errors.push(`${label} row ${headerIndex + offset + 3} must have ${expectedHeader.length} columns`);
+      continue;
+    }
+    rows.push(cells);
+  }
+  return rows;
+}
+
+function tableCells(line) {
+  if (typeof line !== "string" || !line.includes("|")) return null;
+  let value = line.trim();
+  if (value.startsWith("|")) value = value.slice(1);
+  if (value.endsWith("|")) value = value.slice(0, -1);
+  return value.split("|").map((cell) => cell.trim());
+}
+
+function authorityClauseIds(content) {
+  const ids = [];
+  const pattern = /^\s*<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->\s*$/gm;
+  for (const match of content.toString("utf8").matchAll(pattern)) ids.push(match[1]);
+  return ids;
+}
+
 function exactKeys(value, expected, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     errors.push(`${label} must be an object`);
@@ -127,6 +171,49 @@ if (manifest) {
 }
 
 const authority = await bytes(authorityPath);
+const traceability = await bytes(resolve(root, "traceability.md"));
+const clauseIds = authority ? authorityClauseIds(authority) : [];
+if (authority && clauseIds.length === 0) {
+  errors.push('authority.md must identify every normative clause with a stable `<!-- clause-id: ID -->` marker');
+}
+const authorityIds = new Set(clauseIds);
+if (authorityIds.size !== clauseIds.length) errors.push("authority.md must not repeat a clause ID");
+
+const traceRows = traceability ? markdownTableRows(traceability, [
+  "Clause ID", "Authority locator", "Owner outcome", "Authorization evidence",
+  "Proposal revision", "Proposal locator", "Source evidence locator(s)"
+], "traceability.md") : [];
+const traceIds = new Set();
+for (const [index, row] of traceRows.entries()) {
+  const [clauseId, authorityLocator, ownerOutcome, authorizationEvidence, proposalRevision, proposalLocator, sourceLocators] = row;
+  const label = `traceability row ${index + 1}`;
+  if (!clauseId) errors.push(`${label}.clauseId must be non-empty`);
+  else if (traceIds.has(clauseId)) errors.push(`duplicate traceability clause ID: ${clauseId}`);
+  else traceIds.add(clauseId);
+  if (!authorityIds.has(clauseId)) errors.push(`${label} references unknown Authority clause ID: ${clauseId}`);
+  if (authorityLocator !== `clause-id:${clauseId}`) errors.push(`${label}.authorityLocator must be clause-id:${clauseId}`);
+  if (ownerOutcome !== record.outcome) errors.push(`${label}.ownerOutcome must match adoption-record outcome`);
+  if (authorizationEvidence !== record.authorizationEvidence) errors.push(`${label}.authorizationEvidence must match adoption-record evidence`);
+  if (proposalRevision !== record.proposal?.revision) errors.push(`${label}.proposalRevision must match adoption-record revision`);
+  if (!proposalLocator) errors.push(`${label}.proposalLocator must be non-empty`);
+  if (!sourceLocators) errors.push(`${label}.sourceEvidenceLocator(s) must be non-empty`);
+  if (proposal && proposalLocator && !proposal.toString("utf8").includes(proposalLocator)) {
+    errors.push(`${label}.proposalLocator must occur in the exact Proposal bytes`);
+  }
+  if (proposal && sourceLocators && sourceLocators.split(";").some((locator) => {
+    const value = locator.trim();
+    return value === "" || !proposal.toString("utf8").includes(value);
+  })) {
+    errors.push(`${label}.sourceEvidenceLocator(s) must each occur in the exact Proposal bytes`);
+  }
+}
+for (const clauseId of authorityIds) {
+  if (!traceIds.has(clauseId)) errors.push(`Authority clause ${clauseId} is missing from traceability.md`);
+}
+for (const clauseId of traceIds) {
+  if (!authorityIds.has(clauseId)) errors.push(`traceability.md contains a clause absent from authority.md: ${clauseId}`);
+}
+
 if (record.outcome === "Adopt") {
   if (!Array.isArray(record.adoptedContent) || record.adoptedContent.length === 0) {
     errors.push("Adopt requires non-empty adoptedContent");
@@ -143,7 +230,22 @@ if (record.outcome === "Adopt") {
       }
       if (typeof entry?.proposalLocator !== "string" || entry.proposalLocator.trim() === "") {
         errors.push(`adoptedContent[${index}].proposalLocator must be a non-empty string`);
+      } else if (proposal && !proposal.toString("utf8").includes(entry.proposalLocator)) {
+        errors.push(`adoptedContent[${index}].proposalLocator must occur in the exact Proposal bytes`);
       }
+    }
+    for (const id of ids) {
+      if (!authorityIds.has(id)) errors.push(`adoptedContent clause is absent from authority.md: ${id}`);
+    }
+    for (const id of authorityIds) {
+      if (!ids.has(id)) errors.push(`authority.md clause is absent from adoptedContent: ${id}`);
+    }
+    for (const [index, row] of traceRows.entries()) {
+      const adoptedEntry = record.adoptedContent.find((entry) => entry?.clauseId === row[0]);
+      if (adoptedEntry && row[5] !== adoptedEntry.proposalLocator) {
+        errors.push(`traceability row ${index + 1}.proposalLocator must match adoptedContent for ${row[0]}`);
+      }
+      if (!adoptedEntry) errors.push(`traceability row ${index + 1} is not identified in adoptedContent: ${row[0]}`);
     }
   }
   if (record.amendedContent !== null) errors.push("Adopt requires amendedContent: null");
@@ -157,7 +259,6 @@ if (record.outcome === "Amend") {
   if (snapshot && authority && !snapshot.equals(authority)) errors.push("authority.md must exactly match the approved amended snapshot bytes");
 }
 
-await bytes(resolve(root, "traceability.md"));
 await json(resolve(root, "validation-result.json"));
 finish("decision package structure is valid");
 
