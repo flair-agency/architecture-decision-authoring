@@ -70,7 +70,7 @@ Implement the smallest v0.2 vertical slice for one decision:
 5. When export is allowed, produce one Markdown Authority member, one version 1 JSON selector with one local `self` member, and traceability from every normative clause to the owner outcome, Proposal, and source evidence.
 6. Check manifest structure, bounded references, and compatibility using an exact pinned Gatekeeper parser/materializer revision in development. Exercise materialization from committed Markdown snapshots in the pinned test fixture, rather than reading an uncommitted working-tree file. Do not invoke Gatekeeper during authoring.
 7. Report structural compatibility, traceability checks, pinned parser/materializer compatibility, semantic fidelity review, and consumer activation as distinct results. A generated selector does not install or activate policy; a consumer separately chooses whether to add it to Gatekeeper configuration and activate the selected policy.
-8. After adoption, add a new decision record that amends or supersedes decision record 0001 and update the canonical product contract. Preserve 0001 unchanged as historical rationale; do not rewrite it to match the new endpoint.
+8. After adoption, add a new decision record that amends decision record 0001's product endpoint and update the canonical product contract. Preserve 0001 unchanged as historical rationale; do not rewrite or supersede it.
 
 Use a small artifact package such as:
 
@@ -117,7 +117,7 @@ Keep evaluation proportional to this slice: preserve proposal-quality checks, th
 
 | Question | Why owner judgment is needed | What depends on it | Needed by / time bound |
 | --- | --- | --- | --- |
-| Adopt or amend this proposal's specific v0.2 scope and authorize updating decision record 0001 and `docs/architecture.md`? | Issue #30 and the owner's conversation establish the desired endpoint, but this proposal and its exact revision still need an explicit repository outcome under the bootstrap process. | Canonical contract revision and implementation scope. | Before changing canonical authority or implementing the new responsibility. |
+| Adopt or amend this proposal's specific v0.2 scope and authorize recording the endpoint amendment in a new decision record and updating `docs/architecture.md`? | Issue #30 and the owner's conversation establish the desired endpoint, but this proposal and its exact revision still need an explicit repository outcome under the bootstrap process. | Canonical contract revision and implementation scope. | Before changing canonical authority or implementing the new responsibility. |
 
 The exact Gatekeeper commit is a required implementation pin, but is a compatibility input to record during implementation; it does not reopen the product endpoint or require a separate product-level decision unless the available revision fails the proposed contract.
 
@@ -137,7 +137,7 @@ The exact Gatekeeper commit is a required implementation pin, but is a compatibi
 
 ## Adoption record
 
-Leave pending until the authorized repository owner records an outcome for this exact proposal revision under [`docs/decisions/README.md`](../decisions/README.md). The desired final outcome is supplied owner direction; the proposed canonical amendment and implementation scope remain pending. If adopted, record the new decision in a new ADR and leave ADR 0001 unchanged.
+Leave pending until the authorized repository owner records an outcome for this exact proposal revision under [`docs/decisions/README.md`](../decisions/README.md). The desired final outcome is supplied owner direction; the proposed canonical amendment and implementation scope remain pending. If adopted, record the amendment to ADR 0001's product endpoint in a new ADR, update `docs/architecture.md`, and leave ADR 0001 unchanged as historical rationale.
 
 - **Owner outcome:** Pending
 - **Target artifact(s) and revision(s):** `docs/proposals/0002-authority-set-final-outcome.md` at the revision explicitly acted upon
