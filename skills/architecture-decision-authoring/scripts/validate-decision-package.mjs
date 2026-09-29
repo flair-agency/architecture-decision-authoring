@@ -163,6 +163,11 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
+    if (!htmlCommentLines.has(index) && markdownContainerHeading(line)) {
+      errors.push(`authority.md must not place headings inside Markdown blockquote or list containers on line ${index + 1}`);
+      continue;
+    }
+
     const heading = htmlCommentLines.has(index) ? null : line.match(/^(#{1,6})\s+\S/);
     if (heading) {
       if (activeClause && !activeClauseHasBody) {
@@ -198,6 +203,27 @@ function isThematicBreak(line) {
   return /^(?:\*[ \t]*){3,}$/.test(value)
     || /^(?:_[ \t]*){3,}$/.test(value)
     || /^(?:-[ \t]*){3,}$/.test(value);
+}
+
+function markdownContainerHeading(line) {
+  let value = line;
+  let strippedContainer = false;
+  while (true) {
+    const blockquote = value.match(/^ {0,3}>[ \t]?/);
+    if (blockquote) {
+      value = value.slice(blockquote[0].length);
+      strippedContainer = true;
+      continue;
+    }
+    const listItem = value.match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/);
+    if (listItem) {
+      value = value.slice(listItem[0].length);
+      strippedContainer = true;
+      continue;
+    }
+    break;
+  }
+  return strippedContainer && /^#{1,6}\s+\S/.test(value);
 }
 
 function markdownLinkReferenceDefinitionLines(lines, codeLines) {

@@ -645,6 +645,25 @@ test("rejects unmarked headings and content outside bounded Authority clause blo
   }
 });
 
+test("rejects headings nested in Markdown blockquote and list containers", async () => {
+  for (const nestedHeading of ["> ## Quoted heading", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      "Clause A.",
+      nestedHeading,
+      "Normative content."
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${nestedHeading} to fail`);
+    assert.match(result.stderr, /must not place headings inside Markdown blockquote or list containers/);
+  }
+});
+
 test("rejects Setext headings and ambiguous horizontal rules in Authority members", async () => {
   for (const underline of ["===", "---"]) {
     const dir = await root();
