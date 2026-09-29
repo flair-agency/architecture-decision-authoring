@@ -597,6 +597,39 @@ test("rejects spaced CommonMark thematic breaks instead of counting them as clau
   }
 });
 
+test("requires visible clause text instead of a link reference definition", async () => {
+  for (const referenceDefinition of [
+    "[rule]: https://example.invalid/rule",
+    "[rule]: <https://example.invalid/rule> \"Reference title\""
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      referenceDefinition
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
+  }
+
+  const validDir = await root();
+  await writeValidAdoptPackage(validDir);
+  await writeFile(join(validDir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "<!-- clause-id: A -->",
+    "## A",
+    "Requests must use TLS.",
+    "[tls]: https://example.invalid/tls"
+  ].join("\n"));
+  const validResult = run(validDir);
+  assert.equal(validResult.status, 0, validResult.stderr);
+});
+
 test("ignores fake clauses inside raw HTML blocks when parsing Authority members", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);

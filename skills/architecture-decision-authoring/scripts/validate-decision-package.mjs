@@ -172,7 +172,7 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
 
     if (!activeClause) {
       errors.push(`authority.md has content outside a marked clause block on line ${index + 1}`);
-    } else {
+    } else if (!isLinkReferenceDefinition(line)) {
       activeClauseHasBody = true;
     }
   }
@@ -188,6 +188,10 @@ function isThematicBreak(line) {
   return /^(?:\*[ \t]*){3,}$/.test(value)
     || /^(?:_[ \t]*){3,}$/.test(value)
     || /^(?:-[ \t]*){3,}$/.test(value);
+}
+
+function isLinkReferenceDefinition(line) {
+  return /^\[(?:\\.|[^\]\\])+\]:[ \t]*(?:<[^>\s]*>|(?:\\.|[^\s])+)(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/.test(line);
 }
 
 function markdownContext(lines) {
