@@ -47,15 +47,16 @@ function validDate(value) {
 
 function markdownTableRows(content, expectedHeader, label) {
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines, visibleLines } = markdownContext(lines);
+  const { codeLines, visibleLines, htmlCommentLines, ambiguousHtmlCommentLines } = markdownContext(lines);
+  if (ambiguousHtmlCommentLines.size > 0) errors.push(`${label} must not place content after a line-leading HTML comment`);
   const headerIndex = visibleLines.findIndex((line, index) => !codeLines.has(index)
-    && lines[index].trim() === line.trim()
+    && !htmlCommentLines.has(index)
     && tableCells(line)?.join("|") === expectedHeader.join("|"));
   if (headerIndex < 0) {
     errors.push(`${label} must contain the required traceability table header`);
     return [];
   }
-  if (codeLines.has(headerIndex + 1)) {
+  if (codeLines.has(headerIndex + 1) || htmlCommentLines.has(headerIndex + 1)) {
     errors.push(`${label} must have a Markdown separator row after the header`);
     return [];
   }
@@ -67,7 +68,7 @@ function markdownTableRows(content, expectedHeader, label) {
   const rows = [];
   for (let index = headerIndex + 2; index < visibleLines.length; index += 1) {
     const line = visibleLines[index];
-    if (codeLines.has(index) || line.trim() === "") break;
+    if (codeLines.has(index) || htmlCommentLines.has(index) || line.trim() === "") break;
     const cells = tableCells(line);
     if (!cells) break;
     if (cells.length !== expectedHeader.length) {
@@ -90,7 +91,7 @@ function tableCells(line) {
 function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines } = markdownContext(lines);
+  const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines } = markdownContext(lines);
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
   const markersByHeading = new Map();
@@ -117,8 +118,11 @@ function authorityClauseIds(content) {
   if (rawHtmlBlockLines.size > 0) {
     errors.push("authority.md must not contain raw HTML blocks because their rendered content cannot be clause-traced");
   }
+  if (ambiguousHtmlCommentLines.size > 0) {
+    errors.push("authority.md must not place content after a line-leading HTML comment");
+  }
   const linkReferenceDefinitionLines = markdownLinkReferenceDefinitionLines(visibleLines, codeLines);
-  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines);
+  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines);
   return ids;
 }
 
@@ -129,7 +133,7 @@ function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
   return /^##\s+\S/.test(next);
 }
 
-function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines) {
+function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines) {
   let titleSeen = false;
   let activeClause = null;
   let activeClauseHasBody = false;
@@ -149,17 +153,17 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
-    if (isThematicBreak(line)) {
+    if (!htmlCommentLines.has(index) && isThematicBreak(line)) {
       errors.push(`authority.md must not use Markdown thematic breaks as clause content on line ${index + 1}`);
       continue;
     }
 
-    if (/^=+$/.test(line)) {
+    if (!htmlCommentLines.has(index) && /^=+$/.test(line)) {
       errors.push(`authority.md must not use Setext headings or ambiguous horizontal rules on line ${index + 1}`);
       continue;
     }
 
-    const heading = line.match(/^(#{1,6})\s+\S/);
+    const heading = htmlCommentLines.has(index) ? null : line.match(/^(#{1,6})\s+\S/);
     if (heading) {
       if (activeClause && !activeClauseHasBody) {
         errors.push(`Authority clause ${activeClause} must contain Markdown clause content before the next heading`);
@@ -242,6 +246,8 @@ function markdownContext(lines) {
   let fence = null;
   let comment = null;
   let rawHtmlBlock = null;
+  const htmlCommentLines = new Set();
+  const ambiguousHtmlCommentLines = new Set();
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -259,6 +265,10 @@ function markdownContext(lines) {
       if (rawHtmlBlock.blankTerminated ? line.trim() === "" : rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
       continue;
     }
+    if (comment?.lineLeading) htmlCommentLines.add(index);
+    const lineLeadingComment = /^ {0,3}<!--/.test(line)
+      && !/^<!--\s*clause-id:\s*[A-Za-z0-9][A-Za-z0-9._:-]*\s*-->$/.test(line);
+    if (lineLeadingComment) htmlCommentLines.add(index);
     if (!comment && isIndentedCodeLine(line)) {
       codeLines.add(index);
       visibleLines.push("");
@@ -279,6 +289,7 @@ function markdownContext(lines) {
     while (remainder.length > 0) {
       if (comment) {
         comment.end = index;
+        const lineLeadingCommentBlock = comment.lineLeading;
         const commentEnd = remainder.indexOf("-->");
         if (commentEnd < 0) {
           comment.body += `\n${remainder}`;
@@ -289,6 +300,7 @@ function markdownContext(lines) {
         comments.push(comment);
         comment = null;
         remainder = remainder.slice(commentEnd + 3);
+        if (lineLeadingCommentBlock && remainder.trim() !== "") ambiguousHtmlCommentLines.add(index);
         continue;
       }
       const commentStart = remainder.indexOf("<!--");
@@ -302,20 +314,26 @@ function markdownContext(lines) {
       if (commentEnd >= 0) {
         comments.push({ start: index, end: index, body: remainder.slice(commentStart + 4, commentEnd) });
         remainder = remainder.slice(commentEnd + 3);
+        if (lineLeadingComment && remainder.trim() !== "") ambiguousHtmlCommentLines.add(index);
       } else {
-        comment = { start: index, end: index, body: remainder.slice(commentStart + 4) };
+        comment = {
+          start: index,
+          end: index,
+          body: remainder.slice(commentStart + 4),
+          lineLeading: lineLeadingComment && visible.trim() === ""
+        };
         remainder = "";
       }
     }
 
     visibleLines.push(visible);
     const fenceMatch = visible.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
-    if (fenceMatch && (fenceMatch[1][0] !== "`" || !fenceMatch[2].includes("`"))) {
+    if (!htmlCommentLines.has(index) && fenceMatch && (fenceMatch[1][0] !== "`" || !fenceMatch[2].includes("`"))) {
       codeLines.add(index);
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
   }
-  return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines };
+  return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines };
 }
 
 function rawHtmlBlockStart(line) {

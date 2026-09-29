@@ -440,6 +440,23 @@ test("does not reinterpret a table header suffix after a line-leading HTML comme
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("does not accept traceability separators or rows after line-leading HTML comments", async () => {
+  const tableHeader = "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |";
+  const separator = "| --- | --- | --- | --- | --- | --- | --- |";
+  const row = `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`;
+  for (const table of [
+    [tableHeader, "<!-- comment -->" + separator, row],
+    [tableHeader, separator, "<!-- comment -->" + row]
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "traceability.md"), table.join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /(?:must have a Markdown separator row|Authority clause A is missing from traceability\.md)/);
+  }
+});
+
 test("ignores a commented-out extra traceability row", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
@@ -797,6 +814,26 @@ test("checks visible Authority text on lines with inline HTML comments", async (
     assert.equal(result.status, 1);
     assert.match(result.stderr, /content outside a marked clause block/);
   }
+});
+
+test("does not let a line-leading HTML comment turn a visible fence opener into masking", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "<!-- clause-id: A -->",
+    "## A",
+    "Clause A.",
+    "<!-- comment -->```markdown",
+    "## Unmarked",
+    "Unmarked normative content.",
+    "```"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /authority\.md must not place content after a line-leading HTML comment/);
+  assert.match(result.stderr, /must be immediately preceded by a clause-id marker/);
 });
 
 test("requires applicability conditions and exceptions to use the adopted array-of-strings representation", async () => {
