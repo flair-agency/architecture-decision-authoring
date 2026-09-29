@@ -21,15 +21,14 @@ function run(path) {
   return spawnSync(process.execPath, [validator, path], { encoding: "utf8" });
 }
 
-test("accepts a bounded Adopt package", async () => {
-  const dir = await root();
+async function writeValidAdoptPackage(dir, { memberId = "decision-a", validationResult } = {}) {
   const proposal = Buffer.from("# Proposal\n\n## Proposed decision\n\nAdopt clause A, based on source:input.md#rule.\n");
   await mkdir(join(dir, "authority-set"));
   await writeFile(join(dir, "proposal.md"), proposal);
   await writeFile(join(dir, "authority-set", "authority.md"), "# Authority\n\n<!-- clause-id: A -->\n## A\n\nClause A.\n");
   await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
     version: 1,
-    authorities: [{ id: "decision-a", repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
+    authorities: [{ id: memberId, repository: "self", revision: "authority-revision", path: "decision-package/authority-set/authority.md" }]
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
@@ -49,7 +48,20 @@ test("accepts a bounded Adopt package", async () => {
     "| --- | --- | --- | --- | --- | --- | --- |",
     "| A | clause-id:A | Adopt | record:1 | abc123 | Proposed decision | source:input.md#rule |"
   ].join("\n"));
-  await writeFile(join(dir, "validation-result.json"), JSON.stringify({ structure: "pass" }));
+  await writeFile(join(dir, "validation-result.json"), JSON.stringify(validationResult === undefined ? {
+    schemaVersion: 1,
+    packageStructure: "pass",
+    referenceBounds: "pass",
+    clauseTraceability: "pass",
+    gatekeeperCompatibility: { status: "not-run", pinnedRevision: null },
+    semanticFidelity: { status: "pending" },
+    consumerActivation: { status: "not-performed" }
+  } : validationResult));
+}
+
+test("accepts a bounded Adopt package", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
   const result = run(dir);
   assert.equal(result.status, 0, result.stderr);
 });
@@ -204,4 +216,61 @@ test("rejects a clause omitted from traceability.md", async () => {
   const result = run(dir);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Authority clause B is missing from traceability\.md/);
+});
+
+test("rejects manifest member IDs outside Gatekeeper's stable-ID syntax", async () => {
+  for (const memberId of ["", "Decision-A", "decision_a", `a${"b".repeat(64)}`]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir, { memberId });
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${JSON.stringify(memberId)} to fail`);
+    assert.match(result.stderr, /manifest member id must be a Gatekeeper stable ID/);
+  }
+});
+
+test("requires every validation result dimension and explicit unevaluated states", async () => {
+  const cases = [
+    {
+      mutate: (result) => { delete result.gatekeeperCompatibility; },
+      expected: /validation-result keys must be exactly:/
+    },
+    {
+      mutate: (result) => { result.gatekeeperCompatibility.status = "pending"; },
+      expected: /gatekeeperCompatibility\.status must be "pass", "fail", or "not-run"/
+    },
+    {
+      mutate: (result) => { result.semanticFidelity = {}; },
+      expected: /semanticFidelity\.status must be "pass", "fail", or "pending"/
+    },
+    {
+      mutate: (result) => { result.consumerActivation.status = "unknown"; },
+      expected: /consumerActivation\.status must be "performed" or "not-performed"/
+    }
+  ];
+
+  for (const { mutate, expected } of cases) {
+    const dir = await root();
+    const validationResult = {
+      schemaVersion: 1,
+      packageStructure: "pass",
+      referenceBounds: "pass",
+      clauseTraceability: "pass",
+      gatekeeperCompatibility: { status: "not-run", pinnedRevision: null },
+      semanticFidelity: { status: "pending" },
+      consumerActivation: { status: "not-performed" }
+    };
+    mutate(validationResult);
+    await writeValidAdoptPackage(dir, { validationResult });
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, expected);
+  }
+});
+
+test("rejects a non-object validation result", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir, { validationResult: null });
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /validation-result must be an object/);
 });

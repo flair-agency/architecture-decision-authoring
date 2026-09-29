@@ -73,6 +73,8 @@ Use exactly the Gatekeeper version 1 one-member local selector shape, with no ad
 
 The manifest selects Markdown. It is not adoption evidence, a semantic rule ontology, Gatekeeper configuration, or policy activation.
 
+The member `id` must follow Gatekeeper's stable-ID syntax: 1–64 characters, starting with a lowercase ASCII letter and followed only by lowercase ASCII letters, digits, or hyphens. For example, `decision-a` is valid.
+
 ### Traceability
 
 `traceability.md` must contain one row for every Authority clause ID and no other IDs, using this exact header and column order:
@@ -96,14 +98,21 @@ If any normative clause lacks the complete chain, finalization fails and no cons
 
 ### Validation result
 
-Report these statuses separately; never collapse them into one `valid` claim:
+`validation-result.json` must use this version 1 shape and report each dimension separately; never collapse them into one `valid` claim:
 
-- package and selector structure;
-- reference bounds and file existence;
-- clause-level traceability;
-- compatibility with an exact pinned Gatekeeper parser/materializer revision, or `Not run`;
-- semantic fidelity review, or `Pending`; and
-- consumer selection/activation, normally `Not performed`.
+```json
+{
+  "schemaVersion": 1,
+  "packageStructure": "pass",
+  "referenceBounds": "pass",
+  "clauseTraceability": "pass",
+  "gatekeeperCompatibility": { "status": "not-run", "pinnedRevision": null },
+  "semanticFidelity": { "status": "pending" },
+  "consumerActivation": { "status": "not-performed" }
+}
+```
+
+The deterministic validator requires `pass` for package/selector structure, reference bounds, and clause traceability. Gatekeeper compatibility is `pass`, `fail`, or `not-run`; a run requires a full 40-character commit SHA, while `not-run` requires a null revision. Semantic fidelity is `pass`, `fail`, or `pending`. Consumer activation is `performed` or `not-performed`. These explicit states preserve the distinction between checks that passed and checks that have not been evaluated.
 
 Gatekeeper compatibility is a development check over committed fixture snapshots. Do not invoke Gatekeeper as part of authoring or imply that successful generation activates policy.
 
@@ -111,4 +120,4 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
 
-Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. It also requires a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, and Proposal/source locators carried by the Proposal bytes. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
+Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. It also requires a Gatekeeper-valid member ID, a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, Proposal/source locators carried by the Proposal bytes, and the complete version 1 validation-result status set. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.

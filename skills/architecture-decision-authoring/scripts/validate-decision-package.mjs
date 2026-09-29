@@ -76,6 +76,40 @@ function authorityClauseIds(content) {
   return ids;
 }
 
+function validateValidationResult(result) {
+  exactKeys(result, [
+    "schemaVersion", "packageStructure", "referenceBounds", "clauseTraceability",
+    "gatekeeperCompatibility", "semanticFidelity", "consumerActivation"
+  ], "validation-result");
+  if (!result || typeof result !== "object" || Array.isArray(result)) return;
+  if (result.schemaVersion !== 1) errors.push("validation-result.schemaVersion must be 1");
+  for (const key of ["packageStructure", "referenceBounds", "clauseTraceability"]) {
+    if (result[key] !== "pass") errors.push(`validation-result.${key} must be pass when the package validator succeeds`);
+  }
+
+  exactKeys(result.gatekeeperCompatibility, ["status", "pinnedRevision"], "validation-result.gatekeeperCompatibility");
+  const compatibilityStatus = result.gatekeeperCompatibility?.status;
+  if (!["pass", "fail", "not-run"].includes(compatibilityStatus)) {
+    errors.push('validation-result.gatekeeperCompatibility.status must be "pass", "fail", or "not-run"');
+  }
+  const pinnedRevision = result.gatekeeperCompatibility?.pinnedRevision;
+  if (compatibilityStatus === "not-run") {
+    if (pinnedRevision !== null) errors.push("validation-result.gatekeeperCompatibility.pinnedRevision must be null when not-run");
+  } else if (typeof pinnedRevision !== "string" || !/^[a-f0-9]{40}$/i.test(pinnedRevision)) {
+    errors.push("validation-result.gatekeeperCompatibility.pinnedRevision must be a full 40-character commit SHA when run");
+  }
+
+  exactKeys(result.semanticFidelity, ["status"], "validation-result.semanticFidelity");
+  if (!["pass", "fail", "pending"].includes(result.semanticFidelity?.status)) {
+    errors.push('validation-result.semanticFidelity.status must be "pass", "fail", or "pending"');
+  }
+
+  exactKeys(result.consumerActivation, ["status"], "validation-result.consumerActivation");
+  if (!["performed", "not-performed"].includes(result.consumerActivation?.status)) {
+    errors.push('validation-result.consumerActivation.status must be "performed" or "not-performed"');
+  }
+}
+
 function exactKeys(value, expected, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     errors.push(`${label} must be an object`);
@@ -163,11 +197,16 @@ if (manifest) {
   } else {
     const member = manifest.authorities[0];
     exactKeys(member, ["id", "repository", "revision", "path"], "manifest member");
+    if (typeof member.id !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(member.id)) {
+      errors.push("manifest member id must be a Gatekeeper stable ID (lowercase letter followed by up to 63 lowercase letters, digits, or hyphens)");
+    }
     if (member.repository !== "self") errors.push('manifest member repository must be "self"');
     if (member.revision !== "authority-revision") errors.push('manifest member revision must be "authority-revision"');
     const selected = insideBase(repositoryRoot, member.path, "manifest member path");
     if (selected && resolve(selected) !== authorityPath) errors.push("manifest must select authority-set/authority.md");
   }
+} else if (manifest === null && await exists(manifestPath)) {
+  errors.push("manifest must be an object");
 }
 
 const authority = await bytes(authorityPath);
@@ -259,7 +298,9 @@ if (record.outcome === "Amend") {
   if (snapshot && authority && !snapshot.equals(authority)) errors.push("authority.md must exactly match the approved amended snapshot bytes");
 }
 
-await json(resolve(root, "validation-result.json"));
+const validationResult = await json(resolve(root, "validation-result.json"));
+if (validationResult === null) errors.push("validation-result must be an object");
+else validateValidationResult(validationResult);
 finish("decision package structure is valid");
 
 function finish(successMessage) {
