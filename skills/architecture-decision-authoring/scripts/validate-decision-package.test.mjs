@@ -146,6 +146,46 @@ test("accepts a bounded Adopt package", async () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("rejects absolute selector member paths across POSIX and Windows forms", async () => {
+  const absolutePaths = [
+    (dir) => join(dir, "authority-set", "authority.md"),
+    () => "C:\\repo\\decision-package\\authority-set\\authority.md",
+    () => "\\\\server\\share\\decision-package\\authority-set\\authority.md"
+  ];
+
+  for (const absolutePath of absolutePaths) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const manifestPath = join(dir, "authority-set", "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    manifest.authorities[0].path = absolutePath(dir);
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /manifest member path must be relative to its allowed root/);
+  }
+});
+
+test("rejects absolute adoption-record paths across POSIX and Windows forms", async () => {
+  const absolutePaths = [
+    (dir) => join(dir, "proposal.md"),
+    () => "C:\\repo\\decision-package\\proposal.md",
+    () => "\\\\server\\share\\decision-package\\proposal.md"
+  ];
+
+  for (const absolutePath of absolutePaths) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const recordPath = join(dir, "adoption-record.json");
+    const record = JSON.parse(await readFile(recordPath, "utf8"));
+    record.proposal.path = absolutePath(dir);
+    await writeFile(recordPath, JSON.stringify(record));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /proposal\.path must be relative to its allowed root/);
+  }
+});
+
 test("rejects stale consumable output for Defer", async () => {
   const dir = await root();
   await mkdir(join(dir, "authority-set"));
@@ -298,19 +338,36 @@ test("rejects a clause omitted from traceability.md", async () => {
   assert.match(result.stderr, /Authority clause B is missing from traceability\.md/);
 });
 
-test("does not treat a fenced traceability table example as the package table", async () => {
+test("does not treat valid backtick or tilde fenced tables as the package table", async () => {
+  for (const [fence, closer] of [["```markdown", "```"], ["~~~markdown", "~~~"]]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "traceability.md"), [
+      fence,
+      "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+      "| --- | --- | --- | --- | --- | --- | --- |",
+      `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rules |`,
+      closer
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /must contain the required traceability table header/);
+  }
+});
+
+test("does not let invalid backtick fence info mask visible Authority text", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
-  await writeFile(join(dir, "traceability.md"), [
-    "```markdown",
-    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
-    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rules |`,
-    "```"
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "<!-- clause-id: A -->",
+    "## A",
+    "```bad`",
+    "Clause A remains visible text."
   ].join("\n"));
   const result = run(dir);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /must contain the required traceability table header/);
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("does not treat indented traceability table examples as the package table", async () => {
@@ -491,19 +548,21 @@ test("rejects a selector member symlink that resolves outside the repository", a
 });
 
 test("does not count clause ID examples inside fenced code", async () => {
-  const dir = await root();
-  await writeValidAdoptPackage(dir);
-  await writeFile(join(dir, "authority-set", "authority.md"), [
-    "# Authority",
-    "",
-    "```markdown",
-    "<!-- clause-id: A -->",
-    "Clause A in an example only.",
-    "```"
-  ].join("\n"));
-  const result = run(dir);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /authority\.md must identify every normative clause/);
+  for (const [fence, closer] of [["```markdown", "```"], ["~~~markdown", "~~~"]]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      fence,
+      "<!-- clause-id: A -->",
+      "Clause A in an example only.",
+      closer
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /authority\.md must identify every normative clause/);
+  }
 });
 
 test("rejects clause-id-like HTML comments outside fenced code when the marker grammar is invalid", async () => {

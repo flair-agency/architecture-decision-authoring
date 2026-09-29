@@ -2,7 +2,7 @@
 
 import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
-import { resolve, relative, sep } from "node:path";
+import { resolve, relative, sep, isAbsolute, win32 } from "node:path";
 
 const root = resolve(process.argv[2] ?? "decision-package");
 const repositoryRoot = resolve(process.argv[3] ?? resolve(root, ".."));
@@ -266,8 +266,8 @@ function markdownContext(lines) {
     }
 
     visibleLines.push(visible);
-    const fenceMatch = visible.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (fenceMatch) {
+    const fenceMatch = visible.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fenceMatch && (fenceMatch[1][0] !== "`" || !fenceMatch[2].includes("`"))) {
       codeLines.add(index);
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
@@ -357,6 +357,10 @@ async function inside(path, label) {
 async function insideBase(base, path, label) {
   if (typeof path !== "string" || path.trim() === "") {
     errors.push(`${label} must be a non-empty path`);
+    return null;
+  }
+  if (isAbsolute(path) || win32.isAbsolute(path)) {
+    errors.push(`${label} must be relative to its allowed root`);
     return null;
   }
   const target = resolve(base, path);
