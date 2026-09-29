@@ -1,22 +1,23 @@
 # Product and artifact contract
 
-**Document status: Adopted for the initial pilot on 2026-09-28.** Scope: this repository's standalone authoring boundary and Markdown-first, source-mapped pilot contract, subject to reassessment after the comparative pilot. Owner: repository owner. Authorization evidence: [public owner decision record](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038). The linked comment is a coordinator transcription of the owner decision, not independent owner authentication.
+**Document status: Adopted, with the product endpoint amended on 2026-09-29.** The initial Markdown-first, source-mapped Proposal contract was adopted on 2026-09-28 ([initial owner decision](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038)). The post-adoption Authority Set endpoint was adopted on 2026-09-29 for the bounded v0.2 slice ([explicit owner outcome](https://github.com/flair-agency/architecture-decision-authoring/issues/30#issuecomment-5887904872); [decision record 0002](decisions/0002-authority-set-final-outcome.md)). Owner: repository owner.
 
 ## Purpose and boundary
 
-Architecture Decision Authoring is a standalone aid for preparing a reviewable proposal about one architectural decision at a time. It helps an author organize source material, constraints, alternatives, trade-offs, and unresolved owner choices.
+Architecture Decision Authoring is a standalone aid for taking one architectural decision from source-grounded authoring through an explicit owner outcome to a usable artifact. It helps an author organize source material, constraints, alternatives, trade-offs, and unresolved owner choices into a reviewable Proposal. After the owner acts, it may finalize the exact adopted result into a source-grounded Authority Set selectable by Architecture Gatekeeper.
 
-The product is responsible for making those inputs distinguishable and producing a useful proposal for human review. It does not choose an architecture on the owner's behalf, turn constraints or evidence into owner decisions, approve a proposal, enforce policy, or update a consumer's canonical architecture automatically. It has no runtime dependency on a downstream review or enforcement product. Consumers may use exported proposals or explicitly adopted decisions as inputs to their own processes.
+The product is responsible for making those inputs distinguishable, producing a useful Proposal for human review, recording an explicit owner outcome, and—only where that outcome and the adopted content are unambiguous—producing the bounded Authority Set package defined below. It does not choose an architecture on the owner's behalf, turn constraints or evidence into owner decisions, approve a Proposal, enforce or activate policy, or update a consumer's canonical architecture automatically. Architecture Gatekeeper is an artifact-compatibility target, not a runtime dependency.
 
-The project is in design and pre-pilot. No capability or evaluation result is claimed as validated.
+The v0.1.0 implementation is an experimental Proposal-authoring prototype. Authority Set finalization is an adopted product responsibility for v0.2.0, but is not yet implemented or validated. No general effectiveness claim follows from the adoption of this contract.
 
 ## Status of statements in this contract
 
-- **Project facts:** this is a standalone, pre-pilot project; its stated purpose is to help prepare one decision proposal at a time; outputs are for human review.
-- **Adopted initial pilot contract:** the product prepares decision-ready proposals but does not decide or adopt architecture for owners; it uses Markdown-first artifacts with source mapping, subject to reassessment after the comparative pilot. See the [owner decision record](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038).
+- **Project facts:** this is a standalone early-stage project; v0.1.0 implements the Proposal-authoring stage for one decision at a time; the adopted Authority Set finalization stage remains unimplemented and unvalidated.
+- **Adopted initial pilot contract:** the product prepares decision-ready Proposals but does not decide or adopt architecture for owners; it uses Markdown-first artifacts with source mapping, subject to reassessment after the comparative pilot. See the [initial owner decision](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038).
+- **Adopted endpoint amendment:** after an explicit owner outcome, the product may finalize exact adopted content into the bounded Gatekeeper-compatible Authority Set package defined here. See [decision record 0002](decisions/0002-authority-set-final-outcome.md) and its [owner evidence](https://github.com/flair-agency/architecture-decision-authoring/issues/30#issuecomment-5887904872).
 - **Adopted non-goals and boundaries:** automatic architecture selection or approval enforcement; a Gatekeeper-specific core domain model or runtime; and treating generation, commit, merge, or a status label as adoption. Architecture Gatekeeper remains optional downstream.
 - **Assumptions:** owners and proposers can provide or identify relevant source material; the intended reviewer can resolve or route unresolved choices. These assumptions need evaluation during the pilot.
-- **Follow-up questions:** which conditional analyses provide enough value to include for different decision contexts, and whether comparative-pilot findings justify changing the minimum contract. Consumer-specific canonical architecture and governance remain each consumer's responsibility.
+- **Follow-up questions:** which conditional analyses provide enough value for different decision contexts and whether concrete conversion evidence justifies expanding beyond the one-decision, one-member v0.2 bounds. Consumer-specific canonical architecture, Gatekeeper configuration, and policy activation remain each consumer's responsibility.
 
 These categories must not be collapsed. In particular, an asserted fact may be unverified, an assumption is not a fact, and neither is an owner decision.
 
@@ -38,7 +39,7 @@ Use a source map that links each material fact, constraint, existing decision, a
 
 ## Output contract
 
-The default output is a Markdown-first Architecture Decision Proposal. Its minimum useful content is:
+The required intermediate output is a Markdown-first Architecture Decision Proposal. Its minimum useful content is:
 
 - decision question, scope, affected context, applicability conditions, and known exceptions;
 - relevant facts, assumptions, existing decisions, constraints, and source map;
@@ -53,6 +54,17 @@ Additional artifacts are conditional on the decision's scope, risk, and evidence
 
 The proposal structure borrows a small set of familiar decision-record sections compatible with the general MADR style. It does not define a new ADR standard or require a consumer to adopt a particular architecture vocabulary. See [the MADR project](https://github.com/adr/madr) for the referenced format family.
 
+After an explicit owner outcome, the bounded finalization output is a decision package containing:
+
+- the exact Proposal revision and an adoption record identifying the owner outcome, date, scope, applicability conditions, exceptions, and authorization evidence;
+- for `Adopt`, only the exact proposed content identified by the owner; for `Amend`, only exact resulting normative wording supplied or explicitly approved by the owner and bound to an immutable content identity, with the exported member matching that approved snapshot;
+- one Markdown Authority member containing the normative meaning;
+- one Gatekeeper version 1 JSON selector containing one local `self` member with exactly `id`, `repository`, `revision`, and `path`;
+- clause-level traceability from normative content to the owner outcome, Proposal, and source evidence; and
+- validation results that distinguish selector structure, pinned Gatekeeper parser/materializer compatibility, semantic fidelity review, and consumer activation.
+
+The selector is a compatibility artifact. It does not prove adoption, semantic fidelity, precedence, selection by a consumer, or policy activation. This contract does not introduce a generic authority ontology or per-rule YAML/JSON language.
+
 ## Lifecycle and adoption boundary
 
 1. Gather materials and classify statements, constraints, existing decisions, and open questions.
@@ -60,14 +72,15 @@ The proposal structure borrows a small set of familiar decision-record sections 
 3. Develop options and compare their consequences, conditions, exceptions, and trade-offs.
 4. Produce a proposal, complete or explicitly incomplete, for human review.
 5. The authorized owner reviews it, resolves or routes owner choices, and decides whether to adopt, amend, defer, or reject it through the consumer's process. Review roles, if any, belong to the consumer's process.
-6. If adopted, the owner records the authorization and updates the consumer's current canonical architecture or other authoritative record. A decision record explains a decision and its rationale; it is not automatically the current architecture description.
+6. Record the exact owner outcome and its evidence. For `Adopt`, finalize only the identified proposed content. For `Amend`, require exact owner-supplied or explicitly approved resulting normative content. For `Defer`, `Reject`, pending or missing adoption, missing evidence, or ambiguous adopted content, produce no consumable Authority Set.
+7. Where export is allowed, produce the bounded decision package and report structural compatibility, semantic fidelity, and activation separately. The consumer separately decides whether to update canonical architecture, configure Gatekeeper, or activate the selected policy.
 
 Generation, saving, committing, merging, or changing a document's status label does not by itself mean a proposal was approved or adopted. For each consumer, adoption remains unresolved until the owner and evidence are recorded through that consumer's process. The product must leave an adoption record blank or explicitly pending rather than fabricate one. This repository's own bootstrap process is documented in [Decision records](decisions/README.md); it does not govern consumer decisions.
 
-An adopted decision record is historical evidence of a decision in its stated scope and at its stated time. A consumer's current canonical architecture describes the currently adopted state. A downstream selected policy, contract, or authority artifact is separately owned and must be explicitly derived or adopted by that consumer. These artifacts may link to one another, but they are not interchangeable.
+An adopted decision record is historical evidence of a decision in its stated scope and at its stated time. A consumer's current canonical architecture describes the currently adopted state. A generated Authority Set is a traceable representation of exact adopted content, but its selection and activation remain separately consumer-owned. These artifacts may link to one another, but they are not interchangeable.
 
 ## Downstream boundary
 
-The core product emits human-reviewable artifacts and does not require downstream schemas, terminology, tools, or runtime services. Consumers choose whether and how to import or translate an adopted result into their own architecture and governance systems. This repository does not authenticate downstream adoption or enforcement outcomes.
+The core product does not invoke Gatekeeper while authoring or require its runtime services. It targets Gatekeeper's published Authority Set artifact contract and verifies development compatibility against an exact pinned parser/materializer revision by materializing committed Markdown fixture snapshots, not uncommitted working-tree content. Consumers choose whether and how to place the generated package in their repository, select it in Gatekeeper configuration, update canonical architecture, or activate enforcement. This repository does not authenticate downstream adoption or enforcement outcomes.
 
 Related downstream discussions: [Architecture Gatekeeper #162](https://github.com/flair-agency/architecture-gatekeeper/issues/162) and [#167](https://github.com/flair-agency/architecture-gatekeeper/issues/167). These links track downstream work only; they do not establish a dependency or expand this product's core contract.
