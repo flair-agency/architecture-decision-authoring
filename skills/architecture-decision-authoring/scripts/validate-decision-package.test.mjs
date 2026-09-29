@@ -24,7 +24,7 @@ function run(path) {
 
 async function writeValidAdoptPackage(dir, {
   memberId = "decision-a", validationResult, revision = proposalRevision, outcome = "Adopt",
-  applicabilityConditions = [], exceptions = []
+  applicabilityConditions = [], exceptions = [], recordOverrides = {}
 } = {}) {
   const proposal = Buffer.from("# Proposal\n\n## Proposed decision\n\nAdopt clause A, based on source:input.md#rule.\n");
   await mkdir(join(dir, "authority-set"));
@@ -44,8 +44,9 @@ async function writeValidAdoptPackage(dir, {
     scope: "decision A",
     applicabilityConditions,
     exceptions,
-    adoptedContent: [{ clauseId: "A", proposalLocator: "Proposed decision" }],
-    amendedContent: null
+    adoptedContent: outcome === "Adopt" ? [{ clauseId: "A", proposalLocator: "Proposed decision" }] : [],
+    amendedContent: null,
+    ...recordOverrides
   }));
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
@@ -348,6 +349,23 @@ test("does not count clause ID examples inside fenced code", async () => {
   assert.match(result.stderr, /authority\.md must identify every normative clause/);
 });
 
+test("rejects clause-id-like HTML comments outside fenced code when the marker grammar is invalid", async () => {
+  for (const malformedMarker of ["<!-- clause-id: -->", "<!-- clause-id: A B -->", "<!-- clause-id A -->"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      malformedMarker,
+      "## A",
+      "Clause A."
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${malformedMarker} to fail`);
+    assert.match(result.stderr, /authority clause ID comment must match the standalone/);
+  }
+});
+
 test("requires every clause marker to be immediately followed by a Markdown clause", async () => {
   const invalidAuthority = [
     "# Authority\n\n<!-- clause-id: A -->",
@@ -373,6 +391,43 @@ test("requires applicability conditions and exceptions to use the adopted array-
       const result = run(dir);
       assert.equal(result.status, 1, `expected ${key}=${JSON.stringify(value)} to fail`);
       assert.match(result.stderr, new RegExp(`${key}(?: must be an array of non-empty strings|\\[0\\] must be a non-empty string)`));
+    }
+  }
+});
+
+test("valid Defer and Reject records pass common checks without producing a package", async () => {
+  for (const outcome of ["Defer", "Reject"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir, { outcome });
+    await unlink(join(dir, "authority-set", "authority.md"));
+    await unlink(join(dir, "authority-set", "manifest.json"));
+    const result = run(dir);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /no-export outcome is fail-closed/);
+  }
+});
+
+test("rejects invalid common adoption-record fields for Defer and Reject", async () => {
+  const cases = [
+    [{ schemaVersion: null }, /schemaVersion must be 1/],
+    [{ owner: null }, /owner must be a non-empty string/],
+    [{ authorizationEvidence: 0 }, /authorizationEvidence must be a non-empty string/],
+    [{ proposal: null }, /proposal must be an object/],
+    [{ scope: {} }, /scope must be a non-empty string/],
+    [{ decisionDate: "2026-02-30" }, /decisionDate must be a valid YYYY-MM-DD date/],
+    [{ applicabilityConditions: null }, /applicabilityConditions must be an array of non-empty strings/],
+    [{ exceptions: 3 }, /exceptions must be an array of non-empty strings/]
+  ];
+
+  for (const outcome of ["Defer", "Reject"]) {
+    for (const [recordOverrides, expected] of cases) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir, { outcome, recordOverrides });
+      await unlink(join(dir, "authority-set", "authority.md"));
+      await unlink(join(dir, "authority-set", "manifest.json"));
+      const result = run(dir);
+      assert.equal(result.status, 1, `${outcome} should reject ${Object.keys(recordOverrides)[0]}`);
+      assert.match(result.stderr, expected);
     }
   }
 });

@@ -32,6 +32,19 @@ function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+function validDate(value) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  if (year < 1 || month < 1 || month > 12) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= daysInMonth[month - 1];
+}
+
 function markdownTableRows(content, expectedHeader, label) {
   const lines = content.toString("utf8").split(/\r?\n/);
   const headerIndex = lines.findIndex((line) => tableCells(line)?.join("|") === expectedHeader.join("|"));
@@ -73,29 +86,59 @@ function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
   const codeLines = new Set();
+  const comments = [];
   let fence = null;
+  let comment = null;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
     if (fence) {
       codeLines.add(index);
       const close = line.match(/^ {0,3}(`+|~+)\s*$/);
       if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
-    } else if (fenceMatch) {
+      continue;
+    }
+    if (comment) {
+      comment.end = index;
+      comment.body += `\n${line}`;
+      if (line.includes("-->")) {
+        comments.push(comment);
+        comment = null;
+      }
+      continue;
+    }
+    const commentStart = line.indexOf("<!--");
+    if (commentStart >= 0) {
+      const commentEnd = line.indexOf("-->", commentStart + 4);
+      if (commentEnd >= 0) {
+        comments.push({ start: index, end: index, body: line.slice(commentStart + 4, commentEnd) });
+      } else {
+        comment = { start: index, end: index, body: line.slice(commentStart + 4) };
+      }
+      continue;
+    }
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fenceMatch) {
       codeLines.add(index);
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
   }
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
-  for (let index = 0; index < lines.length; index += 1) {
-    if (codeLines.has(index)) continue;
-    const match = lines[index].match(markerPattern);
-    if (!match) continue;
+  for (const current of comments) {
+    if (!/^\s*clause-id\b/i.test(current.body)) continue;
+    const match = current.start === current.end && lines[current.start].match(markerPattern);
+    if (!match) {
+      errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
+      continue;
+    }
+    const index = current.start;
     ids.push(match[1]);
     if (!markerImmediatelyPrecedesClause(lines, codeLines, index)) {
       errors.push(`authority clause marker ${match[1]} must be a standalone marker immediately before a normative Markdown clause`);
     }
+  }
+  if (comment && /^\s*clause-id\b/i.test(comment.body)) {
+    errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
   }
   return ids;
 }
@@ -224,25 +267,14 @@ for (const key of required) {
   if (!(key in record)) errors.push(`adoption record missing: ${key}`);
 }
 
-const exportable = record.outcome === "Adopt" || record.outcome === "Amend";
-const authorityPath = resolve(root, "authority-set", "authority.md");
-const manifestPath = resolve(root, "authority-set", "manifest.json");
-
-if (!exportable) {
-  if (await exists(authorityPath) || await exists(manifestPath)) {
-    errors.push(`outcome ${record.outcome ?? "Unknown"} must not leave a consumable Authority Set`);
-  }
-  finish("no-export outcome is fail-closed");
-}
-
-const boundedAuthorityPath = await inside("authority-set/authority.md", "Authority member path");
-const boundedManifestPath = await inside("authority-set/manifest.json", "manifest path");
-
 if (record.schemaVersion !== 1) errors.push("schemaVersion must be 1");
 for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
   if (typeof record[key] !== "string" || record[key].trim() === "") {
     errors.push(`${key} must be a non-empty string`);
   }
+}
+if (typeof record.decisionDate === "string" && !validDate(record.decisionDate)) {
+  errors.push("decisionDate must be a valid YYYY-MM-DD date");
 }
 for (const key of ["applicabilityConditions", "exceptions"]) {
   if (!Array.isArray(record[key])) {
@@ -268,6 +300,20 @@ const proposal = proposalPath && await bytes(proposalPath);
 if (proposal && sha256(proposal) !== record.proposal.sha256) {
   errors.push("proposal bytes do not match proposal.sha256");
 }
+
+const exportable = record.outcome === "Adopt" || record.outcome === "Amend";
+const authorityPath = resolve(root, "authority-set", "authority.md");
+const manifestPath = resolve(root, "authority-set", "manifest.json");
+
+if (!exportable) {
+  if (await exists(authorityPath) || await exists(manifestPath)) {
+    errors.push(`outcome ${record.outcome ?? "Unknown"} must not leave a consumable Authority Set`);
+  }
+  finish("no-export outcome is fail-closed");
+}
+
+const boundedAuthorityPath = await inside("authority-set/authority.md", "Authority member path");
+const boundedManifestPath = await inside("authority-set/manifest.json", "manifest path");
 
 const manifest = boundedManifestPath && await json(boundedManifestPath);
 if (manifest && typeof manifest === "object" && !Array.isArray(manifest)) {

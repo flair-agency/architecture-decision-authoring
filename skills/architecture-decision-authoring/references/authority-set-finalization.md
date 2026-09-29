@@ -14,7 +14,7 @@ Before producing an Authority Set, require all of:
 
 For `Adopt`, use only proposed content explicitly identified by the owner. For `Amend`, require the exact resulting normative content supplied or explicitly approved by the owner, preserve its content snapshot, and record its SHA-256 digest. Never invent an amendment or promote rationale, assumptions, options, unresolved choices, or generated wording into Authority.
 
-For `Defer`, `Reject`, `Pending`, a missing gate field, or ambiguous adopted content, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member.
+For `Defer`, `Reject`, or an adoption gate that is incomplete or ambiguous, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member. `Pending` is not an outcome token; use `Defer` while the owner decision is pending. No-export records still require a structurally valid common record, including the exact Proposal reference, owner, authorization evidence, date, scope, applicability conditions, and exceptions. Adopt/Amend-specific content requirements apply only to those outcomes.
 
 ## Successful package
 
@@ -49,7 +49,7 @@ Do not claim to authenticate the owner or evidence unless a separate trusted mec
 
 ### Authority member
 
-`authority.md` carries the normative meaning. Give every normative clause a stable ID using a standalone marker immediately before its clause, for example `<!-- clause-id: network-timeout -->`. Place it directly before the Markdown clause, with no blank line or intervening content. Markers inside fenced code examples do not count; a marker must be followed by a Markdown clause, and a heading used as its locator must have clause content below it. IDs must be unique and stable across revisions. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
+`authority.md` carries the normative meaning. Give every normative clause a stable ID using a standalone marker immediately before its clause, for example `<!-- clause-id: network-timeout -->`. Place it directly before the Markdown clause, with no blank line or intervening content. Markers inside fenced code examples do not count; a marker must be followed by a Markdown clause, and a heading used as its locator must have clause content below it. Outside fenced code, any HTML comment beginning with `clause-id` must match this exact marker grammar or validation fails. IDs must be unique and stable across revisions. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
 
 For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If stable IDs or required context are absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
 
