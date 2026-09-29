@@ -63,17 +63,14 @@ function markdownTableRows(content, expectedHeader, label) {
     return [];
   }
   const rows = [];
-  for (const [offset, line] of visibleLines.slice(headerIndex + 2).entries()) {
-    if (codeLines.has(headerIndex + 2 + offset)) continue;
-    if (line.trim() === "") continue;
+  for (let index = headerIndex + 2; index < visibleLines.length; index += 1) {
+    const line = visibleLines[index];
+    if (codeLines.has(index) || line.trim() === "") break;
     const cells = tableCells(line);
-    if (!cells) {
-      if (line.trim().startsWith("|")) errors.push(`${label} row ${headerIndex + offset + 3} must use pipe-delimited Markdown`);
-      continue;
-    }
+    if (!cells) break;
     if (cells.length !== expectedHeader.length) {
-      errors.push(`${label} row ${headerIndex + offset + 3} must have ${expectedHeader.length} columns`);
-      continue;
+      errors.push(`${label} row ${index + 1} must have ${expectedHeader.length} columns`);
+      break;
     }
     rows.push(cells);
   }
@@ -146,6 +143,11 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
+    if (/^(?:=+|-+)$/.test(line)) {
+      errors.push(`authority.md must not use Setext headings or ambiguous horizontal rules on line ${index + 1}`);
+      continue;
+    }
+
     const heading = line.match(/^(#{1,6})\s+\S/);
     if (heading) {
       if (activeClause && !activeClauseHasBody) {
@@ -165,7 +167,7 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
 
     if (!activeClause) {
       errors.push(`authority.md has content outside a marked clause block on line ${index + 1}`);
-    } else if (!/^(?:---+|\*\*\*+|___+)$/.test(line)) {
+    } else if (!/^(?:\*\*\*+|___+)$/.test(line)) {
       activeClauseHasBody = true;
     }
   }
@@ -190,6 +192,11 @@ function markdownContext(lines) {
       visibleLines.push("");
       const close = line.match(/^ {0,3}(`+|~+)\s*$/);
       if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
+      continue;
+    }
+    if (!comment && isIndentedCodeLine(line)) {
+      codeLines.add(index);
+      visibleLines.push("");
       continue;
     }
     let remainder = line;
@@ -234,6 +241,17 @@ function markdownContext(lines) {
     }
   }
   return { codeLines, visibleLines, comments, incompleteComment: comment };
+}
+
+function isIndentedCodeLine(line) {
+  if (line.trim() === "") return false;
+  let columns = 0;
+  for (const character of line) {
+    if (character === " ") columns += 1;
+    else if (character === "\t") columns += 4 - (columns % 4);
+    else break;
+  }
+  return columns >= 4;
 }
 
 function validateValidationResult(result) {

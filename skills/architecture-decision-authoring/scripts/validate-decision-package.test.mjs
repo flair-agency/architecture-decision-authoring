@@ -313,6 +313,33 @@ test("does not treat a fenced traceability table example as the package table", 
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("does not treat indented traceability table examples as the package table", async () => {
+  const table = [
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`
+  ];
+
+  for (const indent of ["    ", "\t"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "traceability.md"), table.map((line) => `${indent}${line}`).join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /must contain the required traceability table header/);
+  }
+});
+
+test("stops traceability row collection when the table ends", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const traceabilityPath = join(dir, "traceability.md");
+  const original = await readFile(traceabilityPath, "utf8");
+  await writeFile(traceabilityPath, `${original}\n\n| detached | clause-id:B | Reject | fake | fake | fake | fake |\n`);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("does not treat a commented-out traceability table as the package table", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
@@ -511,6 +538,25 @@ test("rejects unmarked headings and content outside bounded Authority clause blo
     const result = run(dir);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /(?:immediately preceded by a clause-id marker|content outside a marked clause block|only marked level-two clause headings)/);
+  }
+});
+
+test("rejects Setext headings and ambiguous horizontal rules in Authority members", async () => {
+  for (const underline of ["===", "---"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      "Clause A is normative.",
+      "Unmarked subsection",
+      underline
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /must not use Setext headings or ambiguous horizontal rules/);
   }
 });
 
