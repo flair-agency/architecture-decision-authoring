@@ -50,7 +50,7 @@ flowchart LR
   Current[Current canonical architecture or other authoritative record]
   Record -.-> Distinction[Distinct artifacts; not interchangeable]
   Current -.-> Distinction
-  Process -->|if adopted, separately updates| Current
+  Process -.->|if adopted, may separately update| Current
   Process -->|Adopt or explicit Amend with exact content| Package[Decision package]
   Package --> Adoption[Adoption record]
   Package --> Authority[Markdown Authority member]

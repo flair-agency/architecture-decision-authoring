@@ -81,7 +81,7 @@ Leave pending until the authorized owner acts through the applicable process. Ge
 - **Date and adopted scope:** {...}
 - **Applicability conditions:** {...}
 - **Exceptions:** {...}
-- **Current canonical architecture updated at:** {consumer-owned location, or Pending}
+- **Current canonical architecture disposition:** {consumer-owned update location, Unchanged, Not applicable, or Pending}
 - **Downstream artifacts explicitly adopted/derived:** {consumer-owned links, or None/Pending}
 
-If the decision is adopted, preserve this record as the rationale and history for the decision. Update the consumer's current canonical architecture through its own process; do not assume this proposal is that current-state description.
+If the decision is adopted, preserve this record as the rationale and history for the decision. The consumer separately decides whether its current canonical architecture needs an update and records that disposition through its own process; do not assume this proposal is the current-state description.
