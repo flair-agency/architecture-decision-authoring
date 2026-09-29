@@ -88,7 +88,7 @@ function tableCells(line) {
 function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines, visibleLines, comments, incompleteComment } = markdownContext(lines);
+  const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines } = markdownContext(lines);
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
   const markersByHeading = new Map();
@@ -112,7 +112,11 @@ function authorityClauseIds(content) {
   if (incompleteComment && /^\s*clause-id\b/i.test(incompleteComment.body)) {
     errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
   }
-  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading);
+  if (rawHtmlBlockLines.size > 0) {
+    errors.push("authority.md must not contain raw HTML blocks because their rendered content cannot be clause-traced");
+  }
+  const linkReferenceDefinitionLines = markdownLinkReferenceDefinitionLines(visibleLines, codeLines);
+  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines);
   return ids;
 }
 
@@ -123,7 +127,7 @@ function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
   return /^##\s+\S/.test(next);
 }
 
-function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading) {
+function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines) {
   let titleSeen = false;
   let activeClause = null;
   let activeClauseHasBody = false;
@@ -172,7 +176,7 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
 
     if (!activeClause) {
       errors.push(`authority.md has content outside a marked clause block on line ${index + 1}`);
-    } else if (!isLinkReferenceDefinition(line)) {
+    } else if (!linkReferenceDefinitionLines.has(index)) {
       activeClauseHasBody = true;
     }
   }
@@ -190,12 +194,47 @@ function isThematicBreak(line) {
     || /^(?:-[ \t]*){3,}$/.test(value);
 }
 
-function isLinkReferenceDefinition(line) {
-  return /^\[(?:\\.|[^\]\\])+\]:[ \t]*(?:<[^>\s]*>|(?:\\.|[^\s])+)(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/.test(line);
+function markdownLinkReferenceDefinitionLines(lines, codeLines) {
+  const ignored = new Set();
+  for (let index = 0; index < lines.length; index += 1) {
+    if (codeLines.has(index)) continue;
+    const match = lines[index].match(/^ {0,3}\[((?:\\.|[^\[\]\\])+)\]:[ \t]*(.*)$/);
+    if (!match) continue;
+
+    const sameLine = parseLinkReferenceTail(match[2]);
+    if (sameLine) {
+      ignored.add(index);
+      if (!sameLine.hasTitle && isLinkReferenceTitleLine(lines[index + 1], codeLines, index + 1)) ignored.add(index + 1);
+      continue;
+    }
+
+    if (match[2].trim() !== "") continue;
+    const destination = lines[index + 1]?.match(/^( {0,3})\S(.*)$/);
+    if (!destination || codeLines.has(index + 1)) continue;
+    const nextLine = lines[index + 1].slice(destination[1].length);
+    const parsedDestination = parseLinkReferenceTail(nextLine);
+    if (!parsedDestination) continue;
+    ignored.add(index);
+    ignored.add(index + 1);
+    if (!parsedDestination.hasTitle && isLinkReferenceTitleLine(lines[index + 2], codeLines, index + 2)) ignored.add(index + 2);
+  }
+  return ignored;
+}
+
+function parseLinkReferenceTail(value) {
+  const match = value.match(/^(<[^<>\s]*>|(?:\\.|[^\s])+)(?:[ \t]+("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\((?:\\.|[^)\\])*\)))?[ \t]*$/);
+  return match ? { hasTitle: Boolean(match[2]) } : null;
+}
+
+function isLinkReferenceTitleLine(line, codeLines, index) {
+  if (typeof line !== "string" || codeLines.has(index)) return false;
+  const match = line.match(/^ {0,3}("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\((?:\\.|[^)\\])*\))[ \t]*$/);
+  return Boolean(match);
 }
 
 function markdownContext(lines) {
   const codeLines = new Set();
+  const rawHtmlBlockLines = new Set();
   const visibleLines = [];
   const comments = [];
   let fence = null;
@@ -213,6 +252,7 @@ function markdownContext(lines) {
     }
     if (rawHtmlBlock) {
       codeLines.add(index);
+      rawHtmlBlockLines.add(index);
       visibleLines.push("");
       if (rawHtmlBlock.blankTerminated ? line.trim() === "" : rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
       continue;
@@ -226,6 +266,7 @@ function markdownContext(lines) {
       rawHtmlBlock = rawHtmlBlockStart(line);
       if (rawHtmlBlock) {
         codeLines.add(index);
+        rawHtmlBlockLines.add(index);
         visibleLines.push("");
         if (!rawHtmlBlock.blankTerminated && rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
         continue;
@@ -272,7 +313,7 @@ function markdownContext(lines) {
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
   }
-  return { codeLines, visibleLines, comments, incompleteComment: comment };
+  return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines };
 }
 
 function rawHtmlBlockStart(line) {

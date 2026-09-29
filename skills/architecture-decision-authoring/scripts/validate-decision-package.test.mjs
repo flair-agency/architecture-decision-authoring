@@ -689,24 +689,79 @@ test("requires visible clause text instead of a link reference definition", asyn
   assert.equal(validResult.status, 0, validResult.stderr);
 });
 
-test("ignores fake clauses inside raw HTML blocks when parsing Authority members", async () => {
+test("rejects multiline link reference definitions as clause body by themselves", async () => {
+  const definitions = [
+    ["[rule]:", "  https://example.invalid/rule"],
+    ["[rule]:", "  <https://example.invalid/rule>", "  \"Reference title\""],
+    ["[rule]: https://example.invalid/rule", "  \"Reference title\""]
+  ];
+
+  for (const definition of definitions) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      ...definition
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
+  }
+});
+
+test("accepts visible clause text followed by a multiline link reference definition", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
   await writeFile(join(dir, "authority-set", "authority.md"), [
     "# Authority",
     "",
-    "<div>",
-    "<!-- clause-id: fake -->",
-    "## Fake",
-    "This is illustrative HTML content.",
-    "</div>",
-    "",
     "<!-- clause-id: A -->",
     "## A",
-    "Clause A."
+    "Requests must use TLS.",
+    "[tls]:",
+    "  https://example.invalid/tls",
+    "  \"TLS reference\""
   ].join("\n"));
   const result = run(dir);
   assert.equal(result.status, 0, result.stderr);
+});
+
+test("rejects raw HTML blocks in Authority members outside or inside clauses", async () => {
+  const invalidAuthority = [
+    [
+      "# Authority",
+      "",
+      "<div>",
+      "Normative rule rendered outside all marked clauses.",
+      "</div>",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      "Clause A."
+    ],
+    [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      "Clause A.",
+      "<div>",
+      "Additional normative rule in raw HTML.",
+      "</div>"
+    ]
+  ];
+
+  for (const lines of invalidAuthority) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), lines.join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /authority\.md must not contain raw HTML blocks/);
+  }
 });
 
 test("checks visible Authority text on lines with inline HTML comments", async () => {
