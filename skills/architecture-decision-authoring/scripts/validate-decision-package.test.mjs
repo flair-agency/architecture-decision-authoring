@@ -330,6 +330,21 @@ test("does not treat indented traceability table examples as the package table",
   }
 });
 
+test("does not treat a traceability table inside a raw HTML block as the package table", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    "<div>",
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`,
+    "</div>"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
 test("stops traceability row collection when the table ends", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
@@ -558,6 +573,26 @@ test("rejects Setext headings and ambiguous horizontal rules in Authority member
     assert.equal(result.status, 1);
     assert.match(result.stderr, /must not use Setext headings or ambiguous horizontal rules/);
   }
+});
+
+test("ignores fake clauses inside raw HTML blocks when parsing Authority members", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "<div>",
+    "<!-- clause-id: fake -->",
+    "## Fake",
+    "This is illustrative HTML content.",
+    "</div>",
+    "",
+    "<!-- clause-id: A -->",
+    "## A",
+    "Clause A."
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("checks visible Authority text on lines with inline HTML comments", async () => {

@@ -184,6 +184,7 @@ function markdownContext(lines) {
   const comments = [];
   let fence = null;
   let comment = null;
+  let rawHtmlBlock = null;
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -194,10 +195,25 @@ function markdownContext(lines) {
       if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
       continue;
     }
+    if (rawHtmlBlock) {
+      codeLines.add(index);
+      visibleLines.push("");
+      if (rawHtmlBlock.blankTerminated ? line.trim() === "" : rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
+      continue;
+    }
     if (!comment && isIndentedCodeLine(line)) {
       codeLines.add(index);
       visibleLines.push("");
       continue;
+    }
+    if (!comment) {
+      rawHtmlBlock = rawHtmlBlockStart(line);
+      if (rawHtmlBlock) {
+        codeLines.add(index);
+        visibleLines.push("");
+        if (!rawHtmlBlock.blankTerminated && rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
+        continue;
+      }
     }
     let remainder = line;
     let visible = "";
@@ -241,6 +257,24 @@ function markdownContext(lines) {
     }
   }
   return { codeLines, visibleLines, comments, incompleteComment: comment };
+}
+
+function rawHtmlBlockStart(line) {
+  const openingTag = line.match(/^ {0,3}<(script|pre|style|textarea)(?:[\s/>])[^>]*>/i);
+  if (openingTag) return { end: new RegExp(`</${openingTag[1]}\\s*>`, "i") };
+  if (/^ {0,3}<\?/.test(line)) return { end: /\?>/ };
+  if (/^ {0,3}<!\[CDATA\[/i.test(line)) return { end: /\]\]>/ };
+  if (/^ {0,3}<![A-Z]/.test(line)) return { end: />/ };
+  if (/^ {0,3}<!--/.test(line)) return null;
+
+  const blockTags = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+  if (new RegExp(`^ {0,3}</?(?:${blockTags})(?:[\\s/>]|$)[^>]*>`, "i").test(line)) {
+    return { blankTerminated: true };
+  }
+  if (/^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:\s+[^<>]*|\/?)>\s*$/.test(line)) {
+    return { blankTerminated: true };
+  }
+  return null;
 }
 
 function isIndentedCodeLine(line) {
