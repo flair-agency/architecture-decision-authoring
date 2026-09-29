@@ -3,7 +3,7 @@
 > **Document status:** Proposed and Incomplete
 > **Prepared:** Date unknown; prepared from the supplied source packet
 > **Decision owner:** Operations owner for operational policy; the supplied sources do not name the individual
-> **Review by / time bound:** Before implementation and no later than the `OPS-14` review on 2026-12-31
+> **Review by / time bound:** Not specified for this proposal. `OPS-14` is scheduled for review on 2026-12-31; that date is not established as a deadline for this proposal.
 
 ## Decision question and scope
 
@@ -11,7 +11,7 @@
 - **Scope and affected context:** The production internal weekly exception report, specifically presentation of exception rows and the boundary between reporting and operational status management. This proposal does not change source records or operational status.
 - **Applicability conditions:** Applies when exception rows covered by `OPS-14` are included in the weekly report and have a usable ISO-8601 UTC `created_on` value. Which human-assigned statuses count as “open” is not defined in the supplied sources and requires owner resolution before implementation.
 - **Exceptions:** Rows without a usable `created_on` value and statuses whose inclusion as “open” is unresolved cannot be given a reliable open-item age under this proposal. No other exceptions are established by the sources.
-- **Time bounds:** Proposed for owner review before implementation. The adopted operating rule is due for review on 2026-12-31; the sources provide no effective or expiry date for this proposal.
+- **Time bounds:** The sources provide no effective date, expiry date, or owner-review deadline for this proposal. `OPS-14` has its own review date of 2026-12-31; whether this proposal should be reviewed by then is an owner choice.
 
 ## Context and classified inputs
 
@@ -53,22 +53,22 @@ Keep the classes separate. A source's stated authority and status are reported a
 
 | Option | Benefits | Costs / risks | Conditions, exceptions, and trade-offs |
 | --- | --- | --- | --- |
-| **A. Display age; retain the existing non-age ordering** | Meets the stated visibility need while minimizing change and avoiding an implied age-based priority policy. | Requires definition of “open,” age calculation/display, and handling of unusable timestamps; older items are not automatically surfaced first. | Must not change status or close items. Existing ordering is not documented in the packet, so implementation must preserve it from the current report rather than infer it here. |
+| **A. Display age without introducing age-based ranking** | Meets the stated visibility need while minimizing change and avoiding a new implied age-based priority policy. | Requires definition of “open,” age calculation/display, handling of unusable timestamps, and inspection of the report's current ordering; if it already ranks by age, preserving it would continue age-based ranking. | Must not change status or close items. Current ordering is not documented. Before implementation, the owner must decide what to do if the current report already uses age to rank rows; this proposal does not assume the current order is age-neutral. |
 | **B. Display age and rank open items by age** | Makes older open items more prominent and may aid review. | Could be read as assigning priority or urgency even though none is defined; tie-breaking and interaction with status grouping are unknown. | Requires an explicit owner choice on whether age may determine rank, whether ranking is within each current-status group or across groups, direction, ties, and treatment of unusable timestamps. Ranking must not change status, close items, or become escalation without a separate decision. |
 | **C. Defer/no change** | Preserves the current report without introducing undefined calculation or ordering behavior. | Does not meet the stated desire to make open-item age visible. | Appropriate only until the definition of “open” and age-display semantics are resolved, or if the owner declines the change. |
 
 ## Proposed decision
 
-For owner review, choose **Option A**: add a clearly labeled age display for rows that the operations owner defines as open and that have a usable `created_on` timestamp, while preserving the report's existing ordering and any current-status grouping. Do not use age to rank, prioritize, trigger urgency, or escalate items in this proposal.
+For owner review, choose **Option A**: add a clearly labeled age display for rows that the operations owner defines as open and that have a usable `created_on` timestamp, without introducing age-based ranking. Preserve any current-status grouping. The current ordering is unknown; inspect it before implementation and ask the owner whether to retain or change it if it already ranks rows by age. Do not use age to prioritize, trigger urgency, or escalate items in this proposal.
 
-This is a proposed outcome, not an existing or adopted decision. Age-based ranking remains a separate unresolved owner choice because the supplied adopted rule is silent about ranking and the reporting brief does not choose an ordering. Implementation remains incomplete until the owner defines “open” and the age calculation/display rules.
+This is a proposed outcome, not an existing or adopted decision. Whether to permit age-based ranking, including whether to retain it if the current report already uses it, remains an unresolved owner choice because the supplied adopted rule is silent about ranking and the reporting brief does not choose an ordering. Implementation remains incomplete until the owner defines “open” and the age calculation/display rules and resolves any existing age-based ordering.
 
 ## Consequences and conditional analysis
 
-- **Expected consequences:** Reviewers can see age without the report changing human-assigned status or closing items. The report avoids presenting age as an adopted priority or escalation rule. Items will remain in the current report order unless the owner separately authorizes age ranking.
+- **Expected consequences:** Reviewers can see age without the report changing human-assigned status or closing items. The proposal introduces no new age-based ranking or adopted priority/escalation rule. The effect of retaining the current order is unknown until that order is inspected; if it ranks by age, the owner must resolve whether to keep or change it.
 - **Applicable analysis included:** Source inventory and traceability, classification of claims, report-boundary analysis, and a comparison of display-only, age-ranking, and defer/no-change options are contained in this proposal.
 - **Applicable analysis missing or deferred:** No sample data, current report layout, current ordering specification, status vocabulary, age formula, display format, threshold, escalation process, or owner authorization record is supplied. Consequently, implementation detail and any assessment of ranking behavior are deferred pending owner choices.
-- **Trade-offs accepted by this proposal:** It favors immediate visibility and boundary preservation over automatically surfacing the oldest items. It may require reviewers to scan or use existing grouping/order to find older exceptions.
+- **Trade-offs accepted by this proposal:** It favors visibility and boundary preservation over introducing age-based ranking. Depending on the existing order, reviewers may need to scan or use grouping to find older exceptions; the packet does not establish how the current order behaves.
 
 ## Unresolved owner choices
 
@@ -76,7 +76,7 @@ This is a proposed outcome, not an existing or adopted decision. Age-based ranki
 | --- | --- | --- | --- |
 | Which human-assigned statuses count as “open”? | The sources use “open exceptions” but do not define the status vocabulary or membership. | Row eligibility for age display. | Before implementation. |
 | What as-of time, unit, rounding, label, and timezone presentation define displayed age, and how are unusable timestamps shown? | The field guide provides only a UTC creation timestamp and no age semantics. | Correct, consistent calculation and presentation. | Before implementation. |
-| May age determine rank in a later revision? If yes, within status groups or across them, in which direction, and with what tie/missing-value rules? | The existing decision is silent and the analysis request has no adoption authority. | Whether Option B may replace or amend the proposed display-only outcome. | Before any age-ranked release; preferably by the `OPS-14` review on 2026-12-31. |
+| Does the current report already use age to rank rows, and if so, should that ordering be retained or changed? May a later revision introduce or keep age-based ranking? | The packet does not describe the current order; the existing decision is silent and the analysis request has no adoption authority. | Whether the proposed display-only change can preserve current behavior without continuing age-based ranking, and whether Option B may replace or amend the proposal. | Before implementation or any age-ranked release; no source-defined deadline. |
 | Does age ever imply urgency, priority, thresholding, or escalation? | All supplied sources explicitly leave these concepts undefined. | Labels, visual treatment, alerts, thresholds, and operational follow-up. | Before introducing any such behavior; no source-defined deadline. |
 | Who is the named authorized Operations owner and what process records adoption? | The supplied record names only a role and provides no authorization mechanism. | Adoption evidence and canonical architecture update. | Before adoption. |
 
