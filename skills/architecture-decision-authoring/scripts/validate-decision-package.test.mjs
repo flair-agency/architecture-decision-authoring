@@ -22,7 +22,10 @@ function run(path) {
   return spawnSync(process.execPath, [validator, path], { encoding: "utf8" });
 }
 
-async function writeValidAdoptPackage(dir, { memberId = "decision-a", validationResult, revision = proposalRevision, outcome = "Adopt" } = {}) {
+async function writeValidAdoptPackage(dir, {
+  memberId = "decision-a", validationResult, revision = proposalRevision, outcome = "Adopt",
+  applicabilityConditions = [], exceptions = []
+} = {}) {
   const proposal = Buffer.from("# Proposal\n\n## Proposed decision\n\nAdopt clause A, based on source:input.md#rule.\n");
   await mkdir(join(dir, "authority-set"));
   await writeFile(join(dir, "proposal.md"), proposal);
@@ -39,8 +42,8 @@ async function writeValidAdoptPackage(dir, { memberId = "decision-a", validation
     authorizationEvidence: "record:1",
     decisionDate: "2026-09-29",
     scope: "decision A",
-    applicabilityConditions: [],
-    exceptions: [],
+    applicabilityConditions,
+    exceptions,
     adoptedContent: [{ clauseId: "A", proposalLocator: "Proposed decision" }],
     amendedContent: null
   }));
@@ -327,4 +330,49 @@ test("rejects a selector member symlink that resolves outside the repository", a
   const result = run(dir);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /resolves outside its allowed root/);
+});
+
+test("does not count clause ID examples inside fenced code", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "```markdown",
+    "<!-- clause-id: A -->",
+    "Clause A in an example only.",
+    "```"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /authority\.md must identify every normative clause/);
+});
+
+test("requires every clause marker to be immediately followed by a Markdown clause", async () => {
+  const invalidAuthority = [
+    "# Authority\n\n<!-- clause-id: A -->",
+    "# Authority\n\n<!-- clause-id: A -->\n\n## A\n\nClause A.",
+    "# Authority\n\n<!-- clause-id: A -->\n```markdown\nClause A.\n```",
+    "# Authority\n\n<!-- clause-id: A -->\n## A\n"
+  ];
+  for (const authority of invalidAuthority) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), authority);
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /must be a standalone marker immediately before a normative Markdown clause/);
+  }
+});
+
+test("requires applicability conditions and exceptions to use the adopted array-of-strings representation", async () => {
+  for (const key of ["applicabilityConditions", "exceptions"]) {
+    for (const value of [null, 7, {}, "none", [" ", "valid"], [{}]]) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir, { [key]: value });
+      const result = run(dir);
+      assert.equal(result.status, 1, `expected ${key}=${JSON.stringify(value)} to fail`);
+      assert.match(result.stderr, new RegExp(`${key}(?: must be an array of non-empty strings|\\[0\\] must be a non-empty string)`));
+    }
+  }
 });

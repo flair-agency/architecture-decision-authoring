@@ -71,9 +71,53 @@ function tableCells(line) {
 
 function authorityClauseIds(content) {
   const ids = [];
-  const pattern = /^\s*<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->\s*$/gm;
-  for (const match of content.toString("utf8").matchAll(pattern)) ids.push(match[1]);
+  const lines = content.toString("utf8").split(/\r?\n/);
+  const codeLines = new Set();
+  let fence = null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fence) {
+      codeLines.add(index);
+      const close = line.match(/^ {0,3}(`+|~+)\s*$/);
+      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
+    } else if (fenceMatch) {
+      codeLines.add(index);
+      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
+    }
+  }
+
+  const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
+  for (let index = 0; index < lines.length; index += 1) {
+    if (codeLines.has(index)) continue;
+    const match = lines[index].match(markerPattern);
+    if (!match) continue;
+    ids.push(match[1]);
+    if (!markerImmediatelyPrecedesClause(lines, codeLines, index)) {
+      errors.push(`authority clause marker ${match[1]} must be a standalone marker immediately before a normative Markdown clause`);
+    }
+  }
   return ids;
+}
+
+function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
+  const nextIndex = markerIndex + 1;
+  if (nextIndex >= lines.length || codeLines.has(nextIndex)) return false;
+  const next = lines[nextIndex].trim();
+  if (!next || next.startsWith("<!--") || next.startsWith(">") || /^(?:---+|\*\*\*+|___+)$/.test(next)) return false;
+
+  const heading = next.match(/^#{1,6}\s+\S/);
+  if (!heading) return true;
+
+  for (let index = nextIndex + 1; index < lines.length; index += 1) {
+    if (codeLines.has(index)) continue;
+    const line = lines[index].trim();
+    if (!line) continue;
+    if (/^#{1,6}\s+\S/.test(line) || /^<!--\s*clause-id:/.test(line)) return false;
+    if (line.startsWith("<!--") || /^(?:---+|\*\*\*+|___+)$/.test(line)) continue;
+    return true;
+  }
+  return false;
 }
 
 function validateValidationResult(result) {
@@ -198,6 +242,17 @@ if (record.schemaVersion !== 1) errors.push("schemaVersion must be 1");
 for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
   if (typeof record[key] !== "string" || record[key].trim() === "") {
     errors.push(`${key} must be a non-empty string`);
+  }
+}
+for (const key of ["applicabilityConditions", "exceptions"]) {
+  if (!Array.isArray(record[key])) {
+    errors.push(`${key} must be an array of non-empty strings`);
+  } else {
+    for (const [index, item] of record[key].entries()) {
+      if (typeof item !== "string" || item.trim() === "") {
+        errors.push(`${key}[${index}] must be a non-empty string`);
+      }
+    }
   }
 }
 

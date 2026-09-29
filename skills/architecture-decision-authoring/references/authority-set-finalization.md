@@ -41,7 +41,7 @@ Use JSON with these fields:
 - `outcome`: exactly one of `Adopt`, `Amend`, `Defer`, or `Reject`; `Defer` and `Reject` produce no Authority Set
 - `proposal.path`, `proposal.revision`, and `proposal.sha256`; `proposal.revision` is a full immutable Git commit ID (40- or 64-character hexadecimal)
 - `owner`, `authorizationEvidence`, and `decisionDate`
-- `scope`, `applicabilityConditions`, and `exceptions`
+- `scope`, `applicabilityConditions`, and `exceptions`; conditions and exceptions are arrays of non-empty strings, with an empty array meaning none are recorded
 - `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`
 - `amendedContent`: `null` for `Adopt`; for `Amend`, the snapshot path and SHA-256 digest of the exact owner-approved normative content
 
@@ -49,7 +49,7 @@ Do not claim to authenticate the owner or evidence unless a separate trusted mec
 
 ### Authority member
 
-`authority.md` carries the normative meaning. Give every normative clause a stable ID using a standalone marker immediately before its clause, for example `<!-- clause-id: network-timeout -->`. IDs must be unique and stable across revisions. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
+`authority.md` carries the normative meaning. Give every normative clause a stable ID using a standalone marker immediately before its clause, for example `<!-- clause-id: network-timeout -->`. Place it directly before the Markdown clause, with no blank line or intervening content. Markers inside fenced code examples do not count; a marker must be followed by a Markdown clause, and a heading used as its locator must have clause content below it. IDs must be unique and stable across revisions. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
 
 For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If stable IDs or required context are absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
 
@@ -82,7 +82,7 @@ The member `id` must follow Gatekeeper's stable-ID syntax: 1–64 characters, st
 ```markdown
 | Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |
 | --- | --- | --- | --- | --- | --- | --- |
-| network-timeout | clause-id:network-timeout | Adopt | https://example.invalid/decision/1 | abc123 | Proposed decision, “Timeout” | input/operations.md#timeout |
+| network-timeout | clause-id:network-timeout | Adopt | https://example.invalid/decision/1 | 0123456789abcdef0123456789abcdef01234567 | Proposed decision, “Timeout” | input/operations.md#timeout |
 ```
 
 For each row, the Authority locator is `clause-id:<ID>`. Owner outcome, authorization evidence, and Proposal revision must exactly match the adoption record. For `Adopt`, the Proposal locator must exactly match that clause's `adoptedContent` locator. For either exportable outcome, Proposal and source-evidence locators must appear in the exact `proposal.md` bytes; list multiple source locators separated by semicolons, with each locator present in the Proposal. These checks establish a deterministic reference chain, not source authenticity or semantic equivalence.
