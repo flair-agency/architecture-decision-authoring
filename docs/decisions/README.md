@@ -10,7 +10,10 @@ Decision records capture a question, context, alternatives, an outcome, and its 
 
 A status label is not authentication or proof of approval. Record the authorization evidence for each decision. The public owner decision record for this initial pilot is [here](https://github.com/flair-agency/architecture-decision-authoring/pull/8#issuecomment-5857199038); it is a coordinator transcription, not independent owner authentication.
 
-The initial adopted record is [0001 — Use a Markdown-first, source-mapped proposal contract](0001-markdown-first-proposal-contract.md). It records the initial pilot contract and its reassessment limits.
+The adopted records are:
+
+- [0001 — Use a Markdown-first, source-mapped proposal contract](0001-markdown-first-proposal-contract.md), which preserves the initial pilot contract and rationale; and
+- [0002 — Produce a Gatekeeper-compatible Authority Set after owner adoption](0002-authority-set-final-outcome.md), which amends 0001's product endpoint while retaining the Proposal and owner-adoption boundary.
 
 ## Repository bootstrap adoption rule
 

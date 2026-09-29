@@ -1,15 +1,15 @@
 # Documentation
 
-This directory contains design materials for a project that is still in the design and pre-pilot phase. It includes the adopted initial pilot contract and decision record, as well as proposals and guidance that do not by themselves establish adopted decisions.
+This directory contains the canonical contract, adopted decision history, implementation-stage design materials, and evaluation guidance. Proposals and guidance do not by themselves establish adopted decisions.
 
-- [Product and artifact contract](architecture.md) — adopted initial pilot purpose, responsibility boundary, input classification, outputs, lifecycle, and downstream boundary; reassess after the comparative pilot.
+- [Product and artifact contract](architecture.md) — adopted purpose, responsibility boundary, Proposal contract, bounded post-adoption Authority Set endpoint, lifecycle, and downstream boundary.
 - [Architecture Decision Proposal template](templates/architecture-decision-proposal.md) — Markdown-first, source-mapped starting point; mark missing information instead of inventing it.
 - [Non-normative design views](design-views.md) — explanatory responsibility, concept/artifact, and lifecycle diagrams derived from the adopted contract in `architecture.md`.
 - [Decision records](decisions/README.md) — record guidance and status meanings.
-- [Proposal to make a Gatekeeper-compatible Authority Set the final product outcome](proposals/0002-authority-set-final-outcome.md) — proposed amendment to the initial product endpoint; does not change the current adopted contract.
+- [Adopted proposal to make a Gatekeeper-compatible Authority Set the final product outcome](proposals/0002-authority-set-final-outcome.md) — source-mapped proposal adopted at its recorded exact revision; [decision record 0002](decisions/0002-authority-set-final-outcome.md) carries the canonical endpoint amendment.
 - [Proposed comparative pilot protocol](../evals/protocol.md) — public cases are rehearsal-only; Issue #3 remains open pending Phase A and Phase B freeze records and owner-adjudicated held-out expectations in the [run plan](../evals/run-plan-template.md).
 - [Pilot 001 Phase A proposal](../evals/plans/pilot-001.md) — concrete proposed conditions for owner review; not adopted or frozen, with Phase B not started.
-- [Architecture Decision Authoring Skill prototype](../skills/architecture-decision-authoring/SKILL.md) — reviewable instruction prototype; its [bundled proposal template](../skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is a distribution copy of the canonical [docs template](templates/architecture-decision-proposal.md). A [curated walkthrough](../examples/bounded-decision/run-record.md) illustrates use but is not an evaluation.
+- [Architecture Decision Authoring Skill prototype](../skills/architecture-decision-authoring/SKILL.md) — reviewable Proposal-authoring prototype; Authority Set finalization is adopted but not yet implemented. Its [bundled proposal template](../skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is a distribution copy of the canonical [docs template](templates/architecture-decision-proposal.md). A [curated walkthrough](../examples/bounded-decision/run-record.md) illustrates use but is not an evaluation.
 - [Issue #5 diagnostic review](../reviews/issue-5/README.md) — evidence and findings for the exact candidate; all diagnostic material is public/exposed and is not held-out pilot data.
 - [Manual Architecture Gatekeeper dogfood](gatekeeper-manual-dogfood.md) — optional, local development feedback only; not an acceptance or adoption mechanism.
 - [Optional Architecture Gatekeeper CI observation](gatekeeper-observation-ci.md) — non-required PR feedback under a pinned Gatekeeper workflow; not merge acceptance or adoption.

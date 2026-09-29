@@ -1,6 +1,6 @@
 # Architecture Decision Proposal: Make a Gatekeeper-compatible Authority Set the final product outcome
 
-> **Document status:** Proposed
+> **Document status:** Adopted
 > **Prepared:** 2026-09-29
 > **Decision owner:** Repository owner
 > **Review by / time bound:** None known
@@ -113,11 +113,9 @@ Keep evaluation proportional to this slice: preserve proposal-quality checks, th
 - **Applicable analysis missing or deferred:** The exact Gatekeeper parser/materializer commit and committed Markdown fixture snapshot to pin must be chosen and recorded when implementing the slice. No compatibility run or end-to-end v0.2 example is claimed by this proposal.
 - **Trade-offs accepted by this proposal:** Optimize for one complete, reviewable vertical slice before adding multiple members, external repositories, multiple output formats, precedence automation, or a generic authority ontology.
 
-## Unresolved owner choices
+## Resolved owner choice
 
-| Question | Why owner judgment is needed | What depends on it | Needed by / time bound |
-| --- | --- | --- | --- |
-| Adopt or amend this proposal's specific v0.2 scope and authorize recording the endpoint amendment in a new decision record and updating `docs/architecture.md`? | Issue #30 and the owner's conversation establish the desired endpoint, but this proposal and its exact revision still need an explicit repository outcome under the bootstrap process. | Canonical contract revision and implementation scope. | Before changing canonical authority or implementing the new responsibility. |
+The repository owner adopted this proposal's v0.2 scope for the exact revision recorded below and authorized a new decision record plus the corresponding canonical-contract update. This outcome does not claim that the slice is implemented or validated.
 
 The exact Gatekeeper commit is a required implementation pin, but is a compatibility input to record during implementation; it does not reopen the product endpoint or require a separate product-level decision unless the available revision fails the proposed contract.
 
@@ -137,14 +135,14 @@ The exact Gatekeeper commit is a required implementation pin, but is a compatibi
 
 ## Adoption record
 
-Leave pending until the authorized repository owner records an outcome for this exact proposal revision under [`docs/decisions/README.md`](../decisions/README.md). The desired final outcome is supplied owner direction; the proposed canonical amendment and implementation scope remain pending. If adopted, record the amendment to ADR 0001's product endpoint in a new ADR, update `docs/architecture.md`, and leave ADR 0001 unchanged as historical rationale.
+The authorized repository owner explicitly adopted the exact merged proposal revision under [`docs/decisions/README.md`](../decisions/README.md). [Decision record 0002](../decisions/0002-authority-set-final-outcome.md) records the canonical amendment and preserves decision record 0001 as historical rationale.
 
-- **Owner outcome:** Pending
-- **Target artifact(s) and revision(s):** `docs/proposals/0002-authority-set-final-outcome.md` at the revision explicitly acted upon
+- **Owner outcome:** Adopt
+- **Target artifact(s) and revision(s):** `docs/proposals/0002-authority-set-final-outcome.md` at `cb3a16b1e98a99cc54f075d67c253ac7cc944676`
 - **Authorized owner/authority:** Repository owner under the bootstrap rule
-- **Authorization evidence URL or record ID:** Pending
-- **Date and adopted scope:** Pending
-- **Applicability conditions:** Pending
-- **Exceptions:** Pending
-- **Current canonical architecture updated at:** Pending
+- **Authorization evidence URL or record ID:** [Issue #30 owner outcome](https://github.com/flair-agency/architecture-decision-authoring/issues/30#issuecomment-5887904872)
+- **Date and adopted scope:** 2026-09-29; the bounded v0.2 vertical slice stated in this proposal
+- **Applicability conditions:** One decision, an exact Proposal revision, an explicit owner outcome, and the evidence and unambiguous-content conditions stated above
+- **Exceptions:** No consumable export for `Defer`, `Reject`, pending or missing adoption, missing evidence, or ambiguous adopted content
+- **Current canonical architecture updated at:** [Decision record 0002](../decisions/0002-authority-set-final-outcome.md) and [`docs/architecture.md`](../architecture.md) in the adoption-integration change
 - **Downstream artifacts explicitly adopted/derived:** None; a v1 selector does not activate consumer policy

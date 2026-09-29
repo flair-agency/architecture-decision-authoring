@@ -2,11 +2,11 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/flair-agency?label=Sponsor&logo=github)](https://github.com/sponsors/flair-agency)
 
-Architecture Decision Authoring is an early-stage design project exploring how to help architecture owners and decision proposers turn scattered evidence, constraints, alternatives, and unresolved questions into reviewable decision proposals.
+Architecture Decision Authoring helps architecture owners and decision proposers turn scattered evidence, constraints, alternatives, and unresolved questions into reviewable decision proposals and, after an explicit owner outcome, into source-grounded Authority Sets selectable by Architecture Gatekeeper.
 
-This project is in the design and pre-pilot phase. Its outputs are proposals for human review; they do not make, adopt, or replace an architecture owner's decision. No pilot result or product capability is claimed as validated.
+The current v0.1.0 implementation is an experimental Proposal-authoring prototype. The Authority Set finalization endpoint is adopted for v0.2.0 but is not yet implemented or validated. The product never makes, adopts, or replaces an architecture owner's decision.
 
-The current scope is to support one architecture decision at a time by organizing its context and trade-offs. The project does not aim to generate a complete architecture, make decisions for owners, or automatically approve or adopt proposals.
+The first end-to-end scope is one decision, one exact owner outcome, one local Markdown Authority member, and one Gatekeeper v1 selector with traceability. The project does not aim to generate a complete architecture, make decisions for owners, automatically approve proposals, or activate consumer policy.
 
 ## Project status
 
@@ -20,7 +20,7 @@ Current work items: [Issues](https://github.com/flair-agency/architecture-decisi
 
 ## Skill prototype
 
-The [Architecture Decision Authoring Skill prototype](skills/architecture-decision-authoring/SKILL.md) is a reviewable implementation experiment. Its [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates intended use; it is not an automated or independent evaluation. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
+The [Architecture Decision Authoring Skill prototype](skills/architecture-decision-authoring/SKILL.md) currently implements only the Proposal-authoring stage. Its [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates intended use; it is not an automated or independent evaluation. Authority Set finalization is the next implementation slice. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
 
 ### Install and invoke the Skill
 
@@ -39,7 +39,7 @@ For example, after placing your source files in the workspace, ask:
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. The [product and artifact contract](docs/architecture.md) and its [initial decision record](docs/decisions/0001-markdown-first-proposal-contract.md) are adopted for the initial pilot and will be reassessed after the comparative pilot. See also the [proposal template](docs/templates/architecture-decision-proposal.md) and [decision-record guidance](docs/decisions/README.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to discuss and propose changes. Design documents are proposals until an authorized owner adopts them. The [product and artifact contract](docs/architecture.md), [initial Proposal decision](docs/decisions/0001-markdown-first-proposal-contract.md), and [Authority Set endpoint amendment](docs/decisions/0002-authority-set-final-outcome.md) are adopted within their stated bounds. See also the [proposal template](docs/templates/architecture-decision-proposal.md) and [decision-record guidance](docs/decisions/README.md).
 
 ## Community and security
 

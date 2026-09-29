@@ -10,15 +10,19 @@ flowchart LR
   Authoring -->|prepares| Proposal[Reviewable proposal]
   Proposal -->|for owner review| Owner[Authorized owner]
   Owner -->|acts through| Process[Consumer-owned process]
-  Process -->|if adopted: records authorization and updates| Current[Current canonical architecture or other authoritative record]
-  Process -.->|may select and use| Downstream[Optional downstream system]
+  Process -->|records explicit outcome| Outcome{Owner outcome}
+  Outcome -->|Adopt or explicit Amend| Finalize[Authority Set finalization]
+  Outcome -->|Defer, Reject, or unresolved| NoExport[No consumable Authority Set]
+  Finalize -->|produces compatible package| Authority[Gatekeeper-selectable Authority Set]
+  Process -.->|may separately update| Current[Current canonical architecture or other authoritative record]
+  Authority -.->|consumer may select and activate| Downstream[Architecture Gatekeeper]
   Note[Proposer and owner may be the same person]
   Proposer -.-> Note
 ```
 
 **Governing contract:** [Purpose and boundary](architecture.md#purpose-and-boundary), [Lifecycle and adoption boundary](architecture.md#lifecycle-and-adoption-boundary), and [Downstream boundary](architecture.md#downstream-boundary).
 
-**Material omissions:** This view is not an organizational chart and does not define reviewer roles, reporting lines, identity, or permissions. Proposer and owner are roles, not necessarily different people. Any review roles belong to the consumer's process; the core does not require a separate reviewer. The authoring core does not require downstream schemas, tools, or runtime services; the consumer chooses whether and how to hand off an adopted result.
+**Material omissions:** This view is not an organizational chart and does not define reviewer roles, reporting lines, identity, or permissions. Proposer and owner are roles, not necessarily different people. Any review roles belong to the consumer's process; the core does not require a separate reviewer. Gatekeeper is an artifact-compatibility target, not an authoring runtime dependency. Generation does not select or activate consumer policy.
 
 ## 2. Concepts and artifacts — what is distinct?
 
@@ -46,15 +50,20 @@ flowchart LR
   Current[Current canonical architecture or other authoritative record]
   Record -.-> Distinction[Distinct artifacts; not interchangeable]
   Current -.-> Distinction
-  Process -->|if adopted, separately updates| Current
-  Process -.->|consumer may explicitly derive or adopt| Downstream[Optional downstream artifact]
+  Process -.->|if adopted, may separately update| Current
+  Process -->|Adopt or explicit Amend with exact content| Package[Decision package]
+  Package --> Adoption[Adoption record]
+  Package --> Authority[Markdown Authority member]
+  Package --> Selector[Gatekeeper v1 selector]
+  Package --> Trace[Clause-level traceability and validation results]
+  Package -.->|consumer may select and activate| Downstream[Architecture Gatekeeper]
   Conditional[Additional analyses or artifacts are conditional on scope, risk, and evidence needs]
   Proposal -.-> Conditional
 ```
 
 **Governing contract:** [Input classification and source mapping](architecture.md#input-classification-and-source-mapping), [Output contract](architecture.md#output-contract), [Lifecycle and adoption boundary](architecture.md#lifecycle-and-adoption-boundary), and [Downstream boundary](architecture.md#downstream-boundary).
 
-**Material omissions:** This is a concept map, not a class model, schema, storage design, or exhaustive file inventory. The default proposal is Markdown-first; optional analysis artifacts are not universally required. A source map provides traceability, not proof that sources are authentic or authoritative. An adopted decision record is historical evidence and is distinct from the consumer's current canonical architecture or other authoritative record. Downstream artifacts are separately consumer-owned and optional; the authoring core does not require downstream schemas, tools, or runtime services, and the consumer chooses whether and how to hand off an adopted result.
+**Material omissions:** This is a concept map, not a class model, storage design, generic authority ontology, or exhaustive file inventory. The Proposal and Authority member are Markdown-first. A source map provides traceability, not proof that sources are authentic or authoritative. An adopted decision record is historical evidence and is distinct from current canonical architecture. A compatible selector does not prove semantic fidelity, consumer selection, or activation.
 
 ## 3. Authoring and adoption lifecycle — where does authoring end?
 
@@ -73,13 +82,17 @@ flowchart LR
   Outcome --> Amend[Amend]
   Outcome --> Defer[Defer]
   Outcome --> Reject[Reject]
-  Adopt --> Record[Record authorization]
-  Adopt --> Update[Owner updates current canonical architecture or other authoritative record]
-  Amend --> External[Consumer-owned handling; no automatic core update]
-  Defer --> External
-  Reject --> External
+  Adopt --> Record[Record authorization and exact Proposal revision]
+  Amend --> Exact[Require exact owner-supplied or explicitly approved normative content]
+  Record --> Finalize[Finalize bounded Authority Set package]
+  Exact --> Finalize
+  Finalize --> TraceCheck[Check package traceability]
+  TraceCheck -.-> Consumer[Consumer separately selects or activates policy]
+  DevCheck[Development compatibility check against a pinned Gatekeeper revision] -.->|validates the artifact contract; not a per-decision runtime step| Finalize
+  Defer --> NoExport[No consumable Authority Set]
+  Reject --> NoExport
 ```
 
 **Governing contract:** [Output contract](architecture.md#output-contract) and [Lifecycle and adoption boundary](architecture.md#lifecycle-and-adoption-boundary).
 
-**Material omissions:** The view does not prescribe a tool, approval workflow, mandatory reviewer, number of iterations, or review schedule. It does not require diagrams in individual proposals. A complete proposal and an explicitly incomplete but useful proposal are both valid outputs. The consumer's authorized owner—not the core authoring process—chooses whether to adopt, amend, defer, or reject and updates current canonical architecture or another authoritative record through the consumer's own process. Generation, commit, merge, and status labels alone are not adoption.
+**Material omissions:** The view does not prescribe a tool, approval workflow, mandatory reviewer, number of iterations, or review schedule. It does not require diagrams in individual Proposals. A complete Proposal and an explicitly incomplete but useful Proposal are both valid intermediate outputs. The authorized owner—not the authoring process—chooses whether to adopt, amend, defer, or reject. Generation, commit, merge, and status labels alone are not adoption. Finalization does not update canonical architecture or activate Gatekeeper automatically.
