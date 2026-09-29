@@ -65,11 +65,12 @@ Implement the smallest v0.2 vertical slice for one decision:
 
 1. Produce or ingest one Proposal and identify its exact revision.
 2. Record an explicit owner outcome (`Adopt`, `Amend`, `Defer`, or `Reject`) with the exact Proposal revision, owner, decision date, adopted scope, applicability conditions, exceptions, and an authorization evidence URL or record ID.
-3. For `Adopt`, export only the identified proposed content the owner adopted. For `Amend`, require the owner to supply or explicitly approve the resulting normative wording; do not invent the amendment. If a partial outcome cannot be represented unambiguously from explicitly identified content, stop without an export.
+3. For `Adopt`, export only the identified proposed content the owner adopted. For `Amend`, require the owner to supply or explicitly approve the resulting normative wording; bind that exact resulting content to an immutable content identity (for example, a SHA-256 digest and the recorded content snapshot) in the adoption record. Do not treat unversioned free text as the adopted result or invent the amendment. If a partial outcome cannot be represented unambiguously from explicitly identified content, stop without an export.
 4. For `Defer`, `Reject`, pending outcome, missing evidence, or ambiguous adopted content, preserve the recorded outcome and produce no consumable Authority Set.
 5. When export is allowed, produce one Markdown Authority member, one version 1 JSON selector with one local `self` member, and traceability from every normative clause to the owner outcome, Proposal, and source evidence.
-6. Check manifest structure, bounded references, and compatibility using an exact pinned Gatekeeper parser/materializer revision in development. Do not invoke Gatekeeper during authoring.
-7. Report structural compatibility, traceability checks, pinned parser/materializer compatibility, semantic fidelity review, and consumer activation as distinct results. A generated selector does not install or activate policy.
+6. Check manifest structure, bounded references, and compatibility using an exact pinned Gatekeeper parser/materializer revision in development. Exercise materialization from committed Markdown snapshots in the pinned test fixture, rather than reading an uncommitted working-tree file. Do not invoke Gatekeeper during authoring.
+7. Report structural compatibility, traceability checks, pinned parser/materializer compatibility, semantic fidelity review, and consumer activation as distinct results. A generated selector does not install or activate policy; a consumer separately chooses whether to add it to Gatekeeper configuration and activate the selected policy.
+8. After adoption, add a new decision record that amends or supersedes decision record 0001 and update the canonical product contract. Preserve 0001 unchanged as historical rationale; do not rewrite it to match the new endpoint.
 
 Use a small artifact package such as:
 
@@ -100,16 +101,16 @@ The manifest follows Gatekeeper's v1 selector shape, with no extra keys:
 }
 ```
 
-The Markdown member carries the normative meaning. Do not add a per-rule YAML/JSON schema; Gatekeeper v1 selects Markdown and does not supply such an ontology. The version 1 selector is a compatibility artifact, not evidence of adoption or enforcement.
+The Markdown member carries the normative meaning. For an `Amend` outcome, the adoption record must identify the exact resulting content bytes by immutable identity, and the exported member must match that snapshot. Do not add a per-rule YAML/JSON schema; Gatekeeper v1 selects Markdown and does not supply such an ontology. The version 1 selector is a compatibility artifact, not evidence of adoption, consumer policy selection, or enforcement.
 
 Keep evaluation proportional to this slice: preserve proposal-quality checks, then measure owner-outcome handling, conversion fidelity, traceability, selector/parser compatibility, Authority Set usability, and owner effort on the concrete example. Do not claim general effectiveness from a single example or the public rehearsal in #29.
 
 ## Consequences and conditional analysis
 
-- **Expected consequences:** Users can reach a concrete Gatekeeper-selectable artifact after recording their decision; the owner retains authority; the handoff becomes inspectable and testable.
+- **Expected consequences:** Users can reach a concrete Gatekeeper-selectable artifact after recording their decision; the owner retains authority; the handoff becomes inspectable and testable. Historical decision rationale remains stable because the amended endpoint is recorded as a new decision rather than by rewriting ADR 0001.
 - **Costs and limits:** The first slice covers one local Markdown member and a single Gatekeeper selector version. A schema change requires an explicit reviewed compatibility update. Markdown remains semantically reviewable rather than mechanically proving that its wording matches the owner's intent.
 - **Applicable analysis included:** This proposal uses Gatekeeper's normative contract, integration reference, and current parser implementation to define the narrow compatibility target.
-- **Applicable analysis missing or deferred:** The exact Gatekeeper parser/materializer commit to pin must be chosen and recorded when implementing the slice. No compatibility run or end-to-end v0.2 example is claimed by this proposal.
+- **Applicable analysis missing or deferred:** The exact Gatekeeper parser/materializer commit and committed Markdown fixture snapshot to pin must be chosen and recorded when implementing the slice. No compatibility run or end-to-end v0.2 example is claimed by this proposal.
 - **Trade-offs accepted by this proposal:** Optimize for one complete, reviewable vertical slice before adding multiple members, external repositories, multiple output formats, precedence automation, or a generic authority ontology.
 
 ## Unresolved owner choices
@@ -126,6 +127,7 @@ The exact Gatekeeper commit is a required implementation pin, but is a compatibi
 | --- | --- | --- | --- | --- |
 | Current product endpoint and separation of Proposal from adoption | Existing decision | [`docs/architecture.md`](../architecture.md), “Purpose and boundary,” “Output contract,” and “Lifecycle and adoption boundary”; [decision record 0001](../decisions/0001-markdown-first-proposal-contract.md), “Decision” | Adopted initial pilot, 2026-09-28 | This is the current adopted contract; this proposal does not amend it. |
 | User's desired final outcome and one-decision v0.2 slice | Fact / decision input | [Issue #30](https://github.com/flair-agency/architecture-decision-authoring/issues/30), “Owner direction,” “Correct Gatekeeper compatibility target,” and “Target v0.2 vertical slice” | 2026-09-29 | Captures requested direction; Issue #30 does not itself amend canonical authority. |
+| Amendment history must remain immutable and traceable | Constraint | [`docs/decisions/README.md`](../decisions/README.md), “Repository bootstrap adoption rule”; [decision record 0001](../decisions/0001-markdown-first-proposal-contract.md) | Current repository process | This proposal recommends creating a new decision record for the changed endpoint; decision record 0001 remains historical and unchanged. |
 | v0.1.0 output and its release status | Fact | [v0.1.0 release](https://github.com/flair-agency/architecture-decision-authoring/releases/tag/v0.1.0) | v0.1.0, 2026-09-29 | Experimental Proposal-authoring prototype; not evidence of Authority Set capability. |
 | Rehearsal only evaluated the Proposal stage | Evidence | [PR #29](https://github.com/flair-agency/architecture-decision-authoring/pull/29), outputs and comparison record | 2026-09-29 | Public rehearsal; unfavorable findings remain visible; not held-out or general-effectiveness evidence. |
 | Adoption outcome vocabulary and evidence rule | Existing decision | [`docs/decisions/README.md`](../decisions/README.md), “Repository bootstrap adoption rule” | Current repository process | A status label, PR, or merge is not adoption evidence. |
@@ -135,7 +137,7 @@ The exact Gatekeeper commit is a required implementation pin, but is a compatibi
 
 ## Adoption record
 
-Leave pending until the authorized repository owner records an outcome for this exact proposal revision under [`docs/decisions/README.md`](../decisions/README.md). The desired final outcome is supplied owner direction; the proposed canonical amendment and implementation scope remain pending.
+Leave pending until the authorized repository owner records an outcome for this exact proposal revision under [`docs/decisions/README.md`](../decisions/README.md). The desired final outcome is supplied owner direction; the proposed canonical amendment and implementation scope remain pending. If adopted, record the new decision in a new ADR and leave ADR 0001 unchanged.
 
 - **Owner outcome:** Pending
 - **Target artifact(s) and revision(s):** `docs/proposals/0002-authority-set-final-outcome.md` at the revision explicitly acted upon
