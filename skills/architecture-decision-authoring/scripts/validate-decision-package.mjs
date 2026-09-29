@@ -143,7 +143,12 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
-    if (/^(?:=+|-+)$/.test(line)) {
+    if (isThematicBreak(line)) {
+      errors.push(`authority.md must not use Markdown thematic breaks as clause content on line ${index + 1}`);
+      continue;
+    }
+
+    if (/^=+$/.test(line)) {
       errors.push(`authority.md must not use Setext headings or ambiguous horizontal rules on line ${index + 1}`);
       continue;
     }
@@ -167,7 +172,7 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
 
     if (!activeClause) {
       errors.push(`authority.md has content outside a marked clause block on line ${index + 1}`);
-    } else if (!/^(?:\*\*\*+|___+)$/.test(line)) {
+    } else {
       activeClauseHasBody = true;
     }
   }
@@ -176,6 +181,13 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
   if (activeClause && !activeClauseHasBody) {
     errors.push(`Authority clause ${activeClause} must contain Markdown clause content`);
   }
+}
+
+function isThematicBreak(line) {
+  const value = line.trim();
+  return /^(?:\*[ \t]*){3,}$/.test(value)
+    || /^(?:_[ \t]*){3,}$/.test(value)
+    || /^(?:-[ \t]*){3,}$/.test(value);
 }
 
 function markdownContext(lines) {

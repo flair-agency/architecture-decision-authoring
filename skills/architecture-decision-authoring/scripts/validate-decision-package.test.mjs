@@ -571,7 +571,29 @@ test("rejects Setext headings and ambiguous horizontal rules in Authority member
     ].join("\n"));
     const result = run(dir);
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /must not use Setext headings or ambiguous horizontal rules/);
+    assert.match(result.stderr, /(?:must not use Setext headings or ambiguous horizontal rules|must not use Markdown thematic breaks)/);
+  }
+});
+
+test("rejects spaced CommonMark thematic breaks instead of counting them as clause text", async () => {
+  const validDir = await root();
+  await writeValidAdoptPackage(validDir);
+  const validResult = run(validDir);
+  assert.equal(validResult.status, 0, validResult.stderr);
+
+  for (const thematicBreak of ["* * *", "_ _ _", "- - -", "***", "___"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      thematicBreak
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `${JSON.stringify(thematicBreak)} must not satisfy the clause body`);
+    assert.match(result.stderr, /must not use Markdown thematic breaks as clause content/);
   }
 });
 
