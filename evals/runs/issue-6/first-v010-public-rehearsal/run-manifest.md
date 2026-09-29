@@ -1,6 +1,6 @@
 # Issue #6 public rehearsal pair
 
-Status: diagnostic rehearsal only. These outputs are not scored, are not protocol-compliant Phase A evidence, and do not support a decision-grade conclusion.
+Status: diagnostically agent-scored rehearsal only. These outputs are not owner-adjudicated, are not protocol-compliant Phase A evidence, and do not support a decision-grade conclusion.
 
 ## Source and run setup
 
@@ -9,14 +9,14 @@ Status: diagnostic rehearsal only. These outputs are not scored, are not protoco
 - Each arm used a fresh temporary workspace and a new `codex exec` context. Baseline workspace: `/private/tmp/adr-rehearsal-baseline-new.cAuzSM`. Skill workspace: `/private/tmp/adr-rehearsal-skill-new.jSvd9v`.
 - Both workspaces contained the same `request.md`, `template.md`, and `input/*.md`. Baseline had no authoring Skill files; Skill had only the released authoring Skill package installed under `.codex/skills/`.
 - Both runs used Codex CLI `0.153.2`, requested model `gpt-5.6-sol`, configured reasoning effort `low`, and the same CLI options: `--approve-for-me --ephemeral --skip-git-repo-check --ignore-user-config --json`. The CLI event stream does not independently confirm the served model or backend revision; only the requested model/configuration is recorded here.
-- Both received the same short workspace-reading preamble and the shared baseline prompt body from `evals/baseline-prompt.md` (SHA-256 `4e67cadd714398fa674b3c9d490ca257b81284cdc76d97c7a81b84b70174be83`). The only arm-specific prompt addition was the explicit `$architecture-decision-authoring` invocation in the Skill arm.
+- Both received the same short workspace-reading preamble and a prompt body intended to be extracted from `evals/baseline-prompt.md`. The only arm-specific prompt addition was the explicit `$architecture-decision-authoring` invocation in the Skill arm. The exact sent prompt bytes were not preserved, and the originally recorded digest could not be reproduced from the referenced file at this revision; that digest is withdrawn rather than presented as reconstructable evidence.
 - Each event stream recorded one `turn.started` and one `turn.completed`. Both final-message captures were non-empty and the CLI processes exited `0`.
 
 ## Model substitution limitation
 
 The initial requested `gpt-6-sol` baseline startup attempt failed with exit code `1` before producing a proposal. Codex CLI reported: `The 'gpt-6-sol' model is not supported when using Codex with a ChatGPT account.` Per coordinator direction, both fresh-context runs then used `gpt-5.6-sol` at low reasoning. This substitution is a material deviation and must remain visible in any later comparison.
 
-No expected outputs, prior proposals, reviews, scoring rubric, or case commentary were supplied to either generation context. No scoring was performed here. The prompt requested no external sources or tools; `--ignore-user-config` was used and the observed run events show local workspace reads. This record does not claim network isolation, hidden-prompt visibility, or backend/model-serving verification.
+No expected outputs, prior proposals, reviews, scoring rubric, or case commentary were supplied to either generation context. Scoring was performed later as an agent-coded diagnostic using the public rubric and expectations; it was not supplied during generation and was not owner-adjudicated. The prompt requested no external sources or tools; `--ignore-user-config` was used and the observed run events show local workspace reads. This record does not claim network isolation, hidden-prompt visibility, exact prompt-byte reproducibility, or backend/model-serving verification.
 
 ## File hashes
 
@@ -24,7 +24,7 @@ All hashes use SHA-256. The same input files were staged in both workspaces; has
 
 | File | SHA-256 |
 | --- | --- |
-| Shared prompt body (`evals/baseline-prompt.md`, extracted body) | `4e67cadd714398fa674b3c9d490ca257b81284cdc76d97c7a81b84b70174be83` |
+| Shared prompt body | Not reproducible: exact sent bytes were not preserved; the previously recorded digest is withdrawn |
 | `template.md` | `34bf6d7166c972ae46b55b7de8c0f8ebf0d90a9e276f4a5be6c502dc23f076e1` |
 | `request.md` | `39889a5c470d5a70332a25d9b1aeb73f3bf3e8a3e2969678a08be78fc0eb098e` |
 | `input/adopted-decision.md` | `a841be0cbb3f4600489f860216281b5fa01ad4aa5eb3a7f1b1a7e8908045c6de` |
