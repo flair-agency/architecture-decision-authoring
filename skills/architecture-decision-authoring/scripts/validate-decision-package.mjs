@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { lstat, readFile, realpath } from "node:fs/promises";
 import { resolve, relative, sep } from "node:path";
 
 const root = resolve(process.argv[2] ?? "decision-package");
@@ -122,11 +122,11 @@ function exactKeys(value, expected, label) {
   }
 }
 
-function inside(path, label) {
+async function inside(path, label) {
   return insideBase(root, path, label);
 }
 
-function insideBase(base, path, label) {
+async function insideBase(base, path, label) {
   if (typeof path !== "string" || path.trim() === "") {
     errors.push(`${label} must be a non-empty path`);
     return null;
@@ -134,7 +134,18 @@ function insideBase(base, path, label) {
   const target = resolve(base, path);
   const rel = relative(base, target);
   if (rel === "" || rel.startsWith(`..${sep}`) || rel === "..") {
-    errors.push(`${label} must stay inside the package`);
+    errors.push(`${label} must stay inside its allowed root`);
+    return null;
+  }
+  try {
+    const [baseReal, targetReal] = await Promise.all([realpath(base), realpath(target)]);
+    const realRel = relative(baseReal, targetReal);
+    if (realRel === "" || realRel === ".." || realRel.startsWith(`..${sep}`)) {
+      errors.push(`${label} resolves outside its allowed root`);
+      return null;
+    }
+  } catch {
+    errors.push(`${label} must resolve to an existing path`);
     return null;
   }
   return target;
@@ -142,14 +153,23 @@ function insideBase(base, path, label) {
 
 async function exists(path) {
   try {
-    return (await stat(path)).isFile();
+    const info = await lstat(path);
+    return info.isFile() || info.isSymbolicLink();
   } catch {
     return false;
   }
 }
 
-const record = await json(resolve(root, "adoption-record.json"));
-if (!record) finish("decision package is invalid");
+const recordPath = await inside("adoption-record.json", "adoption record path");
+const record = recordPath && await json(recordPath);
+if (!record || typeof record !== "object" || Array.isArray(record)) {
+  if (recordPath) errors.push("adoption record must be an object");
+  finish("decision package is invalid");
+}
+
+if (!["Adopt", "Amend", "Defer", "Reject"].includes(record.outcome)) {
+  errors.push('outcome must be one of "Adopt", "Amend", "Defer", or "Reject"');
+}
 
 const required = [
   "schemaVersion", "outcome", "proposal", "owner", "authorizationEvidence",
@@ -171,6 +191,9 @@ if (!exportable) {
   finish("no-export outcome is fail-closed");
 }
 
+const boundedAuthorityPath = await inside("authority-set/authority.md", "Authority member path");
+const boundedManifestPath = await inside("authority-set/manifest.json", "manifest path");
+
 if (record.schemaVersion !== 1) errors.push("schemaVersion must be 1");
 for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
   if (typeof record[key] !== "string" || record[key].trim() === "") {
@@ -179,17 +202,20 @@ for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
 }
 
 exactKeys(record.proposal, ["path", "revision", "sha256"], "proposal");
-const proposalPath = record.proposal && inside(record.proposal.path, "proposal.path");
+const proposalPath = record.proposal && await inside(record.proposal.path, "proposal.path");
 if (proposalPath && proposalPath !== resolve(root, "proposal.md")) {
   errors.push("proposal.path must select the package proposal.md");
+}
+if (record.proposal && (typeof record.proposal.revision !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(record.proposal.revision))) {
+  errors.push("proposal.revision must be a full 40- or 64-character immutable Git commit ID");
 }
 const proposal = proposalPath && await bytes(proposalPath);
 if (proposal && sha256(proposal) !== record.proposal.sha256) {
   errors.push("proposal bytes do not match proposal.sha256");
 }
 
-const manifest = await json(manifestPath);
-if (manifest) {
+const manifest = boundedManifestPath && await json(boundedManifestPath);
+if (manifest && typeof manifest === "object" && !Array.isArray(manifest)) {
   exactKeys(manifest, ["version", "authorities"], "manifest");
   if (manifest.version !== 1) errors.push("manifest.version must be 1");
   if (!Array.isArray(manifest.authorities) || manifest.authorities.length !== 1) {
@@ -197,20 +223,23 @@ if (manifest) {
   } else {
     const member = manifest.authorities[0];
     exactKeys(member, ["id", "repository", "revision", "path"], "manifest member");
-    if (typeof member.id !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(member.id)) {
-      errors.push("manifest member id must be a Gatekeeper stable ID (lowercase letter followed by up to 63 lowercase letters, digits, or hyphens)");
+    if (member && typeof member === "object" && !Array.isArray(member)) {
+      if (typeof member.id !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(member.id)) {
+        errors.push("manifest member id must be a Gatekeeper stable ID (lowercase letter followed by up to 63 lowercase letters, digits, or hyphens)");
+      }
+      if (member.repository !== "self") errors.push('manifest member repository must be "self"');
+      if (member.revision !== "authority-revision") errors.push('manifest member revision must be "authority-revision"');
+      const selected = await insideBase(repositoryRoot, member.path, "manifest member path");
+      if (selected && resolve(selected) !== authorityPath) errors.push("manifest must select authority-set/authority.md");
     }
-    if (member.repository !== "self") errors.push('manifest member repository must be "self"');
-    if (member.revision !== "authority-revision") errors.push('manifest member revision must be "authority-revision"');
-    const selected = insideBase(repositoryRoot, member.path, "manifest member path");
-    if (selected && resolve(selected) !== authorityPath) errors.push("manifest must select authority-set/authority.md");
   }
-} else if (manifest === null && await exists(manifestPath)) {
+} else {
   errors.push("manifest must be an object");
 }
 
-const authority = await bytes(authorityPath);
-const traceability = await bytes(resolve(root, "traceability.md"));
+const authority = boundedAuthorityPath && await bytes(boundedAuthorityPath);
+const traceabilityPath = await inside("traceability.md", "traceability path");
+const traceability = traceabilityPath && await bytes(traceabilityPath);
 const clauseIds = authority ? authorityClauseIds(authority) : [];
 if (authority && clauseIds.length === 0) {
   errors.push('authority.md must identify every normative clause with a stable `<!-- clause-id: ID -->` marker');
@@ -292,15 +321,17 @@ if (record.outcome === "Adopt") {
 
 if (record.outcome === "Amend") {
   exactKeys(record.amendedContent, ["path", "sha256"], "amendedContent");
-  const snapshotPath = record.amendedContent && inside(record.amendedContent.path, "amendedContent.path");
+  const snapshotPath = record.amendedContent && await inside(record.amendedContent.path, "amendedContent.path");
   const snapshot = snapshotPath && await bytes(snapshotPath);
   if (snapshot && sha256(snapshot) !== record.amendedContent.sha256) errors.push("amended snapshot digest mismatch");
   if (snapshot && authority && !snapshot.equals(authority)) errors.push("authority.md must exactly match the approved amended snapshot bytes");
 }
 
-const validationResult = await json(resolve(root, "validation-result.json"));
-if (validationResult === null) errors.push("validation-result must be an object");
-else validateValidationResult(validationResult);
+const validationResultPath = await inside("validation-result.json", "validation-result path");
+const validationResult = validationResultPath && await json(validationResultPath);
+if (!validationResult || typeof validationResult !== "object" || Array.isArray(validationResult)) {
+  if (validationResultPath) errors.push("validation-result must be an object");
+} else validateValidationResult(validationResult);
 finish("decision package structure is valid");
 
 function finish(successMessage) {

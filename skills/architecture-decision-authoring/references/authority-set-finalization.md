@@ -1,6 +1,6 @@
 # Authority Set finalization
 
-Use this workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be explicit: `Adopt`, `Amend`, `Defer`, or `Reject`.
+Use this workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be exactly one of `Adopt`, `Amend`, `Defer`, or `Reject`; unknown values fail validation.
 
 ## Finalization gate
 
@@ -38,8 +38,8 @@ Preserve the exact owner-targeted Proposal bytes in `proposal.md` and verify tha
 Use JSON with these fields:
 
 - `schemaVersion`: `1`
-- `outcome`: `Adopt` or `Amend`
-- `proposal.path`, `proposal.revision`, and `proposal.sha256`
+- `outcome`: exactly one of `Adopt`, `Amend`, `Defer`, or `Reject`; `Defer` and `Reject` produce no Authority Set
+- `proposal.path`, `proposal.revision`, and `proposal.sha256`; `proposal.revision` is a full immutable Git commit ID (40- or 64-character hexadecimal)
 - `owner`, `authorizationEvidence`, and `decisionDate`
 - `scope`, `applicabilityConditions`, and `exceptions`
 - `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`
@@ -120,4 +120,4 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
 
-Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. It also requires a Gatekeeper-valid member ID, a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, Proposal/source locators carried by the Proposal bytes, and the complete version 1 validation-result status set. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
+Run `node scripts/validate-decision-package.mjs <decision-package-directory> [repository-root]` as the deterministic package-structure and fail-closed check. It also requires a Gatekeeper-valid member ID, a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, Proposal/source locators carried by the Proposal bytes, and the complete version 1 validation-result status set. Every referenced file is checked both lexically and by its resolved filesystem path; symlinks that escape the package or repository root fail validation. When omitted, `repository-root` defaults to the package directory's parent. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.

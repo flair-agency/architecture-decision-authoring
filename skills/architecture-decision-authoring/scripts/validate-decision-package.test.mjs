@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const validator = fileURLToPath(new URL("./validate-decision-package.mjs", import.meta.url));
 const digest = (value) => createHash("sha256").update(value).digest("hex");
+const proposalRevision = "0123456789abcdef0123456789abcdef01234567";
 
 async function root() {
   const container = await mkdtemp(join(tmpdir(), "decision-package-test-"));
@@ -21,7 +22,7 @@ function run(path) {
   return spawnSync(process.execPath, [validator, path], { encoding: "utf8" });
 }
 
-async function writeValidAdoptPackage(dir, { memberId = "decision-a", validationResult } = {}) {
+async function writeValidAdoptPackage(dir, { memberId = "decision-a", validationResult, revision = proposalRevision, outcome = "Adopt" } = {}) {
   const proposal = Buffer.from("# Proposal\n\n## Proposed decision\n\nAdopt clause A, based on source:input.md#rule.\n");
   await mkdir(join(dir, "authority-set"));
   await writeFile(join(dir, "proposal.md"), proposal);
@@ -32,8 +33,8 @@ async function writeValidAdoptPackage(dir, { memberId = "decision-a", validation
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
-    outcome: "Adopt",
-    proposal: { path: "proposal.md", revision: "abc123", sha256: digest(proposal) },
+    outcome,
+    proposal: { path: "proposal.md", revision, sha256: digest(proposal) },
     owner: "owner",
     authorizationEvidence: "record:1",
     decisionDate: "2026-09-29",
@@ -46,7 +47,7 @@ async function writeValidAdoptPackage(dir, { memberId = "decision-a", validation
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
     "| --- | --- | --- | --- | --- | --- | --- |",
-    "| A | clause-id:A | Adopt | record:1 | abc123 | Proposed decision | source:input.md#rule |"
+    `| A | clause-id:A | ${outcome} | record:1 | ${revision} | Proposed decision | source:input.md#rule |`
   ].join("\n"));
   await writeFile(join(dir, "validation-result.json"), JSON.stringify(validationResult === undefined ? {
     schemaVersion: 1,
@@ -91,7 +92,7 @@ test("rejects Amend output that differs from the approved snapshot", async () =>
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1,
     outcome: "Amend",
-    proposal: { path: "proposal.md", revision: "abc123", sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
     owner: "owner",
     authorizationEvidence: "record:1",
     decisionDate: "2026-09-29",
@@ -102,7 +103,7 @@ test("rejects Amend output that differs from the approved snapshot", async () =>
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
     "| --- | --- | --- | --- | --- | --- | --- |",
-    "| amended-a | clause-id:amended-a | Amend | record:1 | abc123 | Owner-approved amendment | source:input.md#rule |"
+    `| amended-a | clause-id:amended-a | Amend | record:1 | ${proposalRevision} | Owner-approved amendment | source:input.md#rule |`
   ].join("\n"));
   await writeFile(join(dir, "validation-result.json"), "{}");
   const result = run(dir);
@@ -121,7 +122,7 @@ test("rejects a proposal path that does not select proposal.md", async () => {
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1, outcome: "Adopt",
-    proposal: { path: "authority-set/authority.md", revision: "abc", sha256: digest(authority) },
+    proposal: { path: "authority-set/authority.md", revision: proposalRevision, sha256: digest(authority) },
     owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
     applicabilityConditions: [], exceptions: [],
     adoptedContent: [{ clauseId: "A", proposalLocator: "section A" }], amendedContent: null
@@ -145,7 +146,7 @@ test("rejects ambiguous adoptedContent entries", async () => {
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1, outcome: "Adopt",
-    proposal: { path: "proposal.md", revision: "abc", sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
     owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
     applicabilityConditions: [], exceptions: [], adoptedContent: [{}], amendedContent: null
   }));
@@ -169,7 +170,7 @@ test("rejects an Authority clause missing its complete traceability chain", asyn
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1, outcome: "Adopt",
-    proposal: { path: "proposal.md", revision: "abc123", sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
     owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
     applicabilityConditions: [], exceptions: [],
     adoptedContent: [{ clauseId: "A", proposalLocator: "Proposed decision" }], amendedContent: null
@@ -177,7 +178,7 @@ test("rejects an Authority clause missing its complete traceability chain", asyn
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
     "| --- | --- | --- | --- | --- | --- | --- |",
-    "| A | clause-id:A | Adopt | wrong-record | abc123 | absent locator | missing source |"
+    `| A | clause-id:A | Adopt | wrong-record | ${proposalRevision} | absent locator | missing source |`
   ].join("\n"));
   await writeFile(join(dir, "validation-result.json"), "{}");
   const result = run(dir);
@@ -199,7 +200,7 @@ test("rejects a clause omitted from traceability.md", async () => {
   }));
   await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
     schemaVersion: 1, outcome: "Adopt",
-    proposal: { path: "proposal.md", revision: "abc123", sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
     owner: "owner", authorizationEvidence: "record:1", decisionDate: "2026-09-29", scope: "A",
     applicabilityConditions: [], exceptions: [],
     adoptedContent: [
@@ -210,7 +211,7 @@ test("rejects a clause omitted from traceability.md", async () => {
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
     "| --- | --- | --- | --- | --- | --- | --- |",
-    "| A | clause-id:A | Adopt | record:1 | abc123 | Proposed decision | source:input.md#rules |"
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rules |`
   ].join("\n"));
   await writeFile(join(dir, "validation-result.json"), "{}");
   const result = run(dir);
@@ -273,4 +274,57 @@ test("rejects a non-object validation result", async () => {
   const result = run(dir);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /validation-result must be an object/);
+});
+
+test("rejects manifest roots that are not JSON objects", async () => {
+  for (const invalidManifest of [false, 0, "", [], null]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify(invalidManifest));
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${JSON.stringify(invalidManifest)} to fail`);
+    assert.match(result.stderr, /manifest must be an object/);
+  }
+});
+
+test("requires proposal.revision to be an immutable full Git commit ID", async () => {
+  for (const revision of ["", "main", "abc123", "g".repeat(40)]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir, { revision });
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected ${JSON.stringify(revision)} to fail`);
+    assert.match(result.stderr, /proposal\.revision must be a full 40- or 64-character immutable Git commit ID/);
+  }
+});
+
+test("rejects unknown owner outcomes", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir, { outcome: "Approve" });
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /outcome must be one of "Adopt", "Amend", "Defer", or "Reject"/);
+});
+
+test("rejects a package file symlink that resolves outside the package", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const externalProposal = join(dir, "..", "outside-proposal.md");
+  await writeFile(externalProposal, "external proposal");
+  await unlink(join(dir, "proposal.md"));
+  await symlink(externalProposal, join(dir, "proposal.md"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /proposal\.path resolves outside its allowed root/);
+});
+
+test("rejects a selector member symlink that resolves outside the repository", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const externalAuthority = join(dir, "..", "..", "outside-authority.md");
+  await writeFile(externalAuthority, "external authority");
+  await unlink(join(dir, "authority-set", "authority.md"));
+  await symlink(externalAuthority, join(dir, "authority-set", "authority.md"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /resolves outside its allowed root/);
 });
