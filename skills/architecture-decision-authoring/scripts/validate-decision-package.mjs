@@ -47,9 +47,14 @@ function validDate(value) {
 
 function markdownTableRows(content, expectedHeader, label) {
   const lines = content.toString("utf8").split(/\r?\n/);
-  const headerIndex = lines.findIndex((line) => tableCells(line)?.join("|") === expectedHeader.join("|"));
+  const { codeLines } = markdownContext(lines);
+  const headerIndex = lines.findIndex((line, index) => !codeLines.has(index) && tableCells(line)?.join("|") === expectedHeader.join("|"));
   if (headerIndex < 0) {
     errors.push(`${label} must contain the required traceability table header`);
+    return [];
+  }
+  if (codeLines.has(headerIndex + 1)) {
+    errors.push(`${label} must have a Markdown separator row after the header`);
     return [];
   }
   const separator = tableCells(lines[headerIndex + 1]);
@@ -59,6 +64,7 @@ function markdownTableRows(content, expectedHeader, label) {
   }
   const rows = [];
   for (const [offset, line] of lines.slice(headerIndex + 2).entries()) {
+    if (codeLines.has(headerIndex + 2 + offset)) continue;
     if (line.trim() === "") continue;
     const cells = tableCells(line);
     if (!cells) {
@@ -85,10 +91,98 @@ function tableCells(line) {
 function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
+  const { codeLines, commentLines, comments, incompleteComment } = markdownContext(lines);
+
+  const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
+  const markersByHeading = new Map();
+  const markerLines = new Set();
+  for (const current of comments) {
+    if (!/^\s*clause-id\b/i.test(current.body)) continue;
+    const match = current.start === current.end && lines[current.start].match(markerPattern);
+    if (!match) {
+      errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
+      continue;
+    }
+    const index = current.start;
+    markerLines.add(index);
+    ids.push(match[1]);
+    if (!markerImmediatelyPrecedesClause(lines, codeLines, index)) {
+      errors.push(`authority clause marker ${match[1]} must be a standalone marker immediately before a normative Markdown clause`);
+    } else {
+      markersByHeading.set(index + 1, match[1]);
+    }
+  }
+  if (incompleteComment && /^\s*clause-id\b/i.test(incompleteComment.body)) {
+    errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
+  }
+  validateAuthorityBlocks(lines, codeLines, commentLines, markerLines, markersByHeading);
+  return ids;
+}
+
+function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
+  const nextIndex = markerIndex + 1;
+  if (nextIndex >= lines.length || codeLines.has(nextIndex)) return false;
+  const next = lines[nextIndex].trim();
+  return /^##\s+\S/.test(next);
+}
+
+function validateAuthorityBlocks(lines, codeLines, commentLines, markerLines, markersByHeading) {
+  let titleSeen = false;
+  let activeClause = null;
+  let activeClauseHasBody = false;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    if (codeLines.has(index) || commentLines.has(index) || markerLines.has(index)) continue;
+    const line = lines[index].trim();
+    if (!line) continue;
+
+    if (!titleSeen) {
+      if (line !== "# Authority") errors.push('authority.md must begin with the neutral title "# Authority"');
+      else titleSeen = true;
+      continue;
+    }
+    if (line === "# Authority") {
+      errors.push('authority.md may contain only one "# Authority" title');
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,6})\s+\S/);
+    if (heading) {
+      if (activeClause && !activeClauseHasBody) {
+        errors.push(`Authority clause ${activeClause} must contain Markdown clause content before the next heading`);
+      }
+      if (heading[1].length !== 2) {
+        errors.push("authority.md supports only marked level-two clause headings; nested or unmarked headings are not allowed");
+        activeClause = null;
+        activeClauseHasBody = false;
+        continue;
+      }
+      activeClause = markersByHeading.get(index) ?? null;
+      activeClauseHasBody = false;
+      if (!activeClause) errors.push(`Authority heading on line ${index + 1} must be immediately preceded by a clause-id marker`);
+      continue;
+    }
+
+    if (!activeClause) {
+      errors.push(`authority.md has content outside a marked clause block on line ${index + 1}`);
+    } else if (!/^(?:---+|\*\*\*+|___+)$/.test(line)) {
+      activeClauseHasBody = true;
+    }
+  }
+
+  if (!titleSeen) errors.push('authority.md must begin with the neutral title "# Authority"');
+  if (activeClause && !activeClauseHasBody) {
+    errors.push(`Authority clause ${activeClause} must contain Markdown clause content`);
+  }
+}
+
+function markdownContext(lines) {
   const codeLines = new Set();
+  const commentLines = new Set();
   const comments = [];
   let fence = null;
   let comment = null;
+
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (fence) {
@@ -97,7 +191,14 @@ function authorityClauseIds(content) {
       if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
       continue;
     }
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      codeLines.add(index);
+      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
+      continue;
+    }
     if (comment) {
+      commentLines.add(index);
       comment.end = index;
       comment.body += `\n${line}`;
       if (line.includes("-->")) {
@@ -108,59 +209,16 @@ function authorityClauseIds(content) {
     }
     const commentStart = line.indexOf("<!--");
     if (commentStart >= 0) {
+      commentLines.add(index);
       const commentEnd = line.indexOf("-->", commentStart + 4);
       if (commentEnd >= 0) {
         comments.push({ start: index, end: index, body: line.slice(commentStart + 4, commentEnd) });
       } else {
         comment = { start: index, end: index, body: line.slice(commentStart + 4) };
       }
-      continue;
-    }
-    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (fenceMatch) {
-      codeLines.add(index);
-      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
   }
-
-  const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
-  for (const current of comments) {
-    if (!/^\s*clause-id\b/i.test(current.body)) continue;
-    const match = current.start === current.end && lines[current.start].match(markerPattern);
-    if (!match) {
-      errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
-      continue;
-    }
-    const index = current.start;
-    ids.push(match[1]);
-    if (!markerImmediatelyPrecedesClause(lines, codeLines, index)) {
-      errors.push(`authority clause marker ${match[1]} must be a standalone marker immediately before a normative Markdown clause`);
-    }
-  }
-  if (comment && /^\s*clause-id\b/i.test(comment.body)) {
-    errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
-  }
-  return ids;
-}
-
-function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
-  const nextIndex = markerIndex + 1;
-  if (nextIndex >= lines.length || codeLines.has(nextIndex)) return false;
-  const next = lines[nextIndex].trim();
-  if (!next || next.startsWith("<!--") || next.startsWith(">") || /^(?:---+|\*\*\*+|___+)$/.test(next)) return false;
-
-  const heading = next.match(/^#{1,6}\s+\S/);
-  if (!heading) return true;
-
-  for (let index = nextIndex + 1; index < lines.length; index += 1) {
-    if (codeLines.has(index)) continue;
-    const line = lines[index].trim();
-    if (!line) continue;
-    if (/^#{1,6}\s+\S/.test(line) || /^<!--\s*clause-id:/.test(line)) return false;
-    if (line.startsWith("<!--") || /^(?:---+|\*\*\*+|___+)$/.test(line)) continue;
-    return true;
-  }
-  return false;
+  return { codeLines, commentLines, comments, incompleteComment: comment };
 }
 
 function validateValidationResult(result) {

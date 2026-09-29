@@ -223,6 +223,21 @@ test("rejects a clause omitted from traceability.md", async () => {
   assert.match(result.stderr, /Authority clause B is missing from traceability\.md/);
 });
 
+test("does not treat a fenced traceability table example as the package table", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    "```markdown",
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rules |`,
+    "```"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
 test("rejects manifest member IDs outside Gatekeeper's stable-ID syntax", async () => {
   for (const memberId of ["", "Decision-A", "decision_a", `a${"b".repeat(64)}`]) {
     const dir = await root();
@@ -379,7 +394,23 @@ test("requires every clause marker to be immediately followed by a Markdown clau
     await writeFile(join(dir, "authority-set", "authority.md"), authority);
     const result = run(dir);
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /must be a standalone marker immediately before a normative Markdown clause/);
+    assert.match(result.stderr, /(?:must be a standalone marker immediately before a normative Markdown clause|must contain Markdown clause content)/);
+  }
+});
+
+test("rejects unmarked headings and content outside bounded Authority clause blocks", async () => {
+  const invalidAuthority = [
+    "# Authority\n\n<!-- clause-id: A -->\n## A\nClause A.\n\n## Unmarked\nNormative content.",
+    "# Authority\n\n<!-- clause-id: A -->\n## A\nClause A.\n\n### Unmarked nested requirement\nMust remain covered.",
+    "# Authority\n\nUnmarked normative content.\n\n<!-- clause-id: A -->\n## A\nClause A."
+  ];
+  for (const authority of invalidAuthority) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), authority);
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /(?:immediately preceded by a clause-id marker|content outside a marked clause block|only marked level-two clause headings)/);
   }
 });
 
