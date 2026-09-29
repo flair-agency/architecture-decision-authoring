@@ -48,7 +48,9 @@ function validDate(value) {
 function markdownTableRows(content, expectedHeader, label) {
   const lines = content.toString("utf8").split(/\r?\n/);
   const { codeLines, visibleLines } = markdownContext(lines);
-  const headerIndex = visibleLines.findIndex((line, index) => !codeLines.has(index) && tableCells(line)?.join("|") === expectedHeader.join("|"));
+  const headerIndex = visibleLines.findIndex((line, index) => !codeLines.has(index)
+    && lines[index].trim() === line.trim()
+    && tableCells(line)?.join("|") === expectedHeader.join("|"));
   if (headerIndex < 0) {
     errors.push(`${label} must contain the required traceability table header`);
     return [];

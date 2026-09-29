@@ -427,6 +427,19 @@ test("does not treat a commented-out traceability table as the package table", a
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("does not reinterpret a table header suffix after a line-leading HTML comment", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    "<!-- comment -->| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
 test("ignores a commented-out extra traceability row", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
