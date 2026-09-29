@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, symlink, unlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -238,6 +238,31 @@ test("does not treat a fenced traceability table example as the package table", 
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("does not treat a commented-out traceability table as the package table", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    "<!--",
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`,
+    "-->"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
+test("ignores a commented-out extra traceability row", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const traceabilityPath = join(dir, "traceability.md");
+  const original = await readFile(traceabilityPath, "utf8");
+  await writeFile(traceabilityPath, `${original}\n<!-- | B | clause-id:B | Adopt | fake | ${proposalRevision} | fake | fake | -->\n`);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("rejects manifest member IDs outside Gatekeeper's stable-ID syntax", async () => {
   for (const memberId of ["", "Decision-A", "decision_a", `a${"b".repeat(64)}`]) {
     const dir = await root();
@@ -411,6 +436,28 @@ test("rejects unmarked headings and content outside bounded Authority clause blo
     const result = run(dir);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /(?:immediately preceded by a clause-id marker|content outside a marked clause block|only marked level-two clause headings)/);
+  }
+});
+
+test("checks visible Authority text on lines with inline HTML comments", async () => {
+  for (const line of [
+    "Unmarked text before <!-- ignored comment -->.",
+    "<!-- ignored comment --> unmarked text after."
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority",
+      "",
+      line,
+      "",
+      "<!-- clause-id: A -->",
+      "## A",
+      "Clause A."
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /content outside a marked clause block/);
   }
 });
 

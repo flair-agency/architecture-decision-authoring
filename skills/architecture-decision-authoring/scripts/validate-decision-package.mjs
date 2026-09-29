@@ -47,8 +47,8 @@ function validDate(value) {
 
 function markdownTableRows(content, expectedHeader, label) {
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines } = markdownContext(lines);
-  const headerIndex = lines.findIndex((line, index) => !codeLines.has(index) && tableCells(line)?.join("|") === expectedHeader.join("|"));
+  const { codeLines, visibleLines } = markdownContext(lines);
+  const headerIndex = visibleLines.findIndex((line, index) => !codeLines.has(index) && tableCells(line)?.join("|") === expectedHeader.join("|"));
   if (headerIndex < 0) {
     errors.push(`${label} must contain the required traceability table header`);
     return [];
@@ -57,13 +57,13 @@ function markdownTableRows(content, expectedHeader, label) {
     errors.push(`${label} must have a Markdown separator row after the header`);
     return [];
   }
-  const separator = tableCells(lines[headerIndex + 1]);
+  const separator = tableCells(visibleLines[headerIndex + 1]);
   if (!separator || separator.length !== expectedHeader.length || separator.some((cell) => !/^:?-{3,}:?$/.test(cell))) {
     errors.push(`${label} must have a Markdown separator row after the header`);
     return [];
   }
   const rows = [];
-  for (const [offset, line] of lines.slice(headerIndex + 2).entries()) {
+  for (const [offset, line] of visibleLines.slice(headerIndex + 2).entries()) {
     if (codeLines.has(headerIndex + 2 + offset)) continue;
     if (line.trim() === "") continue;
     const cells = tableCells(line);
@@ -91,7 +91,7 @@ function tableCells(line) {
 function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines, commentLines, comments, incompleteComment } = markdownContext(lines);
+  const { codeLines, visibleLines, comments, incompleteComment } = markdownContext(lines);
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
   const markersByHeading = new Map();
@@ -115,7 +115,7 @@ function authorityClauseIds(content) {
   if (incompleteComment && /^\s*clause-id\b/i.test(incompleteComment.body)) {
     errors.push("authority clause ID comment must match the standalone `<!-- clause-id: ID -->` marker grammar");
   }
-  validateAuthorityBlocks(lines, codeLines, commentLines, markerLines, markersByHeading);
+  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading);
   return ids;
 }
 
@@ -126,13 +126,13 @@ function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
   return /^##\s+\S/.test(next);
 }
 
-function validateAuthorityBlocks(lines, codeLines, commentLines, markerLines, markersByHeading) {
+function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading) {
   let titleSeen = false;
   let activeClause = null;
   let activeClauseHasBody = false;
 
   for (let index = 0; index < lines.length; index += 1) {
-    if (codeLines.has(index) || commentLines.has(index) || markerLines.has(index)) continue;
+    if (codeLines.has(index) || markerLines.has(index)) continue;
     const line = lines[index].trim();
     if (!line) continue;
 
@@ -178,7 +178,7 @@ function validateAuthorityBlocks(lines, codeLines, commentLines, markerLines, ma
 
 function markdownContext(lines) {
   const codeLines = new Set();
-  const commentLines = new Set();
+  const visibleLines = [];
   const comments = [];
   let fence = null;
   let comment = null;
@@ -187,38 +187,53 @@ function markdownContext(lines) {
     const line = lines[index];
     if (fence) {
       codeLines.add(index);
+      visibleLines.push("");
       const close = line.match(/^ {0,3}(`+|~+)\s*$/);
       if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
       continue;
     }
-    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    let remainder = line;
+    let visible = "";
+    while (remainder.length > 0) {
+      if (comment) {
+        comment.end = index;
+        const commentEnd = remainder.indexOf("-->");
+        if (commentEnd < 0) {
+          comment.body += `\n${remainder}`;
+          remainder = "";
+          break;
+        }
+        comment.body += `\n${remainder.slice(0, commentEnd)}`;
+        comments.push(comment);
+        comment = null;
+        remainder = remainder.slice(commentEnd + 3);
+        continue;
+      }
+      const commentStart = remainder.indexOf("<!--");
+      if (commentStart < 0) {
+        visible += remainder;
+        remainder = "";
+        break;
+      }
+      visible += remainder.slice(0, commentStart);
+      const commentEnd = remainder.indexOf("-->", commentStart + 4);
+      if (commentEnd >= 0) {
+        comments.push({ start: index, end: index, body: remainder.slice(commentStart + 4, commentEnd) });
+        remainder = remainder.slice(commentEnd + 3);
+      } else {
+        comment = { start: index, end: index, body: remainder.slice(commentStart + 4) };
+        remainder = "";
+      }
+    }
+
+    visibleLines.push(visible);
+    const fenceMatch = visible.match(/^ {0,3}(`{3,}|~{3,})/);
     if (fenceMatch) {
       codeLines.add(index);
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
-      continue;
-    }
-    if (comment) {
-      commentLines.add(index);
-      comment.end = index;
-      comment.body += `\n${line}`;
-      if (line.includes("-->")) {
-        comments.push(comment);
-        comment = null;
-      }
-      continue;
-    }
-    const commentStart = line.indexOf("<!--");
-    if (commentStart >= 0) {
-      commentLines.add(index);
-      const commentEnd = line.indexOf("-->", commentStart + 4);
-      if (commentEnd >= 0) {
-        comments.push({ start: index, end: index, body: line.slice(commentStart + 4, commentEnd) });
-      } else {
-        comment = { start: index, end: index, body: line.slice(commentStart + 4) };
-      }
     }
   }
-  return { codeLines, commentLines, comments, incompleteComment: comment };
+  return { codeLines, visibleLines, comments, incompleteComment: comment };
 }
 
 function validateValidationResult(result) {
