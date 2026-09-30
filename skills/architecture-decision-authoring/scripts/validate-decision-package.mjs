@@ -324,7 +324,7 @@ function markdownContainerHeading(line) {
     }
     break;
   }
-  return strippedContainer && /^#{1,6}(?:[ \t]+.*)?$/.test(value);
+  return strippedContainer && /^ {0,3}#{1,6}(?:[ \t]+.*)?$/.test(value);
 }
 
 function markdownLinkReferenceDefinitionLines(lines, codeLines) {
@@ -502,7 +502,7 @@ function rawHtmlBlockStart(line) {
   if (/^ {0,3}<![A-Z]/.test(line)) return { end: />/ };
   if (/^ {0,3}<!--/.test(line)) return null;
 
-  const blockTags = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+  const blockTags = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
   if (new RegExp(`^ {0,3}</?(?:${blockTags})(?:[\\s/>]|$)`, "i").test(line)) {
     return { blankTerminated: true };
   }
