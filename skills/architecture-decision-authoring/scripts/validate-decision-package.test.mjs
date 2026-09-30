@@ -402,6 +402,41 @@ test("does not treat a traceability table inside a raw HTML block as the package
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("recognizes CommonMark type-1 raw HTML openers without same-line closing angle brackets", async () => {
+  for (const tag of ["pre", "script", "style", "textarea"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "traceability.md"), [
+      `<${tag}`,
+      "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+      "| --- | --- | --- | --- | --- | --- | --- |",
+      `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`,
+      `</${tag}>`
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `${tag} opener must begin a raw HTML block`);
+    assert.match(result.stderr, /must contain the required traceability table header/);
+  }
+});
+
+test("recognizes incomplete type-1 raw HTML openers in Authority content", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority",
+    "",
+    "<!-- clause-id: A -->",
+    "## A",
+    "Clause A.",
+    "",
+    "<pre",
+    "untraceable raw HTML content"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /authority\.md must not contain raw HTML blocks/);
+});
+
 test("stops traceability row collection when the table ends", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);

@@ -363,7 +363,7 @@ function markdownContext(lines) {
 }
 
 function rawHtmlBlockStart(line) {
-  const openingTag = line.match(/^ {0,3}<(script|pre|style|textarea)(?:[\s/>])[^>]*>/i);
+  const openingTag = line.match(/^ {0,3}<(script|pre|style|textarea)(?:[\s/>]|$)/i);
   if (openingTag) return { end: new RegExp(`</${openingTag[1]}\\s*>`, "i") };
   if (/^ {0,3}<\?/.test(line)) return { end: /\?>/ };
   if (/^ {0,3}<!\[CDATA\[/i.test(line)) return { end: /\]\]>/ };
