@@ -1334,3 +1334,38 @@ test("requires Amend to assert only its approved snapshot with empty adoptedCont
     assert.match(result.stderr, /Amend requires adoptedContent: \[\]/);
   }
 });
+
+test("rejects non-delimited GFM rows without skipping subsequent rendered clauses", async () => {
+  for (const suffix of [
+    "\nprose",
+    "\nprose\n| FAKE | clause-id:FAKE | Reject | fabricated | unrelated | fabricated | fabricated |"
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "traceability.md");
+    await writeFile(path, (await readFile(path, "utf8")) + suffix);
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /row 4 must have 7 columns/);
+    if (suffix.includes("FAKE")) assert.match(result.stderr, /unknown Authority clause ID: FAKE/);
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "traceability.md");
+  await writeFile(path, (await readFile(path, "utf8")) + "\n\nExplanatory prose outside the table.\n");
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("does not count image alternative text alone as a normative text body", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "authority-set", "authority.md");
+  await writeFile(path, '# Authority\n\n<!-- clause-id: A -->\n## A\n\n![Rule in alternative text only](diagram.png)\n');
+  const invalid = run(dir);
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /Authority clause A must contain Markdown clause content/);
+  await writeFile(path, '# Authority\n\n<!-- clause-id: A -->\n## A\n\nRequests must use TLS.\n\n![Supporting diagram](diagram.png)\n');
+  const valid = run(dir);
+  assert.equal(valid.status, 0, valid.stderr);
+});

@@ -36,7 +36,7 @@ function hasVisibleText(node) {
   if (node.token.type === "fence" || node.token.type === "code_block") return false;
   if (node.token.type === "inline") {
     return node.token.children.some((token) =>
-      (["text", "code_inline", "image"].includes(token.type) && token.content.trim() !== ""));
+      (["text", "code_inline"].includes(token.type) && token.content.trim() !== ""));
   }
   return node.children.some(hasVisibleText);
 }
@@ -194,12 +194,11 @@ export function markdownTableRows(content, expectedHeader, label, errors) {
   const body = table.children.find((entry) => entry.token.type === "tbody_open");
   for (const row of body?.children ?? []) {
     const columns = sourceColumns(lines[row.token.map[0]]);
-    // A plain prose line can be a padded GFM row; it ends the bounded
-    // product table instead, as required by the existing package format.
-    if (columns === null) break;
+    // Every parser-confirmed row belongs to the rendered table, including
+    // non-delimited prose padded by GFM. Never truncate validation there.
     if (columns !== expectedHeader.length) {
       errors.push(`${label} row ${row.token.map[0] + 1} must have ${expectedHeader.length} columns`);
-      break;
+      continue;
     }
     rows.push(cells(row));
   }

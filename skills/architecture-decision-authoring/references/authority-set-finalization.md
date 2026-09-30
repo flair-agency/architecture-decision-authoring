@@ -99,7 +99,7 @@ The member `id` must follow Gatekeeper's stable-ID syntax: 1–64 characters, st
 
 ### Traceability
 
-`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, commented, or recognized raw-HTML-block examples are ignored. The table ends at the first blank line, prose, non-table line, indented code block, or raw HTML block. Do not place detached pipe-delimited rows after it.
+`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, commented, or recognized raw-HTML-block examples are ignored. The table ends at a blank line or a new block recognized by the parser. Separate prose from the table with a blank line: GFM can treat a non-delimited prose line as a padded table row, and every parser-confirmed row must have exactly the required seven columns. Do not place detached pipe-delimited rows after it.
 
 ```markdown
 | Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |
