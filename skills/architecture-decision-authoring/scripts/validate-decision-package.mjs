@@ -124,6 +124,11 @@ function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+function markdownLines(content) {
+  // CommonMark recognizes LF, CRLF, and bare CR as line endings.
+  return content.toString("utf8").split(/\r\n|\n|\r/);
+}
+
 function validDate(value) {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return false;
@@ -138,7 +143,7 @@ function validDate(value) {
 }
 
 function markdownTableRows(content, expectedHeader, label) {
-  const lines = content.toString("utf8").split(/\r?\n/);
+  const lines = markdownLines(content);
   const { codeLines, visibleLines, htmlCommentLines, ambiguousHtmlCommentLines } = markdownContext(lines);
   if (ambiguousHtmlCommentLines.size > 0) errors.push(`${label} must not place content after a line-leading HTML comment`);
   const headerIndex = visibleLines.findIndex((line, index) => !codeLines.has(index)
@@ -182,7 +187,7 @@ function tableCells(line) {
 
 function authorityClauseIds(content) {
   const ids = [];
-  const lines = content.toString("utf8").split(/\r?\n/);
+  const lines = markdownLines(content);
   const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines, containerHeadingLines } = markdownContext(lines);
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
@@ -264,7 +269,7 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
-    const heading = htmlCommentLines.has(index) ? null : line.match(/^(#{1,6})\s+\S/);
+    const heading = htmlCommentLines.has(index) ? null : line.match(/^(#{1,6})(?:[ \t]+.*)?$/);
     if (heading) {
       if (activeClause && !activeClauseHasBody) {
         errors.push(`Authority clause ${activeClause} must contain Markdown clause content before the next heading`);
@@ -319,7 +324,7 @@ function markdownContainerHeading(line) {
     }
     break;
   }
-  return strippedContainer && /^#{1,6}\s+\S/.test(value);
+  return strippedContainer && /^#{1,6}(?:[ \t]+.*)?$/.test(value);
 }
 
 function markdownLinkReferenceDefinitionLines(lines, codeLines) {
@@ -489,10 +494,29 @@ function rawHtmlBlockStart(line) {
   if (new RegExp(`^ {0,3}</?(?:${blockTags})(?:[\\s/>]|$)`, "i").test(line)) {
     return { blankTerminated: true };
   }
-  if (/^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:\s+[^<>]*|\/?)>\s*$/.test(line)) {
+  if (isCompleteHtmlTagLine(line)) {
     return { blankTerminated: true };
   }
   return null;
+}
+
+function isCompleteHtmlTagLine(line) {
+  const start = line.match(/^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*/);
+  if (!start) return false;
+  const delimiter = line[start[0].length];
+  if (delimiter !== ">" && delimiter !== "/" && !/[ \t]/.test(delimiter ?? "")) return false;
+  let quote = null;
+  for (let index = start[0].length; index < line.length; index += 1) {
+    const character = line[index];
+    if (quote) {
+      if (character === quote) quote = null;
+    } else if (character === "\"" || character === "'") {
+      quote = character;
+    } else if (character === ">") {
+      return line.slice(index + 1).trim() === "";
+    }
+  }
+  return false;
 }
 
 function isIndentedCodeLine(line) {

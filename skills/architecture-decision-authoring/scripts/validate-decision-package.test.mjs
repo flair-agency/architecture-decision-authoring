@@ -107,6 +107,19 @@ test("accepts a minimal Pending record bound to exact Proposal bytes", async () 
   assert.match(result.stdout, /pending adoption is fail-closed/);
 });
 
+test("preserves and validates Proposal bytes containing CRLF line endings", async () => {
+  const dir = await root();
+  const proposal = Buffer.from("# Proposal\r\n\r\nOwner decision not yet recorded.\r\n");
+  const revision = await commitProposal(dir, proposal);
+  await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
+    schemaVersion: 1, status: "Pending", outcome: null,
+    proposal: { path: "proposal.md", revision, sha256: digest(proposal) }
+  }));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(join(dir, "proposal.md")), proposal);
+});
+
 test("rejects Pending records with fabricated decision fields", async () => {
   for (const field of [
     { owner: "owner" }, { authorizationEvidence: "record:1" }, { decisionDate: "2026-09-29" },
@@ -414,6 +427,36 @@ test("does not treat a traceability table inside a raw HTML block as the package
     "| --- | --- | --- | --- | --- | --- | --- |",
     `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`,
     "</div>"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
+test("uses CommonMark LF, CRLF, and CR line endings when finding traceability tables", async () => {
+  for (const lineEnding of ["\n", "\r\n", "\r"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const record = JSON.parse(await readFile(join(dir, "adoption-record.json"), "utf8"));
+    const traceability = [
+      "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+      "| --- | --- | --- | --- | --- | --- | --- |",
+      `| A | clause-id:A | Adopt | record:1 | ${record.proposal.revision} | Proposed decision | source:input.md#rule |`
+    ].join(lineEnding);
+    await writeFile(join(dir, "traceability.md"), traceability);
+    const result = run(dir);
+    assert.equal(result.status, 0, `${JSON.stringify(lineEnding)}: ${result.stderr}`);
+  }
+});
+
+test("does not parse traceability tables following a complete HTML tag with a quoted greater-than sign", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    '<x a=">">',
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`
   ].join("\n"));
   const result = run(dir);
   assert.equal(result.status, 1);
@@ -758,6 +801,28 @@ test("rejects unmarked headings and content outside bounded Authority clause blo
     assert.equal(result.status, 1);
     assert.match(result.stderr, /(?:immediately preceded by a clause-id marker|content outside a marked clause block|only marked level-two clause headings)/);
   }
+});
+
+test("rejects an empty ATX heading as an unmarked nested Authority heading", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority", "", "<!-- clause-id: A -->", "## A", "Clause A.", "###", "Hidden requirement."
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /only marked level-two clause headings/);
+});
+
+test("recognizes Authority headings and clause markers separated by bare CR line endings", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority", "", "<!-- clause-id: A -->", "## A", "Clause A.", "###", "Hidden requirement."
+  ].join("\r"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /only marked level-two clause headings/);
 });
 
 test("rejects headings nested in Markdown blockquote and list containers", async () => {
