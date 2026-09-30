@@ -65,6 +65,10 @@ After an explicit owner outcome, the bounded finalization output is a decision p
 
 The selector is a compatibility artifact. It does not prove adoption, semantic fidelity, precedence, selection by a consumer, or policy activation. This contract does not introduce a generic authority ontology or per-rule YAML/JSON language.
 
+The adoption record distinguishes a pending owner process from a decided outcome. A pending record has `status: "Pending"` and `outcome: null`; after an explicit owner action it has `status: "Decided"` and one outcome: `Adopt`, `Amend`, `Defer`, or `Reject`. A pending record preserves its Proposal reference and does not invent owner or decision metadata. For compatibility, a record without `status` may be treated as a legacy decided record only when it has one of those four outcomes and satisfies the prior validation requirements. A status label does not authenticate an owner outcome. See [decision record 0003](decisions/0003-pending-adoption-record.md).
+
+The packaged Proposal must match the Proposal blob at its package placement path in the locally available full 40- or 64-character Git commit identified by the adoption record, and its SHA-256 must match the packaged Proposal bytes. Validation uses the repository root supplied for the package and does not fetch missing Git objects. Missing or mismatched commits, blobs, or Proposal bytes fail validation. See [decision record 0004](decisions/0004-bind-proposal-revision-to-committed-bytes.md).
+
 ## Lifecycle and adoption boundary
 
 1. Gather materials and classify statements, constraints, existing decisions, and open questions.
