@@ -1,0 +1,25 @@
+{
+  "packageValidation": "pass",
+  "proposalBinding": {
+    "status": "pass",
+    "revision": "e9c69a7cb9309688d395270b3a027db5c56f9c9d",
+    "path": "decision-package/proposal.md",
+    "sha256": "39b269ceb0fd967a85c7da7b5fd1e7ce9bc74d0516798bfe12fb36e78fe83105"
+  },
+  "selectorStructure": "pass",
+  "clauseTraceability": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "pass",
+    "repository": "flair-agency/architecture-gatekeeper",
+    "version": "0.5.1",
+    "sourceRevision": "58bbdbb3119736e53a849388a025e74589ab8664",
+    "fixtureAuthorityRevision": "8ee13a13106dfd4c9e105cd5fe3a224bc1500421",
+    "manifestSha256": "aa5d4a2248384b90d19dcdfc54a39904e2c0babce3f602d755aa4e7faf108dd8",
+    "memberSha256": "8ec8539e33c3727222e0d471f65b444b202aea6d681a1f587b150629c1d80e41",
+    "setDigest": "482dc0776be7cb93ca05a79501f42f4f0f3f7a8a59f15e59273961c7a1db241f"
+  },
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified; the source is explicitly synthetic test data",
+  "consumerActivation": "not-performed",
+  "simulationLimit": "This package exercises authoring mechanics only; it does not record a real owner action, validate real-world semantics, or activate consumer policy."
+}
