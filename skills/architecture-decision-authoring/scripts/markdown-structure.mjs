@@ -110,7 +110,11 @@ export function authorityClauseIds(content, errors) {
   };
   for (const node of roots) {
     const { token } = node;
-    if (["fence", "code_block"].includes(token.type)) continue;
+    if (["fence", "code_block"].includes(token.type)) {
+      if (!titleSeen) errors.push('authority.md must begin with the neutral title "# Authority"');
+      else if (!activeClause) errors.push(`authority.md has content outside a marked clause block on line ${token.map[0] + 1}`);
+      continue;
+    }
     const isTitle = token.type === "heading_open" && token.tag === "h1"
       && token.markup === "#" && lines[token.map[0]].trim() === "# Authority";
     if (!titleSeen) {

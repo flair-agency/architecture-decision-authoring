@@ -427,6 +427,9 @@ if (record.outcome === "Adopt") {
 }
 
 if (record.outcome === "Amend") {
+  if (!Array.isArray(record.adoptedContent) || record.adoptedContent.length !== 0) {
+    errors.push("Amend requires adoptedContent: []");
+  }
   exactKeys(record.amendedContent, ["path", "sha256"], "amendedContent");
   const snapshotPath = record.amendedContent && await inside(record.amendedContent.path, "amendedContent.path");
   const snapshot = snapshotPath && await bytes(snapshotPath);

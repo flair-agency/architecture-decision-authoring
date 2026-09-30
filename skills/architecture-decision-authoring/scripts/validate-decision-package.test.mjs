@@ -1296,3 +1296,41 @@ test("does not count reference titles spanning multiple lines as normative body"
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
 });
+
+test("rejects illustrative code outside the bounded Authority clauses", async () => {
+  for (const code of ["```\nexample only\n```", "    example only"]) {
+    for (const beforeTitle of [true, false]) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir);
+      const path = join(dir, "authority-set", "authority.md");
+      const original = await readFile(path, "utf8");
+      await writeFile(path, beforeTitle ? `${code}\n\n${original}` : original.replace("# Authority\n", `# Authority\n\n${code}\n`));
+      const result = run(dir);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, beforeTitle ? /must begin with the neutral title/ : /content outside a marked clause block/);
+    }
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "authority-set", "authority.md");
+  await writeFile(path, (await readFile(path, "utf8")) + "\n```\nillustrative example\n```\n");
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("requires Amend to assert only its approved snapshot with empty adoptedContent", async () => {
+  for (const adoptedContent of [null, {}, "unused", [{ clauseId: "FAKE", proposalLocator: "fabricated" }]]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir, { outcome: "Amend" });
+    const authority = await readFile(join(dir, "authority-set", "authority.md"));
+    await writeFile(join(dir, "approved.md"), authority);
+    const path = join(dir, "adoption-record.json");
+    const record = JSON.parse(await readFile(path, "utf8"));
+    record.amendedContent = { path: "approved.md", sha256: digest(authority) };
+    record.adoptedContent = adoptedContent;
+    await writeFile(path, JSON.stringify(record));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Amend requires adoptedContent: \[\]/);
+  }
+});

@@ -62,7 +62,7 @@ After the owner acts, use JSON with these fields:
 - `proposal.path`, `proposal.revision`, and `proposal.sha256`; `proposal.revision` is a full immutable Git commit ID (40- or 64-character hexadecimal), and validation confirms the local commit's regular blob at the repository-root-relative Proposal path has the exact bundled bytes
 - `owner`, `authorizationEvidence`, and `decisionDate`
 - `scope`, `applicabilityConditions`, and `exceptions`; conditions and exceptions are arrays of non-empty strings, with an empty array meaning none are recorded
-- `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`
+- `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`; `[]` for `Amend`, `Defer`, and `Reject`, which must not claim additional adopted Proposal content
 - `amendedContent`: `null` for `Adopt`; for `Amend`, the snapshot path and SHA-256 digest of the exact owner-approved normative content
 
 For compatibility, a record with no `status` is treated as a legacy decided record only if it has one of the four explicit outcomes and passes every prior validation. Do not convert an existing `Defer` record to `Pending`.
@@ -154,5 +154,6 @@ locations without rendering or rewriting approved bytes. Traceability tables
 must be at the document root, with exactly seven columns per data row;
 escaped pipes are cell content. Multiple matching tables, nested clause
 headings, missing visible clause text, and documents reaching the parser's
-nesting limit fail validation. Rebuild instructions and the frozen dependency
+nesting limit fail validation. Illustrative code is allowed only inside a
+marked clause, after the neutral title. Rebuild instructions and the frozen dependency
 lockfile are in the source repository's `tools/markdown-parser/` directory.
