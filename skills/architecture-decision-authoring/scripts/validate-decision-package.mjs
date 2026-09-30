@@ -269,6 +269,11 @@ function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading
       continue;
     }
 
+    if (!htmlCommentLines.has(index) && isEmptyMarkdownContainer(line)) {
+      errors.push(`authority.md must not use an empty Markdown blockquote or list container as clause content on line ${index + 1}`);
+      continue;
+    }
+
     const heading = htmlCommentLines.has(index) ? null : line.match(/^(#{1,6})(?:[ \t]+.*)?$/);
     if (heading) {
       if (activeClause && !activeClauseHasBody) {
@@ -382,10 +387,13 @@ function markdownContext(lines) {
     if (fence) {
       let fenceLine = line;
       let outsideContainer = false;
-      if (fence.quote) {
+      for (let depth = 0; depth < (fence.quoteDepth ?? 0); depth += 1) {
         const quoted = stripBlockquotePrefix(fenceLine);
-        if (quoted === null) outsideContainer = fenceLine.trim() !== "";
-        else fenceLine = quoted;
+        if (quoted === null) {
+          outsideContainer = fenceLine.trim() !== "";
+          break;
+        }
+        fenceLine = quoted;
       }
       if (!outsideContainer && fence.containerIndent !== undefined && fenceLine.trim() !== "") {
         if (indentationColumns(fenceLine) < fence.containerIndent) outsideContainer = true;
@@ -500,7 +508,7 @@ function markdownContext(lines) {
       codeLines.add(index);
       fence = {
         character: fenceMatch[1][0], length: fenceMatch[1].length,
-        containerIndent: container.containerIndent, quote: container.quote
+        containerIndent: container.containerIndent, quoteDepth: container.quoteDepth
       };
     }
   }
@@ -583,23 +591,37 @@ function stripBlockquotePrefix(line) {
 function markdownContainerContent(line) {
   let content = line;
   let containerIndent;
-  let quote = false;
+  let quoteDepth = 0;
+  let hasContainer = false;
   while (true) {
     const blockquote = stripBlockquotePrefix(content);
     if (blockquote !== null) {
       content = blockquote;
-      quote = true;
+      quoteDepth += 1;
+      hasContainer = true;
       continue;
     }
     const item = markdownListItem(content);
     if (item) {
       content = item.content;
       containerIndent = item.contentIndent;
+      hasContainer = true;
+      continue;
+    }
+    if (/^ {0,3}(?:[-+*]|\d{1,9}[.)])$/.test(content)) {
+      content = "";
+      hasContainer = true;
       continue;
     }
     break;
   }
-  return { content, containerIndent, quote };
+  return { content, containerIndent, quoteDepth, hasContainer };
+}
+
+function isEmptyMarkdownContainer(line) {
+  const container = markdownContainerContent(line);
+  return line.trim() !== "" && container.content.trim() === ""
+    && container.hasContainer;
 }
 
 function rawHtmlBlockStart(line) {
@@ -818,6 +840,12 @@ const authorityPath = resolve(root, "authority-set", "authority.md");
 const manifestPath = resolve(root, "authority-set", "manifest.json");
 
 if (isPending || !exportable) {
+  if (record.outcome === "Defer" || record.outcome === "Reject") {
+    if (!Array.isArray(record.adoptedContent) || record.adoptedContent.length !== 0) {
+      errors.push(`${record.outcome} requires adoptedContent: []`);
+    }
+    if (record.amendedContent !== null) errors.push(`${record.outcome} requires amendedContent: null`);
+  }
   if (await exists(authorityPath) || await exists(manifestPath)) {
     errors.push(`${isPending ? "Pending adoption" : `outcome ${record.outcome ?? "Unknown"}`} must not leave a consumable Authority Set`);
   }

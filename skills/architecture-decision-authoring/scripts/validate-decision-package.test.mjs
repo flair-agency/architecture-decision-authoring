@@ -406,6 +406,18 @@ test("does not treat fenced tables inside list or blockquote containers as the p
   }
 });
 
+test("keeps nested blockquote depth when closing a fenced Authority example", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), [
+    "# Authority", "", "<!-- clause-id: A -->", "## A", "Clause A.",
+    "> > ```markdown", "> > hidden example", "> > ```", "> > ### Hidden requirement"
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must not place headings inside Markdown blockquote or list containers/);
+});
+
 test("does not let invalid backtick fence info mask visible Authority text", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
@@ -933,6 +945,19 @@ test("rejects spaced CommonMark thematic breaks instead of counting them as clau
   }
 });
 
+test("does not count empty Markdown list and blockquote containers as Authority clause text", async () => {
+  for (const emptyContainer of ["-", ">", "1.", "> -"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), [
+      "# Authority", "", "<!-- clause-id: A -->", "## A", emptyContainer
+    ].join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `${JSON.stringify(emptyContainer)} cannot supply normative clause text`);
+    assert.match(result.stderr, /must not use an empty Markdown blockquote or list container as clause content/);
+  }
+});
+
 test("requires visible clause text instead of a link reference definition", async () => {
   for (const referenceDefinition of [
     "[rule]: https://example.invalid/rule",
@@ -1104,6 +1129,23 @@ test("valid Defer and Reject records pass common checks without producing a pack
     const result = run(dir);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /no-export outcome is fail-closed/);
+  }
+});
+
+test("requires Defer and Reject records to have no adopted or amended content", async () => {
+  for (const outcome of ["Defer", "Reject"]) {
+    for (const [recordOverrides, expected] of [
+      [{ adoptedContent: [{ clauseId: "A", proposalLocator: "Proposed decision" }] }, /requires adoptedContent: \[\]/],
+      [{ amendedContent: { path: "amended-content.md", sha256: "0".repeat(64) } }, /requires amendedContent: null/]
+    ]) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir, { outcome, recordOverrides });
+      await unlink(join(dir, "authority-set", "authority.md"));
+      await unlink(join(dir, "authority-set", "manifest.json"));
+      const result = run(dir);
+      assert.equal(result.status, 1, `${outcome} must reject fabricated content`);
+      assert.match(result.stderr, expected);
+    }
   }
 });
 
