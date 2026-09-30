@@ -1173,3 +1173,126 @@ test("rejects invalid common adoption-record fields for Defer and Reject", async
     }
   }
 });
+
+test("rejects GFM table rows that would silently discard or pad columns", async () => {
+  for (const change of [
+    (row) => row + " extra |",
+    (row) => row.slice(0, row.lastIndexOf("|", row.length - 2)) + "|"
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "traceability.md");
+    const lines = (await readFile(path, "utf8")).split("\n");
+    lines[2] = change(lines[2]);
+    await writeFile(path, lines.join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /row 3 must have 7 columns/);
+  }
+});
+
+test("reads escaped GFM pipes as cell content without changing evidence strings", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir, { recordOverrides: { authorizationEvidence: "record:1|approved" } });
+  const path = join(dir, "traceability.md");
+  await writeFile(path, (await readFile(path, "utf8")).replace("record:1", "record:1\\|approved"));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("ignores container tables rather than flattening them into package data", async () => {
+  for (const container of [
+    (lines) => lines.map((line) => `> ${line}`),
+    (lines) => ["- Evidence example", "", ...lines.map((line) => `  ${line}`)]
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "traceability.md");
+    await writeFile(path, container((await readFile(path, "utf8")).split("\n")).join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /must contain the required traceability table header/);
+  }
+});
+
+test("rejects two matching package tables instead of choosing one silently", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "traceability.md");
+  const table = await readFile(path, "utf8");
+  await writeFile(path, `${table}\n\n${table}\n`);
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain exactly one required traceability table/);
+});
+
+test("does not count fenced, indented, or comment-only clause bodies as visible text", async () => {
+  for (const body of ["```\nexample only\n```", "    example only", "<!-- explanation only -->", "> <!-- explanation only -->"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 1, body);
+    assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
+  }
+});
+
+test("rejects nested Setext and ATX headings after mixed list/quote code examples", async () => {
+  for (const body of [
+    "> - item\n>   > ```\n>   > example\n>   > ```\n>   > ### Requirement",
+    "- item\n\n  Subsection\n  ---"
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\nClause A.\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 1, body);
+    assert.match(result.stderr, /must not place headings inside Markdown blockquote or list containers/);
+  }
+});
+
+test("does not reinterpret literal code-span or escaped markers as real clause markers", async () => {
+  for (const body of ["`<!-- clause-id: example -->`", "\\<!-- clause-id: example -->"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\nClause A.\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test("validates an exact approved Amend snapshot without reserializing CRLF or Markdown", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir, { outcome: "Amend" });
+  const authority = Buffer.from("# Authority\r\n\r\n<!-- clause-id: A -->\r\n## A\r\n\r\n**Requests** must use `TLS`.\r\n\r\n- Preserve human status.\r\n\r\n| Field | Value |\r\n| --- | --- |\r\n| status | manual |\r\n");
+  await writeFile(join(dir, "authority-set", "authority.md"), authority);
+  await writeFile(join(dir, "approved.md"), authority);
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  record.amendedContent = { path: "approved.md", sha256: digest(authority) };
+  await writeFile(recordPath, JSON.stringify(record));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(join(dir, "authority-set", "authority.md")), authority);
+  assert.deepEqual(await readFile(join(dir, "approved.md")), authority);
+});
+
+test("fails closed when parser nesting limits would omit untraced headings", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const authorityPath = join(dir, "authority-set", "authority.md");
+  const original = await readFile(authorityPath, "utf8");
+  await writeFile(authorityPath, `${original}\n${"> ".repeat(101)}## Hidden\n${"> ".repeat(101)}Must obey this untraced rule.\n`);
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /reaches the Markdown parser nesting limit/);
+});
+
+test("does not count reference titles spanning multiple lines as normative body", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "authority-set", "authority.md"), '# Authority\n\n<!-- clause-id: A -->\n## A\n[rule]: /example "First line\nsecond line"\n');
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
+});

@@ -143,3 +143,16 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
 
 Run `node scripts/validate-decision-package.mjs <decision-package-directory> <repository-root>` as the deterministic package-structure and fail-closed check. The repository-root argument is required and must be the exact Git top-level directory. The check also requires a Gatekeeper-valid member ID, a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, Proposal/source locators carried by the Proposal bytes, and the complete version 1 validation-result status set. Selector-member and adoption-record paths must be relative to their allowed roots; every referenced file is checked both lexically and by its resolved filesystem path, and symlinks that escape the package or repository root fail validation. The recorded Proposal revision must resolve locally to a commit whose regular Proposal blob matches the bundled bytes; validation never fetches Git objects. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
+
+The complete Skill includes a pinned markdown-it 15.0.2 runtime bundle and
+its third-party notices under `scripts/vendor/`; Node.js and Git are needed
+to run the validator, but npm and network access are not. Copy the entire
+Skill directory, including `scripts/markdown-structure.mjs` and `scripts/vendor/`.
+The parser supplies CommonMark block hierarchy and GFM table/strikethrough
+tokens; product-specific checks operate on those tokens and their source
+locations without rendering or rewriting approved bytes. Traceability tables
+must be at the document root, with exactly seven columns per data row;
+escaped pipes are cell content. Multiple matching tables, nested clause
+headings, missing visible clause text, and documents reaching the parser's
+nesting limit fail validation. Rebuild instructions and the frozen dependency
+lockfile are in the source repository's `tools/markdown-parser/` directory.
