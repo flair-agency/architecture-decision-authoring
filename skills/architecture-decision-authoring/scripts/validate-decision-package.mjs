@@ -472,14 +472,26 @@ function markdownContext(lines) {
 function isIndentedListHeading(lines, index) {
   const line = lines[index];
   if (!/^ {4,}#{1,6}\s+\S/.test(line)) return false;
-  let previous = index - 1;
-  while (previous >= 0 && lines[previous].trim() === "") previous -= 1;
-  if (previous < 0) return false;
-  const item = lines[previous].match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/);
-  if (!item) return false;
-  const itemIndent = item[0].replace(/\t/g, "    ").length;
   const headingIndent = line.match(/^ */)[0].length;
-  return headingIndent >= itemIndent && headingIndent < itemIndent + 4;
+  let minimumContinuationIndent = Number.POSITIVE_INFINITY;
+  for (let previous = index - 1; previous >= 0; previous -= 1) {
+    const prior = lines[previous];
+    if (prior.trim() === "") continue;
+    const item = prior.match(/^( *)(?:[-+*]|\d{1,9}[.)])[ \t]+/);
+    if (item) {
+      const contentIndent = item[0].replace(/\t/g, "    ").length;
+      return minimumContinuationIndent >= contentIndent
+        && headingIndent >= contentIndent
+        && headingIndent < contentIndent + 4;
+    }
+    const priorIndent = prior.match(/^( *)/)[0].length;
+    // Continuation paragraphs keep the containing list item active. An
+    // unindented line ends that context; intermediate indented lines may be
+    // multiple wrapped paragraph lines or a blank-line-separated block.
+    if (priorIndent < 1) return false;
+    minimumContinuationIndent = Math.min(minimumContinuationIndent, priorIndent);
+  }
+  return false;
 }
 
 function rawHtmlBlockStart(line) {

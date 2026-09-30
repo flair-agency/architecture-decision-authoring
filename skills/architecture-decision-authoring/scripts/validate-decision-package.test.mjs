@@ -826,7 +826,7 @@ test("recognizes Authority headings and clause markers separated by bare CR line
 });
 
 test("rejects headings nested in Markdown blockquote and list containers", async () => {
-  for (const nestedHeading of ["> ## Quoted heading", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading", "- List item\n    ## Indented list heading"]) {
+  for (const nestedHeading of ["> ## Quoted heading", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading", "- List item\n    ## Indented list heading", "- item\n  continuation\n    ## Continued-list heading"]) {
     const dir = await root();
     await writeValidAdoptPackage(dir);
     await writeFile(join(dir, "authority-set", "authority.md"), [
