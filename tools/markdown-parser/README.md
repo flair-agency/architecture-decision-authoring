@@ -37,7 +37,9 @@ independent. Original JSON bytes are never rewritten.
 `scripts/markdown-structure.mjs` consumes parser hierarchy and source maps.
 Product checks require root-level marked ATX clauses and one root-level
 traceability table. They exclude illustrative code and non-rendering
-reference definitions, reject raw HTML/invalid clause boundaries, and reject
+reference definitions, reject raw HTML tags outside code/comments throughout
+Authority and traceability documents (including inline tags or HTML containers
+that span parser block boundaries), reject invalid clause boundaries, and reject
 GFM's silent padding or truncation of traceability columns. Only these
 bounded format checks inspect source lines; they do not implement Markdown
 block parsing. Reaching the parser's nesting limit fails closed because

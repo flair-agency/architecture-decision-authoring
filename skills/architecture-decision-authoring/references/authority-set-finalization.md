@@ -99,7 +99,7 @@ The member `id` must follow Gatekeeper's stable-ID syntax: 1–64 characters, st
 
 ### Traceability
 
-`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, commented, or recognized raw-HTML-block examples are ignored. The table ends at a blank line or a new block recognized by the parser. Separate prose from the table with a blank line: GFM can treat a non-delimited prose line as a padded table row, and every parser-confirmed row must have exactly the required seven columns. Do not place detached pipe-delimited rows after it.
+`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, and commented examples are ignored. Raw HTML tags outside code or comments are rejected throughout the traceability document because an open HTML element can hide a later parser-root table. The table ends at a blank line or a new block recognized by the parser. Separate prose from the table with a blank line: GFM can treat a non-delimited prose line as a padded table row, and every parser-confirmed row must have exactly the required seven columns. Do not place detached pipe-delimited rows after it.
 
 ```markdown
 | Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |
@@ -153,7 +153,7 @@ tokens; product-specific checks operate on those tokens and their source
 locations without rendering or rewriting approved bytes. Traceability tables
 must be at the document root, with exactly seven columns per data row;
 escaped pipes are cell content. Multiple matching tables, nested clause
-headings, missing visible clause text, and documents reaching the parser's
+headings, raw HTML inline tags or blocks, missing visible clause text, and documents reaching the parser's
 nesting limit fail validation. Illustrative code is allowed only inside a
 marked clause, after the neutral title. Rebuild instructions and the frozen dependency
 lockfile are in the source repository's `tools/markdown-parser/` directory.

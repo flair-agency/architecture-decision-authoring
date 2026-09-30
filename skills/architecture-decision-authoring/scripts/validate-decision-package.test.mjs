@@ -1508,3 +1508,58 @@ test("rejects JSON comments and trailing commas while allowing key-like string v
   const result = run(dir);
   assert.equal(result.status, 0, result.stderr);
 });
+
+test("rejects inline HTML that can hide Authority text while preserving literal examples", async () => {
+  for (const body of [
+    '<span hidden>Invisible rule</span>',
+    '<span style="display:none">Invisible rule</span>',
+    'Visible words <span hidden>Another rule</span>',
+    'Words <style>h2, p { display:none }</style>',
+    '<a href="/rule">Rule</a>'
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 1, `${body} accepted`);
+    assert.match(result.stderr, /must not contain raw HTML/);
+  }
+  for (const body of [
+    'Rule. <!-- explanatory comment -->',
+    '`<span hidden>literal example</span>`',
+    '&lt;span hidden&gt;literal example&lt;/span&gt;',
+    'Rule.\n\n```html\n<span hidden>example</span>\n```'
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test("rejects raw HTML enclosing traceability across Markdown block boundaries", async () => {
+  for (const [open, close] of [
+    ['<div hidden>', '</div>'],
+    ['<div style="display:none">', '</div>'],
+    ['<details>', '</details>'],
+    ['Before <span hidden>', '</span>'],
+    ['<!-- note --><div hidden>', '</div>']
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "traceability.md");
+    const table = await readFile(path, "utf8");
+    await writeFile(path, `${open}\n\n${table}\n\n${close}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 1, `${open} accepted`);
+    assert.match(result.stderr, /raw HTML|content after a line-leading HTML comment/);
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "traceability.md");
+  const table = await readFile(path, "utf8");
+  await writeFile(path, `<!-- explanation -->\n\n${table}\n\n\`<div hidden>\`\n\n\`\`\`html\n<div hidden>example</div>\n\`\`\`\n`);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});

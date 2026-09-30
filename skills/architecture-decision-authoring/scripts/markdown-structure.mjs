@@ -63,6 +63,9 @@ export function authorityClauseIds(content, errors) {
       ? token.children.filter((child) => child.type === "html_inline")
       : token.type === "html_block" ? [token] : [];
     for (const html of htmlTokens) {
+      if (html.type === "html_inline" && !html.content.startsWith("<!--")) {
+        errors.push("authority.md must not contain raw HTML inline tags because they can hide normative content");
+      }
       for (const comment of html.content.matchAll(commentPattern)) {
         if (!/^\s*clause-id\b/i.test(comment[1])) continue;
         const markerLine = token.map?.[0];
@@ -174,6 +177,12 @@ export function markdownTableRows(content, expectedHeader, label, errors) {
   const { roots, lines } = document(content, errors, label);
   for (const node of descendants(roots)) {
     if (commentSuffix(node)) errors.push(`${label} must not place content after a line-leading HTML comment`);
+    const htmlTokens = node.token.type === "inline"
+      ? node.token.children.filter((token) => token.type === "html_inline")
+      : node.token.type === "html_block" ? [node.token] : [];
+    if (htmlTokens.some((token) => !token.content.trimStart().startsWith("<!--"))) {
+      errors.push(`${label} must not contain raw HTML because it can hide the traceability table across Markdown block boundaries`);
+    }
   }
   const tables = roots.filter((node) => node.token.type === "table_open"
     && cells(node.children.find((entry) => entry.token.type === "thead_open").children[0]).join("|") === expectedHeader.join("|"));
