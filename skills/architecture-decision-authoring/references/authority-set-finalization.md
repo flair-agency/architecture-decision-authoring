@@ -42,16 +42,16 @@ Use JSON with these fields:
 - `proposal.path`, `proposal.revision`, and `proposal.sha256`
 - `owner`, `authorizationEvidence`, and `decisionDate`
 - `scope`, `applicabilityConditions`, and `exceptions`
-- `adoptedContent`: a non-empty list of stable clause IDs and exact Proposal locators for `Adopt`
+- `adoptedContent`: for `Adopt`, a non-empty list identifying the exact Proposal locators for content the owner adopted
 - `amendedContent`: `null` for `Adopt`; for `Amend`, the snapshot path and SHA-256 digest of the exact owner-approved normative content
 
 Do not claim to authenticate the owner or evidence unless a separate trusted mechanism establishes that assurance.
 
 ### Authority member
 
-`authority.md` carries the normative meaning. Give every normative clause a stable ID. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
+`authority.md` carries the normative meaning. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
 
-For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If stable IDs or required context are absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
+For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If required context is absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
 
 ### Selector
 
@@ -75,11 +75,11 @@ The manifest selects Markdown. It is not adoption evidence, a semantic rule onto
 
 ### Traceability
 
-For every Authority clause, map:
+For every normative Authority clause, map:
 
-- stable clause ID and exact Authority locator;
+- exact Authority locator;
 - owner outcome and authorization-evidence locator;
-- exact Proposal revision and adopted-content locator; and
+- exact Proposal revision and Proposal locator identifying adopted content; and
 - supporting source locators carried by the Proposal.
 
 If any normative clause lacks the complete chain, finalization fails and no consumable Authority Set is returned.
@@ -100,3 +100,5 @@ Gatekeeper compatibility is a development check over committed fixture snapshots
 ## Final check
 
 Before returning a successful package, verify the exact Proposal bytes, all recorded digests, amended-member byte equality where applicable, JSON parsing, exact selector keys, referenced paths, outcome-specific fields, and the traceability chain. Write the consumable manifest only after these gates pass. State limitations without converting them into success claims.
+
+The bundled read-only package checker can be run from the Skill directory with `node scripts/validate-decision-package.mjs <decision-package-directory> <repository-root>`. Its JSON report separates package validation from clause-level traceability, semantic fidelity, owner/evidence authenticity, Gatekeeper compatibility, and consumer activation. A package-validation pass does not establish those separately reported properties.
