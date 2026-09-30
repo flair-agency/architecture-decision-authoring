@@ -1,4 +1,5 @@
 import markdown from "./vendor/markdown-it.mjs";
+import { visibleText } from "./structural-input.mjs";
 
 // Preserve parser hierarchy and source maps; never render/serialize approved
 // content. Normalization happens only inside the parser's inspection copy.
@@ -37,7 +38,7 @@ function hasVisibleText(node) {
   if (node.token.type === "inline") {
     return node.token.children.some((token) =>
       (["text", "code_inline"].includes(token.type)
-        && token.content.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, "").trim() !== ""));
+        && visibleText(token.content)));
   }
   return node.children.some(hasVisibleText);
 }

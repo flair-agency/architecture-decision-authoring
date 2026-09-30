@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { resolve, relative, sep, isAbsolute, win32 } from "node:path";
 import { authorityClauseIds, markdownTableRows } from "./markdown-structure.mjs";
+import { strictJson, visibleText } from "./structural-input.mjs";
 
 const root = resolve(process.argv[2] ?? "decision-package");
 const repositoryRootArgument = process.argv[3];
@@ -115,9 +116,10 @@ async function json(path) {
   const content = await bytes(path);
   if (!content) return null;
   try {
-    return JSON.parse(content.toString("utf8"));
-  } catch {
-    errors.push(`invalid JSON: ${relative(root, path)}`);
+    return strictJson(content.toString("utf8"));
+  } catch (error) {
+    const detail = error.message.startsWith("duplicate JSON key") ? ` (${error.message})` : "";
+    errors.push(`invalid JSON: ${relative(root, path)}${detail}`);
     return null;
   }
 }
@@ -263,7 +265,7 @@ if (isPending) {
   }
 
   for (const key of ["owner", "authorizationEvidence", "decisionDate", "scope"]) {
-    if (typeof record[key] !== "string" || record[key].trim() === "") {
+    if (!visibleText(record[key])) {
       errors.push(`${key} must be a non-empty string`);
     }
   }
@@ -275,7 +277,7 @@ if (isPending) {
       errors.push(`${key} must be an array of non-empty strings`);
     } else {
       for (const [index, item] of record[key].entries()) {
-        if (typeof item !== "string" || item.trim() === "") {
+        if (!visibleText(item)) {
           errors.push(`${key}[${index}] must be a non-empty string`);
         }
       }
@@ -371,14 +373,14 @@ for (const [index, row] of traceRows.entries()) {
   if (ownerOutcome !== record.outcome) errors.push(`${label}.ownerOutcome must match adoption-record outcome`);
   if (authorizationEvidence !== record.authorizationEvidence) errors.push(`${label}.authorizationEvidence must match adoption-record evidence`);
   if (proposalRevision !== record.proposal?.revision) errors.push(`${label}.proposalRevision must match adoption-record revision`);
-  if (!proposalLocator) errors.push(`${label}.proposalLocator must be non-empty`);
-  if (!sourceLocators) errors.push(`${label}.sourceEvidenceLocator(s) must be non-empty`);
+  if (!visibleText(proposalLocator)) errors.push(`${label}.proposalLocator must be non-empty`);
+  if (!visibleText(sourceLocators)) errors.push(`${label}.sourceEvidenceLocator(s) must be non-empty`);
   if (proposal && proposalLocator && !proposal.toString("utf8").includes(proposalLocator)) {
     errors.push(`${label}.proposalLocator must occur in the exact Proposal bytes`);
   }
   if (proposal && sourceLocators && sourceLocators.split(";").some((locator) => {
     const value = locator.trim();
-    return value === "" || !proposal.toString("utf8").includes(value);
+    return !visibleText(value) || !proposal.toString("utf8").includes(value);
   })) {
     errors.push(`${label}.sourceEvidenceLocator(s) must each occur in the exact Proposal bytes`);
   }
@@ -397,14 +399,14 @@ if (record.outcome === "Adopt") {
     const ids = new Set();
     for (const [index, entry] of record.adoptedContent.entries()) {
       exactKeys(entry, ["clauseId", "proposalLocator"], `adoptedContent[${index}]`);
-      if (typeof entry?.clauseId !== "string" || entry.clauseId.trim() === "") {
+      if (!visibleText(entry?.clauseId)) {
         errors.push(`adoptedContent[${index}].clauseId must be a non-empty string`);
       } else if (ids.has(entry.clauseId)) {
         errors.push(`duplicate adoptedContent clauseId: ${entry.clauseId}`);
       } else {
         ids.add(entry.clauseId);
       }
-      if (typeof entry?.proposalLocator !== "string" || entry.proposalLocator.trim() === "") {
+      if (!visibleText(entry?.proposalLocator)) {
         errors.push(`adoptedContent[${index}].proposalLocator must be a non-empty string`);
       } else if (proposal && !proposal.toString("utf8").includes(entry.proposalLocator)) {
         errors.push(`adoptedContent[${index}].proposalLocator must occur in the exact Proposal bytes`);

@@ -1431,3 +1431,80 @@ test("rejects missing promisor objects without lazily fetching from the availabl
     await assert.rejects(readFile(localObject), { code: "ENOENT" });
   }
 });
+
+test("rejects invisible-only decided metadata and applicability bounds", async () => {
+  for (const invisible of ["\u200b", "\u200d", "\u2060", "\u0001", " \u200b\t"]) {
+    for (const key of ["owner", "authorizationEvidence", "scope", "applicabilityConditions", "exceptions"]) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir);
+      const path = join(dir, "adoption-record.json");
+      const record = JSON.parse(await readFile(path, "utf8"));
+      record[key] = ["applicabilityConditions", "exceptions"].includes(key) ? [invisible] : invisible;
+      await writeFile(path, JSON.stringify(record));
+      if (key === "authorizationEvidence") {
+        const table = join(dir, "traceability.md");
+        await writeFile(table, (await readFile(table, "utf8")).replace("record:1", invisible));
+      }
+      const result = run(dir);
+      assert.equal(result.status, 1, `${key}: ${JSON.stringify(invisible)} accepted`);
+      assert.match(result.stderr, new RegExp(`${key}.*non-empty string`));
+    }
+  }
+});
+
+test("preserves meaningful decision metadata with embedded joiners", async () => {
+  const dir = await root();
+  const owner = "owner\u200dname";
+  await writeValidAdoptPackage(dir, {
+    recordOverrides: { owner, scope: "scope\u200bA" },
+    applicabilityConditions: ["applies\u200dhere"], exceptions: ["except\u200bthere"]
+  });
+  const path = join(dir, "adoption-record.json");
+  const before = await readFile(path);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(path), before);
+});
+
+test("rejects conflicting and escaped duplicate JSON keys at every artifact level", async () => {
+  const cases = [
+    ["adoption-record.json", '"outcome":"Adopt"', '"outcome":"Reject","outcome":"Adopt"'],
+    ["adoption-record.json", '"owner":"owner"', '"owner":"other","ow\\u006eer":"owner"'],
+    ["adoption-record.json", '"path":"proposal.md"', '"path":"other.md","path":"proposal.md"'],
+    ["adoption-record.json", '"proposal":', '"proposal":null,"proposal":'],
+    ["authority-set/manifest.json", '"version":1', '"version":2,"version":1'],
+    ["authority-set/manifest.json", '"repository":"self"', '"repository":"other","repository":"self"'],
+    ["validation-result.json", '"packageStructure":"pass"', '"packageStructure":"fail","packageStructure":"pass"'],
+    ["validation-result.json", '"status":"not-run"', '"status":"pass","status":"not-run"']
+  ];
+  for (const [artifact, original, duplicate] of cases) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, artifact);
+    const content = await readFile(path, "utf8");
+    assert.ok(content.includes(original));
+    await writeFile(path, content.replace(original, duplicate));
+    const result = run(dir);
+    assert.equal(result.status, 1, `${artifact}: ${duplicate} accepted`);
+    assert.match(result.stderr, /duplicate JSON key/);
+  }
+});
+
+test("rejects JSON comments and trailing commas while allowing key-like string values", async () => {
+  for (const transform of [
+    (s) => s.replace('{', '{/* outcome: Reject */'),
+    (s) => s.replace(/}$/, ',}')
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "adoption-record.json");
+    await writeFile(path, transform(await readFile(path, "utf8")));
+    const result = run(dir);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /invalid JSON/);
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir, { recordOverrides: { owner: 'Owner mentions "outcome":"Reject", "outcome":"Adopt"' } });
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});

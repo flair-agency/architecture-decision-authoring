@@ -144,10 +144,10 @@ Before returning a successful package, verify the exact Proposal bytes, all reco
 
 Run `node scripts/validate-decision-package.mjs <decision-package-directory> <repository-root>` as the deterministic package-structure and fail-closed check. The repository-root argument is required and must be the exact Git top-level directory. The check also requires a Gatekeeper-valid member ID, a unique stable-ID marker for each traceable Authority clause, exact coverage between Authority IDs and traceability rows, matching owner/evidence/revision references, Proposal/source locators carried by the Proposal bytes, and the complete version 1 validation-result status set. Selector-member and adoption-record paths must be relative to their allowed roots; every referenced file is checked both lexically and by its resolved filesystem path, and symlinks that escape the package or repository root fail validation. The recorded Proposal revision must resolve locally to a commit whose regular Proposal blob matches the bundled bytes; validation sets `GIT_NO_LAZY_FETCH=1` in its sanitized Git environment to disable on-demand retrieval from promisor remotes and never fetches Git objects. Selector member paths are resolved from that repository root, while adoption-record paths are resolved inside the package. A successful result does not replace semantic fidelity review or a pinned Gatekeeper compatibility check.
 
-The complete Skill includes a pinned markdown-it 15.0.2 runtime bundle and
-its third-party notices under `scripts/vendor/`; Node.js and Git are needed
+The complete Skill includes pinned markdown-it 15.0.2 and jsonc-parser 3.3.1 runtime bundles and
+their third-party notices under `scripts/vendor/`; Node.js and Git are needed
 to run the validator, but npm and network access are not. Copy the entire
-Skill directory, including `scripts/markdown-structure.mjs` and `scripts/vendor/`.
+Skill directory, including all scripts and `scripts/vendor/`.
 The parser supplies CommonMark block hierarchy and GFM table/strikethrough
 tokens; product-specific checks operate on those tokens and their source
 locations without rendering or rewriting approved bytes. Traceability tables
@@ -164,3 +164,10 @@ characters, or controls do not satisfy it. This inspection does not remove
 characters from the approved artifact or establish semantic fidelity. Row
 delimiter counting follows the pinned parser's table escape behavior, including
 multiple backslashes before a pipe; those pipes stay inside their cell.
+
+Required non-empty decision metadata, conditions, exceptions, and content
+locators must contain text beyond whitespace, Unicode default-ignorable
+characters, and controls. Meaningful text containing such characters is
+preserved. All JSON artifacts reject duplicate decoded keys within each
+object, including nested and escaped keys; comments and trailing commas
+are invalid. These structural checks do not authenticate owner evidence.

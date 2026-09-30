@@ -1,4 +1,4 @@
-# Markdown parser runtime bundle
+# Parser runtime bundles
 
 The package validator uses **markdown-it 15.0.2**, with CommonMark blocks and
 the default GFM table/strikethrough extensions. HTML parsing is enabled so
@@ -24,9 +24,15 @@ Use an accessible npm cache (`npm --cache /workspace/scratch/npm-cache ...`)
 if the cloud machine's default cache is read-only. The checked-in lockfile
 pins the transitive dependencies and npm verifies their integrity. esbuild
 0.28.2 produces the ESM runtime bundle; the generated full third-party
-notices travel beside it. Review and commit both generated files when
+notices travel beside it. Review and commit the generated bundles and notices when
 updating the build. Rebuilding from a frozen install must leave their bytes
 unchanged.
+
+**jsonc-parser 3.3.1** is bundled as `scripts/vendor/jsonc-parser.mjs` using
+its ESM entry. JSON comments and trailing commas are disabled. The validator
+checks each object's decoded keys for duplicates before native `JSON.parse`,
+including nested objects and escaped names; keys in distinct objects remain
+independent. Original JSON bytes are never rewritten.
 
 `scripts/markdown-structure.mjs` consumes parser hierarchy and source maps.
 Product checks require root-level marked ATX clauses and one root-level
