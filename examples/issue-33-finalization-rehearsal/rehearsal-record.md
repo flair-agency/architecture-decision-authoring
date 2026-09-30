@@ -40,7 +40,7 @@ byte-for-byte, into `authority-set/authority.md`. The member SHA-256 is
 matches the paragraph selected by the synthetic outcome. The completed
 package snapshots are in [`decision-package/`](decision-package/). The package
 snapshot is committed in the temporary fixture at
-`80af024fc0f2f464d20b77635a100146b5b2be10`. The exact Authority member was
+`749a4adae1e7f5779b007f9cf85b1fdd26ef5a02`. The exact Authority member was
 already committed at the Gatekeeper compatibility revision
 `8ee13a13106dfd4c9e105cd5fe3a224bc1500421`.
 
@@ -51,7 +51,17 @@ not a live, source-repository-bound Authority Set.
 
 ## Verification
 
-The package validator was run after the final manifest was written:
+The package was first assembled as a complete candidate under the private
+`decision-package/` staging path in the isolated fixture repository. The
+candidate manifest was present for its checks because the validator consumes
+a complete package. After candidate validation and the pinned Gatekeeper
+materialization succeeded, the candidate package files were copied into a
+separate final-package destination; the final manifest was copied last. This
+is an observed, one-run staging sequence, not a general publication helper or
+security guarantee. The final manifest was not exposed in the final-package
+destination before the private candidate checks passed.
+
+The checker was also run on the final package after its manifest was written:
 
 ```sh
 node skills/architecture-decision-authoring/scripts/validate-decision-package.mjs \
@@ -65,8 +75,13 @@ claims remain `not-verified`; semantic fidelity is `pending`; owner/evidence
 authenticity is `not-verified`; consumer activation is `not-performed`. Its
 Gatekeeper field says `not-run` because this checker does not invoke Gatekeeper.
 The package's [`validation-result.json`](decision-package/validation-result.json)
-records the separate pinned compatibility check below; these reports describe
-different checks.
+records the separate pinned compatibility check below. Its checker fields
+remain `clauseTraceability: not-verified` and `semanticFidelity: pending`. A
+separate bounded agent review passed traceability coverage and semantic
+fidelity for this synthetic example only. See
+[`independent-review.md`](independent-review.md) for the reviewer task,
+model/effort, supplied source set, scope, and exact assessment. The review does
+not authenticate a real owner action or establish a general guarantee.
 
 The Gatekeeper source was archived from exact commit
 `58bbdbb3119736e53a849388a025e74589ab8664`, whose package version is `0.5.1`,
@@ -111,6 +126,37 @@ nonexistent destination. Repeating the same invocation with a fresh output
 directory succeeded; the failure was test setup, not a rejected selector or
 member.
 
+A separate staging replay used `/private/tmp/ada-issue33-stage-replay3.20424`.
+Both candidate and final fixture clones started at committed synthetic member
+`8ee13a13106dfd4c9e105cd5fe3a224bc1500421`; the candidate received the
+complete package and its manifest, then the checker passed. The pinned
+Gatekeeper materializer also passed against that candidate selector with a
+fresh output directory. The final clone's package directory was assembled by
+copying `adoption-record.json`, `proposal.md`, `traceability.md`,
+`validation-result.json`, and `authority.md`; an explicit check confirmed
+`authority-set/manifest.json` was absent in the final clone before candidate
+validation, and a second check confirmed it remained absent before promotion. Only after
+those checks was the manifest copied as the last package file. The checker then passed against the final package. Candidate and
+final checker reports both record package pass and the same explicitly
+unverified/pending semantic fields.
+
+The replay's Gatekeeper invocation was:
+
+```sh
+node /private/tmp/ada-issue33-rehearsal.KdeTdz/gatekeeper-58bbdbb/src/prepare-authority-set.mjs \
+  --manifest /private/tmp/ada-issue33-rehearsal.KdeTdz/candidate-manifest.json \
+  --self-repository flair-agency/architecture-decision-authoring \
+  --self-root /private/tmp/ada-issue33-stage-replay3.20424/candidate \
+  --authority-sha 8ee13a13106dfd4c9e105cd5fe3a224bc1500421 \
+  --limits /private/tmp/ada-issue33-rehearsal.KdeTdz/limits.json \
+  --output-dir /private/tmp/ada-issue33-stage-replay3.20424/gatekeeper-output
+```
+
+Its provenance output records the same selector SHA, member SHA, and set digest
+listed above. This is one manual staging demonstration; it is not a generic
+publisher, does not prove a broader visibility or security property, and does
+not make checker pass equivalent to finalization acceptance.
+
 The focused Skill package test suite also passed: 19 tests, 0 failures. It
 includes exact Amend snapshot-byte equality, plain Markdown Amend content
 without clause IDs, legacy records without IDs, no-export outcomes, Proposal
@@ -145,6 +191,17 @@ node skills/architecture-decision-authoring/scripts/validate-decision-package.mj
   /private/tmp/ada-issue33-rehearsal.KdeTdz/decision-package \
   /private/tmp/ada-issue33-rehearsal.KdeTdz
 ```
+
+To repeat the staging replay, make separate candidate and final clones of the
+fixture at the committed member revision. Confirm the final clone has no
+`decision-package/authority-set/manifest.json`. Copy the complete candidate
+package (including its manifest) into the candidate clone, run the package
+checker there, and materialize its selector with the pinned Gatekeeper command
+above using a new nonexistent output directory. Then copy the candidate
+package files except the manifest into the final clone, copy the manifest last,
+and run the checker against the final package. This demonstrates the recorded
+sequence for this fixture; it does not establish a general
+no-publication-before-validation property.
 
 The exact selector bytes are in
 `decision-package/authority-set/manifest.json`. The named limits are
