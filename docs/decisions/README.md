@@ -15,6 +15,7 @@ The adopted records are:
 - [0001 — Use a Markdown-first, source-mapped proposal contract](0001-markdown-first-proposal-contract.md), which preserves the initial pilot contract and rationale; and
 - [0002 — Produce a Gatekeeper-compatible Authority Set after owner adoption](0002-authority-set-final-outcome.md), which amends 0001's product endpoint while retaining the Proposal and owner-adoption boundary.
 - [0003 — Represent a pending adoption process without inventing an owner outcome](0003-pending-adoption-record.md), which distinguishes a pending process state from an explicit `Defer` outcome and preserves valid legacy records.
+- [0004 — Bind Proposal revisions to committed repository bytes](0004-bind-proposal-revision-to-committed-bytes.md), which requires the package validator to verify that a Proposal revision selects the exact bundled bytes in the local Git repository.
 
 ## Repository bootstrap adoption rule
 

@@ -1,12 +1,104 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { resolve, relative, sep, isAbsolute, win32 } from "node:path";
 
 const root = resolve(process.argv[2] ?? "decision-package");
-const repositoryRoot = resolve(process.argv[3] ?? resolve(root, ".."));
+const repositoryRootArgument = process.argv[3];
+const repositoryRoot = resolve(repositoryRootArgument ?? ".");
 const errors = [];
+
+function git(args) {
+  const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key)));
+  environment.GIT_NO_REPLACE_OBJECTS = "1";
+  const result = spawnSync("git", ["--no-replace-objects", ...args], {
+    cwd: repositoryRoot, encoding: "buffer", env: environment, maxBuffer: 64 * 1024 * 1024
+  });
+  if (result.error || result.status !== 0) return null;
+  return result.stdout;
+}
+
+async function exactGitRoot() {
+  if (!repositoryRootArgument) {
+    errors.push("repositoryRoot argument is required and must be the Git top-level directory");
+    return null;
+  }
+  const reported = git(["rev-parse", "--show-toplevel"]);
+  if (!reported) {
+    errors.push("repositoryRoot must be the top-level directory of a local Git repository");
+    return null;
+  }
+  try {
+    const [actualRoot, requestedRoot] = await Promise.all([
+      realpath(reported.toString("utf8").trim()),
+      realpath(repositoryRoot)
+    ]);
+    if (actualRoot !== requestedRoot) {
+      errors.push("repositoryRoot must be the exact Git top-level directory");
+      return null;
+    }
+    return actualRoot;
+  } catch {
+    errors.push("repositoryRoot must resolve to the Git top-level directory");
+    return null;
+  }
+}
+
+async function proposalBlobAtRevision(proposalPath, revision) {
+  const gitRoot = await exactGitRoot();
+  if (!gitRoot || typeof revision !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(revision)) return null;
+
+  let packageReal;
+  let proposalReal;
+  try {
+    packageReal = await realpath(root);
+    proposalReal = await realpath(proposalPath);
+  } catch {
+    errors.push("proposal.path must resolve to an existing file in the Git repository");
+    return null;
+  }
+  const proposalInfo = await lstat(proposalPath).catch(() => null);
+  const expectedProposalPath = resolve(packageReal, "proposal.md");
+  if (!proposalInfo?.isFile() || proposalInfo.isSymbolicLink() || proposalReal !== expectedProposalPath) {
+    errors.push("package proposal.md must be a regular file at its repository placement path");
+    return null;
+  }
+  const repositoryPath = relative(gitRoot, expectedProposalPath);
+  if (repositoryPath === "" || repositoryPath === ".." || repositoryPath.startsWith(`..${sep}`) || isAbsolute(repositoryPath)) {
+    errors.push("proposal.path must resolve inside repositoryRoot");
+    return null;
+  }
+
+  const resolved = git(["rev-parse", "--verify", "--end-of-options", `${revision}^{commit}`]);
+  const resolvedId = resolved?.toString("utf8").trim();
+  if (!resolvedId || resolvedId.toLowerCase() !== revision.toLowerCase()) {
+    errors.push("proposal.revision must identify a locally available Git commit");
+    return null;
+  }
+
+  const pathspec = `:(literal)${repositoryPath.split(sep).join("/")}`;
+  const tree = git(["ls-tree", "-z", "--full-tree", revision, "--", pathspec]);
+  if (!tree) {
+    errors.push("proposal.revision must contain a readable tree and Proposal blob in the local Git object database");
+    return null;
+  }
+  const entries = tree.toString("utf8").split("\0").filter(Boolean).map((entry) => {
+    const separatorIndex = entry.indexOf("\t");
+    if (separatorIndex < 0) return null;
+    const [mode, type, objectId] = entry.slice(0, separatorIndex).split(" ");
+    return { mode, type, objectId, path: entry.slice(separatorIndex + 1) };
+  });
+  const selected = entries.filter((entry) => entry?.path === repositoryPath.split(sep).join("/"));
+  if (selected.length !== 1 || !["100644", "100755"].includes(selected[0]?.mode) || selected[0]?.type !== "blob") {
+    errors.push("proposal.revision must contain proposal.md as a regular file blob at the recorded path");
+    return null;
+  }
+  const blob = git(["cat-file", "blob", selected[0].objectId]);
+  if (!blob) errors.push("proposal.revision Proposal blob is missing from the local Git object database");
+  return blob;
+}
 
 async function bytes(path) {
   try {
@@ -91,7 +183,7 @@ function tableCells(line) {
 function authorityClauseIds(content) {
   const ids = [];
   const lines = content.toString("utf8").split(/\r?\n/);
-  const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines } = markdownContext(lines);
+  const { codeLines, visibleLines, comments, incompleteComment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines, containerHeadingLines } = markdownContext(lines);
 
   const markerPattern = /^<!--\s*clause-id:\s*([A-Za-z0-9][A-Za-z0-9._:-]*)\s*-->$/;
   const markersByHeading = new Map();
@@ -122,7 +214,7 @@ function authorityClauseIds(content) {
     errors.push("authority.md must not place content after a line-leading HTML comment");
   }
   const linkReferenceDefinitionLines = markdownLinkReferenceDefinitionLines(visibleLines, codeLines);
-  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines);
+  validateAuthorityBlocks(visibleLines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines, containerHeadingLines);
   return ids;
 }
 
@@ -133,12 +225,16 @@ function markerImmediatelyPrecedesClause(lines, codeLines, markerIndex) {
   return /^##\s+\S/.test(next);
 }
 
-function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines) {
+function validateAuthorityBlocks(lines, codeLines, markerLines, markersByHeading, linkReferenceDefinitionLines, htmlCommentLines, containerHeadingLines) {
   let titleSeen = false;
   let activeClause = null;
   let activeClauseHasBody = false;
 
   for (let index = 0; index < lines.length; index += 1) {
+    if (containerHeadingLines.has(index)) {
+      errors.push(`authority.md must not place headings inside Markdown blockquote or list containers on line ${index + 1}`);
+      continue;
+    }
     if (codeLines.has(index) || markerLines.has(index)) continue;
     const line = lines[index].trim();
     if (!line) continue;
@@ -274,6 +370,7 @@ function markdownContext(lines) {
   let rawHtmlBlock = null;
   const htmlCommentLines = new Set();
   const ambiguousHtmlCommentLines = new Set();
+  const containerHeadingLines = new Set();
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -296,8 +393,13 @@ function markdownContext(lines) {
       && !/^<!--\s*clause-id:\s*[A-Za-z0-9][A-Za-z0-9._:-]*\s*-->$/.test(line);
     if (lineLeadingComment) htmlCommentLines.add(index);
     if (!comment && isIndentedCodeLine(line)) {
-      codeLines.add(index);
-      visibleLines.push("");
+      if (isIndentedListHeading(lines, index)) {
+        containerHeadingLines.add(index);
+        visibleLines.push(line);
+      } else {
+        codeLines.add(index);
+        visibleLines.push("");
+      }
       continue;
     }
     if (!comment) {
@@ -359,7 +461,20 @@ function markdownContext(lines) {
       fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
     }
   }
-  return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines };
+  return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines, containerHeadingLines };
+}
+
+function isIndentedListHeading(lines, index) {
+  const line = lines[index];
+  if (!/^ {4,}#{1,6}\s+\S/.test(line)) return false;
+  let previous = index - 1;
+  while (previous >= 0 && lines[previous].trim() === "") previous -= 1;
+  if (previous < 0) return false;
+  const item = lines[previous].match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/);
+  if (!item) return false;
+  const itemIndent = item[0].replace(/\t/g, "    ").length;
+  const headingIndent = line.match(/^ */)[0].length;
+  return headingIndent >= itemIndent && headingIndent < itemIndent + 4;
 }
 
 function rawHtmlBlockStart(line) {
@@ -371,7 +486,7 @@ function rawHtmlBlockStart(line) {
   if (/^ {0,3}<!--/.test(line)) return null;
 
   const blockTags = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
-  if (new RegExp(`^ {0,3}</?(?:${blockTags})(?:[\\s/>]|$)[^>]*>`, "i").test(line)) {
+  if (new RegExp(`^ {0,3}</?(?:${blockTags})(?:[\\s/>]|$)`, "i").test(line)) {
     return { blankTerminated: true };
   }
   if (/^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:\s+[^<>]*|\/?)>\s*$/.test(line)) {
@@ -546,6 +661,12 @@ if (record.proposal && (typeof record.proposal.revision !== "string" || !/^(?:[a
 const proposal = proposalPath && await bytes(proposalPath);
 if (proposal && sha256(proposal) !== record.proposal.sha256) {
   errors.push("proposal bytes do not match proposal.sha256");
+}
+if (proposal && proposalPath && typeof record.proposal?.revision === "string") {
+  const committedProposal = await proposalBlobAtRevision(proposalPath, record.proposal.revision);
+  if (committedProposal && !committedProposal.equals(proposal)) {
+    errors.push("bundled Proposal bytes do not match proposal.md at proposal.revision");
+  }
 }
 
 const exportable = record.outcome === "Adopt" || record.outcome === "Amend";

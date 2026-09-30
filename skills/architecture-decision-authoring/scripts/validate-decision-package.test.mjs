@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, symlink, unlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -10,25 +10,43 @@ import { fileURLToPath } from "node:url";
 const validator = fileURLToPath(new URL("./validate-decision-package.mjs", import.meta.url));
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 const proposalRevision = "0123456789abcdef0123456789abcdef01234567";
-
 async function root() {
   const container = await mkdtemp(join(tmpdir(), "decision-package-test-"));
   const dir = join(container, "decision-package");
   await mkdir(dir);
+  for (const args of [
+    ["init", "-q"], ["config", "user.name", "Package Validator Test"],
+    ["config", "user.email", "validator-test@example.invalid"]
+  ]) {
+    const result = spawnSync("git", args, { cwd: container, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+  }
   return dir;
 }
 
-function run(path) {
-  return spawnSync(process.execPath, [validator, path], { encoding: "utf8" });
+function run(path, repositoryRoot = join(path, "..")) {
+  return spawnSync(process.execPath, [validator, path, repositoryRoot], { encoding: "utf8" });
+}
+
+async function commitProposal(dir, proposal) {
+  await writeFile(join(dir, "proposal.md"), proposal);
+  const repositoryRoot = join(dir, "..");
+  for (const args of [["add", "--", "decision-package/proposal.md"], ["commit", "-q", "-m", "proposal snapshot"]]) {
+    const result = spawnSync("git", args, { cwd: repositoryRoot, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  const revision = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" });
+  assert.equal(revision.status, 0, revision.stderr);
+  return revision.stdout.trim();
 }
 
 async function writeValidAdoptPackage(dir, {
-  memberId = "decision-a", validationResult, revision = proposalRevision, outcome = "Adopt",
+  memberId = "decision-a", validationResult, revision, outcome = "Adopt",
   applicabilityConditions = [], exceptions = [], recordOverrides = {}
 } = {}) {
   const proposal = Buffer.from("# Proposal\n\n## Proposed decision\n\nAdopt clause A, based on source:input.md#rule.\n");
+  const actualRevision = revision ?? await commitProposal(dir, proposal);
   await mkdir(join(dir, "authority-set"));
-  await writeFile(join(dir, "proposal.md"), proposal);
   await writeFile(join(dir, "authority-set", "authority.md"), "# Authority\n\n<!-- clause-id: A -->\n## A\n\nClause A.\n");
   await writeFile(join(dir, "authority-set", "manifest.json"), JSON.stringify({
     version: 1,
@@ -38,7 +56,7 @@ async function writeValidAdoptPackage(dir, {
     schemaVersion: 1,
     status: "Decided",
     outcome,
-    proposal: { path: "proposal.md", revision, sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision: actualRevision, sha256: digest(proposal) },
     owner: "owner",
     authorizationEvidence: "record:1",
     decisionDate: "2026-09-29",
@@ -52,7 +70,7 @@ async function writeValidAdoptPackage(dir, {
   await writeFile(join(dir, "traceability.md"), [
     "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
     "| --- | --- | --- | --- | --- | --- | --- |",
-    `| A | clause-id:A | ${outcome} | record:1 | ${revision} | Proposed decision | source:input.md#rule |`
+    `| A | clause-id:A | ${outcome} | record:1 | ${actualRevision} | Proposed decision | source:input.md#rule |`
   ].join("\n"));
   await writeFile(join(dir, "validation-result.json"), JSON.stringify(validationResult === undefined ? {
     schemaVersion: 1,
@@ -67,7 +85,7 @@ async function writeValidAdoptPackage(dir, {
 
 async function writePendingPackage(dir, { recordOverrides = {}, staleAuthority = false } = {}) {
   const proposal = Buffer.from("# Proposal\n\nOwner decision not yet recorded.\n");
-  await writeFile(join(dir, "proposal.md"), proposal);
+  const revision = await commitProposal(dir, proposal);
   if (staleAuthority) {
     await mkdir(join(dir, "authority-set"));
     await writeFile(join(dir, "authority-set", "authority.md"), "# stale member\n");
@@ -76,7 +94,7 @@ async function writePendingPackage(dir, { recordOverrides = {}, staleAuthority =
     schemaVersion: 1,
     status: "Pending",
     outcome: null,
-    proposal: { path: "proposal.md", revision: proposalRevision, sha256: digest(proposal) },
+    proposal: { path: "proposal.md", revision, sha256: digest(proposal) },
     ...recordOverrides
   }));
 }
@@ -402,8 +420,8 @@ test("does not treat a traceability table inside a raw HTML block as the package
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
-test("recognizes CommonMark type-1 raw HTML openers without same-line closing angle brackets", async () => {
-  for (const tag of ["pre", "script", "style", "textarea"]) {
+test("recognizes CommonMark raw HTML openers without same-line closing angle brackets", async () => {
+  for (const tag of ["pre", "script", "style", "textarea", "div"]) {
     const dir = await root();
     await writeValidAdoptPackage(dir);
     await writeFile(join(dir, "traceability.md"), [
@@ -580,6 +598,68 @@ test("requires proposal.revision to be an immutable full Git commit ID", async (
   }
 });
 
+test("binds the Proposal bytes to the exact committed revision even when the package digest is updated", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const proposalPath = join(dir, "proposal.md");
+  const changedProposal = Buffer.concat([await readFile(proposalPath), Buffer.from("\nChanged after the recorded revision.\n")]);
+  await writeFile(proposalPath, changedProposal);
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  record.proposal.sha256 = digest(changedProposal);
+  await writeFile(recordPath, JSON.stringify(record));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /bundled Proposal bytes do not match proposal\.md at proposal\.revision/);
+});
+
+test("rejects nonexistent revisions, non-commit objects, and missing Proposal blobs", async () => {
+  const nonexistent = await root();
+  await writeValidAdoptPackage(nonexistent);
+  const nonexistentRecordPath = join(nonexistent, "adoption-record.json");
+  const nonexistentRecord = JSON.parse(await readFile(nonexistentRecordPath, "utf8"));
+  nonexistentRecord.proposal.revision = "f".repeat(40);
+  await writeFile(nonexistentRecordPath, JSON.stringify(nonexistentRecord));
+  let result = run(nonexistent);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /proposal\.revision must identify a locally available Git commit/);
+
+  const nonCommit = await root();
+  await writeValidAdoptPackage(nonCommit);
+  const nonCommitRecordPath = join(nonCommit, "adoption-record.json");
+  const nonCommitRecord = JSON.parse(await readFile(nonCommitRecordPath, "utf8"));
+  const blobId = spawnSync("git", ["rev-parse", `${nonCommitRecord.proposal.revision}:decision-package/proposal.md`], {
+    cwd: join(nonCommit, ".."), encoding: "utf8"
+  }).stdout.trim();
+  nonCommitRecord.proposal.revision = blobId;
+  await writeFile(nonCommitRecordPath, JSON.stringify(nonCommitRecord));
+  result = run(nonCommit);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /proposal\.revision must identify a locally available Git commit/);
+
+  const missingBlob = await root();
+  await writeValidAdoptPackage(missingBlob);
+  const missingRecord = JSON.parse(await readFile(join(missingBlob, "adoption-record.json"), "utf8"));
+  const missingBlobId = spawnSync("git", ["rev-parse", `${missingRecord.proposal.revision}:decision-package/proposal.md`], {
+    cwd: join(missingBlob, ".."), encoding: "utf8"
+  }).stdout.trim();
+  await unlink(join(missingBlob, "..", ".git", "objects", missingBlobId.slice(0, 2), missingBlobId.slice(2)));
+  result = run(missingBlob);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /(?:must contain proposal\.md as a regular file blob|readable tree and Proposal blob|Proposal blob is missing)/);
+});
+
+test("requires repositoryRoot to be the exact Git top-level directory", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const result = run(dir, dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /repositoryRoot must be the exact Git top-level directory/);
+  const missing = spawnSync(process.execPath, [validator, dir], { encoding: "utf8" });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /repositoryRoot argument is required/);
+});
+
 test("rejects unknown owner outcomes", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir, { outcome: "Approve" });
@@ -681,7 +761,7 @@ test("rejects unmarked headings and content outside bounded Authority clause blo
 });
 
 test("rejects headings nested in Markdown blockquote and list containers", async () => {
-  for (const nestedHeading of ["> ## Quoted heading", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading"]) {
+  for (const nestedHeading of ["> ## Quoted heading", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading", "- List item\n    ## Indented list heading"]) {
     const dir = await root();
     await writeValidAdoptPackage(dir);
     await writeFile(join(dir, "authority-set", "authority.md"), [
