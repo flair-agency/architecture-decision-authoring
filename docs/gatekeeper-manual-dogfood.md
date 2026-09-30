@@ -6,7 +6,7 @@
 
 This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.5.1`. The release tag `v0.5.1` was verified in the sibling `architecture-gatekeeper` repository at source commit `58bbdbb3119736e53a849388a025e74589ab8664`. Use only that exact release for this dogfood; do not use a floating version or an unpinned registry fallback. The runtime is configured for local/manual version 2 and one self authority: `authoring-product-contract` at the committed `docs/architecture.md` revision. The manifest identifies the self authority at the reviewed Git revision; no external authority is selected.
 
-The consumer-owned prompt, output schema, deterministic decision validation, reviewer model/effort, limits, and timeout are in `.codex/gatekeeper/`. Their selection does not make the review an acceptance gate. The reviewer is configured as `gpt-6-sol` with `low` reasoning and a 180,000 ms review timeout.
+The consumer-owned prompt, output schema, deterministic decision validation, reviewer model/effort, limits, and timeout are in `.codex/gatekeeper/`. Their selection does not make the review an acceptance gate. The reviewer is configured as `gpt-6.1-sol` with `low` reasoning and a 180,000 ms review timeout.
 
 Use the already-installed exact package entry point `architecture-review` with a focused change description, for example:
 

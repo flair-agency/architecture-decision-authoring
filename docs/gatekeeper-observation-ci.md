@@ -6,7 +6,7 @@ association `OWNER`, `MEMBER`, or `COLLABORATOR` proceeds to the semantic
 review observation. That model job is pinned to Architecture Gatekeeper v0.5.1 at commit
 `58bbdbb3119736e53a849388a025e74589ab8664`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
-protected Authority Set. The selected model is `gpt-6-sol` with `low`
+protected Authority Set. The selected model is `gpt-6.1-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
 `enforced` for this observation. The CI policy sets `maxPromptBytes` to
 131,072 bytes, intentionally below the local/manual configuration's 524,288

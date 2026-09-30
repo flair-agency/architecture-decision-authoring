@@ -6,7 +6,7 @@
   "branches": {
     "main": {
       "mode": "enforced",
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoningEffort": "low",
       "authorityManifestPath": ".codex/gatekeeper/authorities.json",
       "authorityLimits": {
