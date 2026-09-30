@@ -16,6 +16,12 @@ if (!packageArgument || !repositoryArgument) {
 const errors = [];
 const packageRoot = resolve(packageArgument);
 const repositoryRoot = resolve(repositoryArgument);
+const GATEKEEPER_ID = /^[a-z][a-z0-9-]{0,63}$/;
+
+function isGatekeeperMarkdownPath(value) {
+  return typeof value === "string" && value.length <= 240 && value.endsWith(".md") &&
+    value.split("/").every((segment) => segment.length > 0 && segment !== "." && segment !== ".." && /^[A-Za-z0-9._-]+$/.test(segment));
+}
 
 function fail(message) {
   errors.push(message);
@@ -251,8 +257,10 @@ async function main() {
       } else {
         const member = manifest.authorities[0];
         if (exactKeys(member, ["id", "repository", "revision", "path"], "manifest authority")) {
-          if (!hasText(member.id) || member.repository !== "self" || !hasText(member.revision) || !hasText(member.path)) {
-            fail("manifest authority must have a non-empty id, self repository, revision, and path");
+          const expectedMemberPath = relative(repositoryRoot, authorityPath).split(sep).join("/");
+          if (typeof member.id !== "string" || !GATEKEEPER_ID.test(member.id) || member.repository !== "self" ||
+              member.revision !== "authority-revision" || !isGatekeeperMarkdownPath(member.path) || member.path !== expectedMemberPath) {
+            fail("manifest authority must use a Gatekeeper v1 ID, self repository, authority-revision, and this package's canonical Markdown path");
           }
           const authorityReal = await realpath(authorityPath).catch(() => null);
           let selectedReal = null;

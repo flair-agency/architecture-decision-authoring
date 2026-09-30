@@ -55,7 +55,7 @@ async function fixture(t, outcome = "Adopt") {
       authorities: [{
         id: "synthetic-authority",
         repository: "self",
-        revision: "fixture-revision",
+        revision: "authority-revision",
         path: "decision-package/authority-set/authority.md"
       }]
     }, null, 2));
@@ -73,7 +73,7 @@ async function fixture(t, outcome = "Adopt") {
       authorities: [{
         id: "synthetic-authority",
         repository: "self",
-        revision: "fixture-revision",
+        revision: "authority-revision",
         path: "decision-package/authority-set/authority.md"
       }]
     }, null, 2));
@@ -248,7 +248,7 @@ test("rejects an Authority member reached through an outside package symlink", a
   assert.match(JSON.parse(result.stdout).errors.join(" "), /resolves outside the package/);
 });
 
-test("rejects a selector with extra keys or a different member path", async (t) => {
+test("rejects a selector with extra keys or a noncanonical member path", async (t) => {
   const data = await fixture(t, "Adopt");
   const manifestPath = path.join(data.packageRoot, "authority-set", "manifest.json");
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -259,4 +259,29 @@ test("rejects a selector with extra keys or a different member path", async (t) 
   manifest.authorities[0].path = "other/authority.md";
   await writeFile(manifestPath, JSON.stringify(manifest));
   assert.notEqual(runValidator(data).status, 0);
+});
+
+test("rejects v1-incompatible selector IDs, revisions, paths, and path aliases", async (t) => {
+  const data = await fixture(t, "Adopt");
+  const manifestPath = path.join(data.packageRoot, "authority-set", "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const member = manifest.authorities[0];
+  for (const [key, value] of [
+    ["id", "Synthetic-Authority"],
+    ["revision", "fixture-revision"],
+    ["path", "decision-package/authority-set/authority.txt"]
+  ]) {
+    const invalid = structuredClone(manifest);
+    invalid.authorities[0][key] = value;
+    await writeFile(manifestPath, JSON.stringify(invalid));
+    assert.notEqual(runValidator(data).status, 0, `${key}=${value} must not be accepted`);
+  }
+
+  const authorityPath = path.join(data.packageRoot, "authority-set", "authority.md");
+  const aliasPath = path.join(data.packageRoot, "authority-set", "authority-alias.md");
+  await symlink("authority.md", aliasPath);
+  member.path = "decision-package/authority-set/authority-alias.md";
+  await writeFile(manifestPath, JSON.stringify(manifest));
+  assert.notEqual(runValidator(data).status, 0, "a realpath alias must not be accepted as the canonical package member");
+  assert.equal((await readFile(aliasPath)).toString(), (await readFile(authorityPath)).toString());
 });
