@@ -2,7 +2,8 @@
 
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstat, readFile, realpath } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, open, realpath, stat } from "node:fs/promises";
 import { resolve, relative, sep, isAbsolute, win32 } from "node:path";
 import { authorityClauseIds, markdownTableRows } from "./markdown-structure.mjs";
 import { strictJson, visibleText } from "./structural-input.mjs";
@@ -104,11 +105,25 @@ async function proposalBlobAtRevision(proposalPath, revision) {
 }
 
 async function bytes(path) {
+  let handle;
   try {
-    return await readFile(path);
+    if (!(await stat(path)).isFile()) {
+      errors.push(`${relative(root, path)} must be a regular file`);
+      return null;
+    }
+    // Nonblocking open plus descriptor inspection also protects against a
+    // regular file being replaced by a FIFO between the path check and open.
+    handle = await open(path, constants.O_RDONLY | constants.O_NONBLOCK);
+    if (!(await handle.stat()).isFile()) {
+      errors.push(`${relative(root, path)} must be a regular file`);
+      return null;
+    }
+    return await handle.readFile();
   } catch {
     errors.push(`missing file: ${relative(root, path)}`);
     return null;
+  } finally {
+    await handle?.close();
   }
 }
 

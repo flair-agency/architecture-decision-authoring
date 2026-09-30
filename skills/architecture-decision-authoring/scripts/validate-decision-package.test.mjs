@@ -1563,3 +1563,41 @@ test("rejects raw HTML enclosing traceability across Markdown block boundaries",
   const result = run(dir);
   assert.equal(result.status, 0, result.stderr);
 });
+
+test("rejects FIFO and directory inputs promptly at every package artifact boundary", async () => {
+  for (const artifact of ["adoption-record.json", "proposal.md", "authority-set/authority.md", "authority-set/manifest.json", "traceability.md", "validation-result.json"]) {
+    for (const type of ["fifo", "directory", "symlink-fifo"]) {
+      const dir = await root();
+      await writeValidAdoptPackage(dir);
+      const path = join(dir, artifact);
+      await unlink(path);
+      if (type === "directory") await mkdir(path);
+      else {
+        const target = type === "symlink-fifo" ? join(dir, "input-fifo") : path;
+        const result = spawnSync("mkfifo", [target], { encoding: "utf8" });
+        assert.equal(result.status, 0, result.stderr);
+        if (type === "symlink-fifo") await symlink(target, path);
+      }
+      const result = spawnSync(process.execPath, [validator, dir, join(dir, "..")], {
+        encoding: "utf8", timeout: 2000
+      });
+      assert.equal(result.error, undefined, `${artifact} ${type}: ${result.error?.message}`);
+      assert.equal(result.status, 1, result.stdout);
+      assert.match(result.stderr, /must be a regular file/);
+    }
+  }
+});
+
+test("retains bounded symlinks to regular Authority inputs", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "authority-set", "authority.md");
+  const target = join(dir, "authority-set", "approved-authority.md");
+  const before = await readFile(path);
+  await writeFile(target, before);
+  await unlink(path);
+  await symlink(target, path);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(path), before);
+});

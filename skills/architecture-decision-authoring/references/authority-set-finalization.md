@@ -99,7 +99,7 @@ The member `id` must follow Gatekeeper's stable-ID syntax: 1–64 characters, st
 
 ### Traceability
 
-`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, and commented examples are ignored. Raw HTML tags outside code or comments are rejected throughout the traceability document because an open HTML element can hide a later parser-root table. The table ends at a blank line or a new block recognized by the parser. Separate prose from the table with a blank line: GFM can treat a non-delimited prose line as a padded table row, and every parser-confirmed row must have exactly the required seven columns. Do not place detached pipe-delimited rows after it.
+`traceability.md` must contain one contiguous Markdown table for every Authority clause ID and no other IDs, using this exact header and column order. Only the table whose header is followed by the required separator and contiguous rows is package data; indented-code, fenced, and commented examples are ignored. Raw HTML tags outside code or comments are rejected throughout the traceability document because an open HTML element can hide a later parser-root table. The table ends at a blank line or a new block recognized by the parser. Separate prose from the table with a blank line: GFM can treat a non-delimited prose line as a padded table row, and every parser-confirmed row must have exactly the required seven columns. Finalization must not emit detached pipe-delimited rows. The deterministic validator checks only the designated parser-recognized table; detached paragraphs are outside that table and are not interpreted as traceability records. Structural validation does not establish the semantic consistency of surrounding prose.
 
 ```markdown
 | Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |
@@ -160,8 +160,7 @@ lockfile are in the source repository's `tools/markdown-parser/` directory.
 
 Clause-body presence is checked on text-bearing parser nodes; image alternative
 text alone and text consisting only of whitespace, Unicode default-ignorable
-characters, or controls do not satisfy it. This inspection does not remove
-characters from the approved artifact or establish semantic fidelity. Row
+characters, or controls do not satisfy it. This inspection checks text-bearing node presence against the stated character exclusions. It does not establish readability, glyph appearance, or visibility under arbitrary renderers, fonts, or styles, remove characters from the approved artifact, or establish semantic fidelity. Row
 delimiter counting follows the pinned parser's table escape behavior, including
 multiple backslashes before a pipe; those pipes stay inside their cell.
 
@@ -171,3 +170,8 @@ characters, and controls. Meaningful text containing such characters is
 preserved. All JSON artifacts reject duplicate decoded keys within each
 object, including nested and escaped keys; comments and trailing commas
 are invalid. These structural checks do not authenticate owner evidence.
+
+All input artifacts must resolve to regular files before they are read.
+Nonblocking open and descriptor type checks reject FIFO/device/directory
+inputs without waiting for data; existing bounded symlinks to regular files
+remain allowed where the artifact-specific rules permit them.
