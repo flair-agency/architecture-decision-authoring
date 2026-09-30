@@ -152,7 +152,7 @@ The parser supplies CommonMark block hierarchy and GFM table/strikethrough
 tokens; product-specific checks operate on those tokens and their source
 locations without rendering or rewriting approved bytes. Traceability tables
 must be at the document root, with exactly seven columns per data row;
-escaped pipes are cell content. Multiple matching tables, nested clause
+escaped pipes are cell content. Every required cell must contain text-bearing Markdown content under the same node/character presence check as clause bodies; comments or image alternative text alone do not satisfy it. Annotations alongside real text and code/escaped literal references remain allowed. Raw cell values still bind to the record and Proposal without rewriting bytes. Multiple matching tables, nested clause
 headings, raw HTML inline tags or blocks, missing visible clause text, and documents reaching the parser's
 nesting limit fail validation. Illustrative code is allowed only inside a
 marked clause, after the neutral title. Rebuild instructions and the frozen dependency

@@ -1601,3 +1601,53 @@ test("retains bounded symlinks to regular Authority inputs", async () => {
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(await readFile(path), before);
 });
+
+async function writePackageWithTraceValues(dir, {
+  evidence = "record:1", proposalLocator = "Proposed decision", sourceLocator = "source:input.md#rule"
+} = {}) {
+  await writeValidAdoptPackage(dir);
+  const proposal = Buffer.concat([
+    await readFile(join(dir, "proposal.md")), Buffer.from(`\n${proposalLocator}\n${sourceLocator}\n`)
+  ]);
+  const revision = await commitProposal(dir, proposal);
+  const path = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(path, "utf8"));
+  record.authorizationEvidence = evidence;
+  record.proposal.revision = revision;
+  record.proposal.sha256 = digest(proposal);
+  record.adoptedContent[0].proposalLocator = proposalLocator;
+  await writeFile(path, JSON.stringify(record));
+  const tablePath = join(dir, "traceability.md");
+  const header = (await readFile(tablePath, "utf8")).split("\n").slice(0, 2);
+  await writeFile(tablePath, [...header,
+    `| A | clause-id:A | Adopt | ${evidence} | ${revision} | ${proposalLocator} | ${sourceLocator} |`
+  ].join("\n"));
+}
+
+test("rejects comment-only required traceability values even with matching raw bindings", async () => {
+  for (const key of ["evidence", "proposalLocator", "sourceLocator"]) {
+    const dir = await root();
+    await writePackageWithTraceValues(dir, { [key]: "<!-- hidden-reference -->" });
+    const result = run(dir);
+    assert.equal(result.status, 1, `${key} accepted`);
+    assert.match(result.stderr, /must contain text-bearing Markdown content/);
+    assert.doesNotMatch(result.stderr, /must match|must occur|must each occur/);
+  }
+});
+
+test("preserves traceability annotations and literal comment references with text-bearing values", async () => {
+  for (const value of [
+    'reference <!-- explanatory annotation -->',
+    '`<!-- literal-reference -->`',
+    '\\<!-- literal-reference -->'
+  ]) {
+    const dir = await root();
+    await writePackageWithTraceValues(dir, { evidence: value, proposalLocator: value, sourceLocator: value });
+    const proposalBefore = await readFile(join(dir, "proposal.md"));
+    const traceBefore = await readFile(join(dir, "traceability.md"));
+    const result = run(dir);
+    assert.equal(result.status, 0, `${value}: ${result.stderr}`);
+    assert.deepEqual(await readFile(join(dir, "proposal.md")), proposalBefore);
+    assert.deepEqual(await readFile(join(dir, "traceability.md")), traceBefore);
+  }
+});

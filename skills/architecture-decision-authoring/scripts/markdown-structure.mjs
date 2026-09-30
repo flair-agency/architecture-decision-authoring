@@ -214,6 +214,11 @@ export function markdownTableRows(content, expectedHeader, label, errors) {
       errors.push(`${label} row ${row.token.map[0] + 1} must have ${expectedHeader.length} columns`);
       continue;
     }
+    for (const [index, cell] of row.children.entries()) {
+      if (!hasVisibleText(cell)) {
+        errors.push(`${label} row ${row.token.map[0] + 1} column ${index + 1} must contain text-bearing Markdown content`);
+      }
+    }
     rows.push(cells(row));
   }
   return rows;
