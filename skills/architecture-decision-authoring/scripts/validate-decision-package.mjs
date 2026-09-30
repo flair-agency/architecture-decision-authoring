@@ -316,6 +316,14 @@ if (record.proposal && (typeof record.proposal.revision !== "string" || !/^(?:[a
   errors.push("proposal.revision must be a full 40- or 64-character immutable Git commit ID");
 }
 const proposal = proposalPath && await bytes(proposalPath);
+const proposalText = proposal ? utf8(proposal) : null;
+const proposalLocatorPresence = new Map();
+function proposalContains(locator) {
+  if (!proposalLocatorPresence.has(locator)) {
+    proposalLocatorPresence.set(locator, proposalText.includes(locator));
+  }
+  return proposalLocatorPresence.get(locator);
+}
 if (proposal && sha256(proposal) !== record.proposal.sha256) {
   errors.push("proposal bytes do not match proposal.sha256");
 }
@@ -397,12 +405,12 @@ for (const [index, row] of traceRows.entries()) {
   if (proposalRevision !== record.proposal?.revision) errors.push(`${label}.proposalRevision must match adoption-record revision`);
   if (!visibleText(proposalLocator)) errors.push(`${label}.proposalLocator must be non-empty`);
   if (!visibleText(sourceLocators)) errors.push(`${label}.sourceEvidenceLocator(s) must be non-empty`);
-  if (proposal && proposalLocator && !proposal.toString("utf8").includes(proposalLocator)) {
+  if (proposal && proposalLocator && !proposalContains(proposalLocator)) {
     errors.push(`${label}.proposalLocator must occur in the exact Proposal bytes`);
   }
   if (proposal && sourceLocators && sourceLocators.split(";").some((locator) => {
     const value = locator.trim();
-    return !visibleText(value) || !proposal.toString("utf8").includes(value);
+    return !visibleText(value) || !proposalContains(value);
   })) {
     errors.push(`${label}.sourceEvidenceLocator(s) must each occur in the exact Proposal bytes`);
   }
@@ -419,7 +427,10 @@ if (record.outcome === "Adopt") {
     errors.push("Adopt requires non-empty adoptedContent");
   } else {
     const ids = new Set();
+    const adoptedById = new Map();
     for (const [index, entry] of record.adoptedContent.entries()) {
+      // Preserve first-match behavior; duplicate IDs still fail below.
+      if (!adoptedById.has(entry?.clauseId)) adoptedById.set(entry?.clauseId, entry);
       exactKeys(entry, ["clauseId", "proposalLocator"], `adoptedContent[${index}]`);
       if (!visibleText(entry?.clauseId)) {
         errors.push(`adoptedContent[${index}].clauseId must be a non-empty string`);
@@ -430,7 +441,7 @@ if (record.outcome === "Adopt") {
       }
       if (!visibleText(entry?.proposalLocator)) {
         errors.push(`adoptedContent[${index}].proposalLocator must be a non-empty string`);
-      } else if (proposal && !proposal.toString("utf8").includes(entry.proposalLocator)) {
+      } else if (proposal && !proposalContains(entry.proposalLocator)) {
         errors.push(`adoptedContent[${index}].proposalLocator must occur in the exact Proposal bytes`);
       }
     }
@@ -441,7 +452,7 @@ if (record.outcome === "Adopt") {
       if (!ids.has(id)) errors.push(`authority.md clause is absent from adoptedContent: ${id}`);
     }
     for (const [index, row] of traceRows.entries()) {
-      const adoptedEntry = record.adoptedContent.find((entry) => entry?.clauseId === row[0]);
+      const adoptedEntry = adoptedById.get(row[0]);
       if (adoptedEntry && row[5] !== adoptedEntry.proposalLocator) {
         errors.push(`traceability row ${index + 1}.proposalLocator must match adoptedContent for ${row[0]}`);
       }

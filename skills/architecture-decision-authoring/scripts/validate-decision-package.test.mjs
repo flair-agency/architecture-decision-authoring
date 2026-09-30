@@ -1840,3 +1840,34 @@ test("preserves conforming comments and literal malformed-comment examples", asy
   const result = run(dir);
   assert.equal(result.status, 0, result.stderr);
 });
+
+test("indexes clause references independently of order without hiding duplicate or mismatched entries", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const locators = { A: "Proposed decision", B: "source:input.md#rule", C: "Adopt clause A" };
+  await writeFile(join(dir, "authority-set/authority.md"), "# Authority\n\n" + ["A", "B", "C"].map((id) =>
+    `<!-- clause-id: ${id} -->\n## ${id}\n\nClause ${id}.\n`).join("\n"));
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  record.adoptedContent = ["C", "A", "B"].map((id) => ({ clauseId: id, proposalLocator: locators[id] }));
+  await writeFile(recordPath, JSON.stringify(record));
+  const trace = join(dir, "traceability.md");
+  const header = (await readFile(trace, "utf8")).split("\n").slice(0, 2).join("\n");
+  const rows = ["B", "C", "A"].map((id) => `| ${id} | clause-id:${id} | Adopt | record:1 | ${record.proposal.revision} | ${locators[id]} | source:input.md#rule |`);
+  await writeFile(trace, `${header}\n${rows.join("\n")}\n`);
+  const valid = run(dir);
+  assert.equal(valid.status, 0, valid.stderr);
+  record.adoptedContent.push({ clauseId: "B", proposalLocator: locators.A });
+  await writeFile(recordPath, JSON.stringify(record));
+  rows[0] = rows[0].replace(`| ${locators.B} | source:`, `| ${locators.A} | source:`);
+  await writeFile(trace, `${header}\n${rows.join("\n")}\n`);
+  const duplicate = run(dir);
+  assert.equal(duplicate.status, 1);
+  assert.match(duplicate.stderr, /duplicate adoptedContent clauseId: B/);
+  assert.match(duplicate.stderr, /proposalLocator must match adoptedContent for B/);
+  record.adoptedContent.pop();
+  await writeFile(recordPath, JSON.stringify(record));
+  const mismatch = run(dir);
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stderr, /proposalLocator must match adoptedContent for B/);
+});

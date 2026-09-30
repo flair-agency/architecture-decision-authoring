@@ -73,6 +73,14 @@ function commentSuffix(node) {
 
 export function authorityClauseIds(content, errors) {
   const { roots, lines } = document(content, errors, "authority.md");
+  const headingsByLine = new Map();
+  for (const node of roots) {
+    const { token } = node;
+    if (token.type === "heading_open" && token.tag === "h2"
+      && token.markup === "##" && hasVisibleText(node)) {
+      if (!headingsByLine.has(token.map[0])) headingsByLine.set(token.map[0], node);
+    }
+  }
   const markersByHeading = new Map();
   const ids = [];
   for (const node of descendants(roots)) {
@@ -94,9 +102,7 @@ export function authorityClauseIds(content, errors) {
           continue;
         }
         ids.push(match[1]);
-        const heading = roots.find((entry) => entry.token.type === "heading_open"
-          && entry.token.map[0] === markerLine + 1 && entry.token.tag === "h2"
-          && entry.token.markup === "##" && hasVisibleText(entry));
+        const heading = headingsByLine.get(markerLine + 1);
         if (!heading) {
           errors.push(`authority clause marker ${match[1]} must be a standalone marker immediately before a normative Markdown clause`);
         } else {
