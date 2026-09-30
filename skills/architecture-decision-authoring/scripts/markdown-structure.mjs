@@ -36,7 +36,8 @@ function hasVisibleText(node) {
   if (node.token.type === "fence" || node.token.type === "code_block") return false;
   if (node.token.type === "inline") {
     return node.token.children.some((token) =>
-      (["text", "code_inline"].includes(token.type) && token.content.trim() !== ""));
+      (["text", "code_inline"].includes(token.type)
+        && token.content.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, "").trim() !== ""));
   }
   return node.children.some(hasVisibleText);
 }
@@ -159,7 +160,10 @@ function cells(row) {
 // table-row source lines. Escaped pipes are cell content, not delimiters.
 function sourceColumns(line) {
   const value = line.trim();
-  const delimiters = [...value.matchAll(/(?<!\\)(?:\\\\)*\|/g)].map((match) => match.index + match[0].length - 1);
+  // The pinned table rule escapes a pipe whenever its immediately preceding
+  // character is a backslash, including even-length runs. Do not impose
+  // general Markdown backslash parity on that parser-specific table rule.
+  const delimiters = [...value.matchAll(/(?<!\\)\|/g)].map((match) => match.index);
   if (delimiters.length === 0) return null;
   return delimiters.length + 1 - Number(delimiters[0] === 0)
     - Number(delimiters.at(-1) === value.length - 1);

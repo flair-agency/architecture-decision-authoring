@@ -1369,3 +1369,35 @@ test("does not count image alternative text alone as a normative text body", asy
   const valid = run(dir);
   assert.equal(valid.status, 0, valid.stderr);
 });
+
+test("rejects default-ignorable-only bodies without rewriting meaningful Unicode text", async () => {
+  for (const body of ["\u200b", "\u200c\u200d", "\u2060", "\ufe0f", "\u{e0100}", "&#x200b;", "`\u200b`", " \u200b \u2060 ", "\u0007", "\u001b"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "authority-set", "authority.md"), `# Authority\n\n<!-- clause-id: A -->\n## A\n\n${body}\n`);
+    const result = run(dir);
+    assert.equal(result.status, 1, JSON.stringify(body));
+    assert.match(result.stderr, /Authority clause A must contain Markdown clause content/);
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const authority = Buffer.from('# Authority\n\n<!-- clause-id: A -->\n## A\n\nRequests must preserve the joiner in क्\u200dष.\n');
+  const path = join(dir, "authority-set", "authority.md");
+  await writeFile(path, authority);
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(path), authority);
+});
+
+test("follows the pinned parser's table escaping for multiple backslashes before pipes", async () => {
+  for (const count of [2, 3, 4]) {
+    const dir = await root();
+    const evidence = "record:1" + "\\".repeat(count - 1) + "|approved";
+    await writeValidAdoptPackage(dir, { recordOverrides: { authorizationEvidence: evidence } });
+    const path = join(dir, "traceability.md");
+    const sourceCell = "record:1" + "\\".repeat(count) + "|approved";
+    await writeFile(path, (await readFile(path, "utf8")).replace("record:1", sourceCell));
+    const result = run(dir);
+    assert.equal(result.status, 0, result.stderr);
+  }
+});

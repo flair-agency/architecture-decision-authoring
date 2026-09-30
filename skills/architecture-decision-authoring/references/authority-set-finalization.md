@@ -157,3 +157,10 @@ headings, missing visible clause text, and documents reaching the parser's
 nesting limit fail validation. Illustrative code is allowed only inside a
 marked clause, after the neutral title. Rebuild instructions and the frozen dependency
 lockfile are in the source repository's `tools/markdown-parser/` directory.
+
+Clause-body presence is checked on text-bearing parser nodes; image alternative
+text alone and text consisting only of whitespace, Unicode default-ignorable
+characters, or controls do not satisfy it. This inspection does not remove
+characters from the approved artifact or establish semantic fidelity. Row
+delimiter counting follows the pinned parser's table escape behavior, including
+multiple backslashes before a pipe; those pipes stay inside their cell.
