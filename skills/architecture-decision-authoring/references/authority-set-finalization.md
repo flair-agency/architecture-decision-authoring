@@ -148,6 +148,10 @@ The complete Skill includes pinned markdown-it 15.0.2 and jsonc-parser 3.3.1 run
 their third-party notices under `scripts/vendor/`; Node.js and Git are needed
 to run the validator, but npm and network access are not. Copy the entire
 Skill directory, including all scripts and `scripts/vendor/`.
+The raw-HTML comment exception applies only to conforming comments on parser HTML tokens: a closing `-->`, no abrupt initial `>`/`->`, no nested opener or `--!>` terminator, and no trailing `<!-` in the body. Code and escaped examples remain literal; this is not a general browser visibility guarantee.
+
+All text artifacts must decode as valid UTF-8; malformed byte sequences fail before JSON or Markdown inspection rather than being replaced. Authority and traceability Markdown must not contain NUL, which the pinned parser would replace and could collapse distinct reference values. Valid encoded replacement characters remain allowed. Proposal bytes and escaped JSON controls are not subjected to that Markdown-specific NUL restriction. Hashes and approved-snapshot comparisons always use the original bytes; decoding does not rewrite content or silently strip a JSON BOM.
+
 The parser supplies CommonMark block hierarchy and GFM table/strikethrough
 tokens; product-specific checks operate on those tokens and their source
 locations without rendering or rewriting approved bytes. Traceability tables

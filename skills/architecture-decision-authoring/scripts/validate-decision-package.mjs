@@ -6,7 +6,7 @@ import { constants } from "node:fs";
 import { lstat, open, realpath, stat } from "node:fs/promises";
 import { resolve, relative, sep, isAbsolute, win32 } from "node:path";
 import { authorityClauseIds, markdownTableRows } from "./markdown-structure.mjs";
-import { strictJson, visibleText } from "./structural-input.mjs";
+import { strictJson, utf8, visibleText } from "./structural-input.mjs";
 
 const root = resolve(process.argv[2] ?? "decision-package");
 const repositoryRootArgument = process.argv[3];
@@ -118,7 +118,14 @@ async function bytes(path) {
       errors.push(`${relative(root, path)} must be a regular file`);
       return null;
     }
-    return await handle.readFile();
+    const content = await handle.readFile();
+    try {
+      utf8(content);
+    } catch {
+      errors.push(`invalid UTF-8: ${relative(root, path)}`);
+      return null;
+    }
+    return content;
   } catch {
     errors.push(`missing file: ${relative(root, path)}`);
     return null;
@@ -131,7 +138,7 @@ async function json(path) {
   const content = await bytes(path);
   if (!content) return null;
   try {
-    return strictJson(content.toString("utf8"));
+    return strictJson(utf8(content));
   } catch (error) {
     const detail = error.message.startsWith("duplicate JSON key") ? ` (${error.message})` : "";
     errors.push(`invalid JSON: ${relative(root, path)}${detail}`);

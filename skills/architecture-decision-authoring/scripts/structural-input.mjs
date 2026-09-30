@@ -1,5 +1,10 @@
 import { parseTree } from "./vendor/jsonc-parser.mjs";
 
+// Preserve BOM characters so strict JSON retains its existing syntax rules.
+export function utf8(content) {
+  return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(content);
+}
+
 // Inspection only: never normalize, rewrite, or authenticate supplied content.
 export function visibleText(value) {
   return typeof value === "string"

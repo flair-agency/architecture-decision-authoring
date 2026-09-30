@@ -1651,3 +1651,192 @@ test("preserves traceability annotations and literal comment references with tex
     assert.deepEqual(await readFile(join(dir, "traceability.md")), traceBefore);
   }
 });
+
+test("rejects malformed UTF-8 in JSON instead of silently replacing owner bytes", async () => {
+  for (const invalid of [[0x80], [0xc3], [0xc0, 0x80], [0xed, 0xa0, 0x80]]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, "adoption-record.json");
+    const original = await readFile(path);
+    const needle = Buffer.from('"owner":"owner"');
+    const at = original.indexOf(needle);
+    assert.ok(at >= 0);
+    await writeFile(path, Buffer.concat([
+      original.subarray(0, at), Buffer.from('"owner":"'), Buffer.from(invalid),
+      Buffer.from('"'), original.subarray(at + needle.length)
+    ]));
+    const result = run(dir);
+    assert.equal(result.status, 1, `${invalid} accepted`);
+    assert.match(result.stderr, /invalid UTF-8/);
+  }
+});
+
+test("rejects malformed UTF-8 at every artifact read boundary", async () => {
+  for (const artifact of ["proposal.md", "authority-set/authority.md", "authority-set/manifest.json", "traceability.md", "validation-result.json"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, artifact);
+    const malformed = Buffer.concat([await readFile(path), Buffer.from([0x80])]);
+    if (artifact === "proposal.md") {
+      const revision = await commitProposal(dir, malformed);
+      const recordPath = join(dir, "adoption-record.json");
+      const record = JSON.parse(await readFile(recordPath, "utf8"));
+      const oldRevision = record.proposal.revision;
+      record.proposal.revision = revision;
+      record.proposal.sha256 = digest(malformed);
+      await writeFile(recordPath, JSON.stringify(record));
+      const table = join(dir, "traceability.md");
+      await writeFile(table, (await readFile(table, "utf8")).replace(oldRevision, revision));
+    } else await writeFile(path, malformed);
+    const result = run(dir);
+    assert.equal(result.status, 1, `${artifact} accepted`);
+    assert.match(result.stderr, /invalid UTF-8/);
+  }
+});
+
+test("rejects malformed UTF-8 in an approved amendment snapshot", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const snapshotPath = join(dir, "approved-amendment.md");
+  const snapshot = await readFile(join(dir, "authority-set", "authority.md"));
+  await writeFile(snapshotPath, snapshot);
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  record.outcome = "Amend";
+  record.adoptedContent = [];
+  record.amendedContent = { path: "approved-amendment.md", sha256: digest(snapshot) };
+  await writeFile(recordPath, JSON.stringify(record));
+  const table = join(dir, "traceability.md");
+  await writeFile(table, (await readFile(table, "utf8")).replace("| Adopt |", "| Amend |"));
+  const valid = run(dir);
+  assert.equal(valid.status, 0, valid.stderr);
+  const malformed = Buffer.concat([snapshot, Buffer.from([0x80])]);
+  await writeFile(snapshotPath, malformed);
+  record.amendedContent.sha256 = digest(malformed);
+  await writeFile(recordPath, JSON.stringify(record));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /invalid UTF-8: approved-amendment.md/);
+});
+
+test("rejects Markdown NUL before it can equal a different recorded replacement character", async () => {
+  const dir = await root();
+  await writePackageWithTraceValues(dir, { evidence: "record:\ufffd1" });
+  const table = join(dir, "traceability.md");
+  await writeFile(table, (await readFile(table, "utf8")).replace("record:\ufffd1", "record:\u00001"));
+  const result = run(dir);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /must not contain NUL/);
+  const authorityDir = await root();
+  await writeValidAdoptPackage(authorityDir);
+  const authority = join(authorityDir, "authority-set", "authority.md");
+  await writeFile(authority, (await readFile(authority, "utf8")).replace("Clause A.", "Clause\u0000 A."));
+  const invalidAuthority = run(authorityDir);
+  assert.equal(invalidAuthority.status, 1);
+  assert.match(invalidAuthority.stderr, /authority.md must not contain NUL/);
+});
+
+test("preserves legitimate encoded replacement characters without loss or rewriting", async () => {
+  const dir = await root();
+  await writePackageWithTraceValues(dir, {
+    evidence: "record:\ufffd1", proposalLocator: "Proposed \ufffd decision", sourceLocator: "source:\ufffd.md#rule"
+  });
+  const paths = ["adoption-record.json", "proposal.md", "traceability.md"].map((p) => join(dir, p));
+  const before = await Promise.all(paths.map((p) => readFile(p)));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  for (const [i, path] of paths.entries()) assert.deepEqual(await readFile(path), before[i]);
+});
+
+test("retains Proposal NUL bytes and escaped JSON controls outside Markdown parser inputs", async () => {
+  const dir = await root();
+  const proposal = Buffer.from("# Proposal\r\n\r\nAn illustrative embedded NUL: \u0000\r\n");
+  const revision = await commitProposal(dir, proposal);
+  await writeFile(join(dir, "adoption-record.json"), JSON.stringify({
+    schemaVersion: 1, status: "Pending", outcome: null,
+    proposal: { path: "proposal.md", revision, sha256: digest(proposal) }
+  }));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(join(dir, "proposal.md")), proposal);
+  const decidedDir = await root();
+  await writeValidAdoptPackage(decidedDir, { recordOverrides: { owner: "owner\u0000name" } });
+  const decided = run(decidedDir);
+  assert.equal(decided.status, 0, decided.stderr);
+});
+
+test("does not silently strip a JSON BOM during strict decoding", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const path = join(dir, "adoption-record.json");
+  await writeFile(path, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), await readFile(path)]));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /invalid JSON/);
+});
+
+test("rejects HTML comment terminators that expose hidden tags to consumers", async () => {
+  for (const artifact of ["authority-set/authority.md", "traceability.md"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, artifact);
+    const original = await readFile(path, "utf8");
+    const payload = "<!-- note --!><div hidden>-->";
+    const altered = artifact === "traceability.md"
+      ? `${payload}\n\n${original}\n\n<!-- note --!></div>-->\n`
+      : original.replace("Clause A.", `Clause A.\n\n${payload}\n\nUntraced rendered rule.\n\n<!-- note --!></div>-->`);
+    await writeFile(path, altered);
+    const result = run(dir);
+    assert.equal(result.status, 1, `${artifact}: ${result.stdout}`);
+    assert.match(result.stderr, /HTML comment/);
+  }
+});
+
+test("rejects malformed comments only on parser HTML tokens", async () => {
+  for (const comment of ["<!-->", "<!--->", "<!-- nested <!-- opener -->", "<!-- unfinished", "<!-- tail <!--->"]) {
+    for (const artifact of ["authority-set/authority.md", "traceability.md"]) {
+      for (const prefix of comment === "<!-- unfinished" ? [""] : ["", "Words "]) {
+        const dir = await root();
+        await writeValidAdoptPackage(dir);
+        const path = join(dir, artifact);
+        const original = await readFile(path, "utf8");
+        await writeFile(path, `${original}\n\n${prefix}${comment}\n`);
+        const result = run(dir);
+        assert.equal(result.status, 1, `${artifact}: ${prefix}${comment} accepted`);
+        assert.match(result.stderr, /malformed HTML comment/);
+      }
+    }
+  }
+});
+
+test("preserves conforming comments and literal malformed-comment examples", async () => {
+  for (const artifact of ["authority-set/authority.md", "traceability.md"]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    const path = join(dir, artifact);
+    const original = await readFile(path, "utf8");
+    const examples = [
+      "Words <!-- unfinished",
+      "<!-- first --> <!-- second -->", "<!-- multiple\nlines -->", "<!-- foo--bar -->",
+      "`<!-- note --!><div hidden>-->`", "\\<!-- note --!>&lt;div hidden&gt;--&gt;",
+      "```html\n<!-- note --!><div hidden>-->\n```"
+    ].join("\n\n");
+    const content = Buffer.from(`${original}\n\n${examples}\n`);
+    await writeFile(path, content);
+    const result = run(dir);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(await readFile(path), content);
+  }
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  const authority = join(dir, "authority-set/authority.md");
+  await writeFile(authority, (await readFile(authority, "utf8")).replace("clause-id: A", "clause-id: foo--bar"));
+  const trace = join(dir, "traceability.md");
+  await writeFile(trace, (await readFile(trace, "utf8")).replace("| A | clause-id:A |", "| foo--bar | clause-id:foo--bar |"));
+  const recordPath = join(dir, "adoption-record.json");
+  const record = JSON.parse(await readFile(recordPath, "utf8"));
+  record.adoptedContent[0].clauseId = "foo--bar";
+  await writeFile(recordPath, JSON.stringify(record));
+  const result = run(dir);
+  assert.equal(result.status, 0, result.stderr);
+});

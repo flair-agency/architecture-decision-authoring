@@ -1,12 +1,16 @@
 import markdown from "./vendor/markdown-it.mjs";
-import { visibleText } from "./structural-input.mjs";
+import { utf8, visibleText } from "./structural-input.mjs";
 
 // Preserve parser hierarchy and source maps; never render/serialize approved
 // content. Normalization happens only inside the parser's inspection copy.
 function document(content, errors, label) {
-  const source = content.toString("utf8");
+  const source = utf8(content);
   const lines = source.split(/\r\n|\n|\r/);
   const roots = [];
+  if (source.includes("\0")) {
+    errors.push(`${label} must not contain NUL because Markdown replaces it and cannot preserve reference identity`);
+    return { roots, lines };
+  }
   const stack = [{ children: roots }];
   const tokens = markdown.parse(source, {});
   // The parser stops emitting blocks at maxNesting. Fail at that boundary
@@ -15,6 +19,20 @@ function document(content, errors, label) {
     errors.push(`${label} reaches the Markdown parser nesting limit; structure cannot be validated`);
   }
   for (const token of tokens) {
+    const htmlTokens = token.type === "inline"
+      ? token.children.filter((child) => child.type === "html_inline")
+      : token.type === "html_block" ? [token] : [];
+    // Limit the comment exception to conforming HTML comments. Alternative
+    // browser terminators must not expose raw tags hidden inside parser tokens.
+    for (const html of htmlTokens) {
+      for (const comment of html.content.matchAll(commentPattern)) {
+        const body = comment[1];
+        if (!comment[0].endsWith("-->") || /^(?:>|->)/.test(body)
+          || /<!--|-->|--!>/.test(body) || body.endsWith("<!-")) {
+          errors.push(`${label} contains a malformed HTML comment; raw HTML cannot be exempted as a comment`);
+        }
+      }
+    }
     if (token.nesting === -1) {
       stack.pop();
       continue;
