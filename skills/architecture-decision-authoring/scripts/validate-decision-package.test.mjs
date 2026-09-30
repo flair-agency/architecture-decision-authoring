@@ -433,6 +433,20 @@ test("does not treat a traceability table inside a raw HTML block as the package
   assert.match(result.stderr, /must contain the required traceability table header/);
 });
 
+test("does not treat a traceability table inside a list-item raw HTML block as the package table", async () => {
+  const dir = await root();
+  await writeValidAdoptPackage(dir);
+  await writeFile(join(dir, "traceability.md"), [
+    "- <div>",
+    "  | Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "  | --- | --- | --- | --- | --- | --- | --- |",
+    `  | A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`
+  ].join("\n"));
+  const result = run(dir);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must contain the required traceability table header/);
+});
+
 test("recognizes every CommonMark type 6 tag including noframes", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);
@@ -840,7 +854,7 @@ test("recognizes Authority headings and clause markers separated by bare CR line
 });
 
 test("rejects headings nested in Markdown blockquote and list containers", async () => {
-  for (const nestedHeading of ["> ## Quoted heading", ">  ## Quoted heading with two spaces", ">   ## Quoted heading with three spaces", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading", "- List item\n    ## Indented list heading", "- item\n  continuation\n    ## Continued-list heading"]) {
+  for (const nestedHeading of ["> ## Quoted heading", ">  ## Quoted heading with two spaces", ">   ## Quoted heading with three spaces", "- ## List heading", "1. ## Ordered-list heading", "> - ### Nested heading", "- List item\n    ## Indented list heading", "- item\n  continuation\n    ## Continued-list heading", "- item\n\t## Tab-indented list heading"]) {
     const dir = await root();
     await writeValidAdoptPackage(dir);
     await writeFile(join(dir, "authority-set", "authority.md"), [

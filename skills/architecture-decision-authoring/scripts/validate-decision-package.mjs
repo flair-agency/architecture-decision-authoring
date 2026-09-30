@@ -387,16 +387,35 @@ function markdownContext(lines) {
       continue;
     }
     if (rawHtmlBlock) {
-      codeLines.add(index);
-      rawHtmlBlockLines.add(index);
-      visibleLines.push("");
-      if (rawHtmlBlock.blankTerminated ? line.trim() === "" : rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
-      continue;
+      const blankLine = line.trim() === "";
+      const outsideContainer = rawHtmlBlock.containerIndent !== undefined
+        && !blankLine
+        && indentationColumns(line) < rawHtmlBlock.containerIndent;
+      if (!outsideContainer) {
+        codeLines.add(index);
+        rawHtmlBlockLines.add(index);
+        visibleLines.push("");
+        if (rawHtmlBlock.blankTerminated ? blankLine : rawHtmlBlock.end.test(line)) rawHtmlBlock = null;
+        continue;
+      }
+      rawHtmlBlock = null;
     }
     if (comment?.lineLeading) htmlCommentLines.add(index);
     const lineLeadingComment = /^ {0,3}<!--/.test(line)
       && !/^<!--\s*clause-id:\s*[A-Za-z0-9][A-Za-z0-9._:-]*\s*-->$/.test(line);
     if (lineLeadingComment) htmlCommentLines.add(index);
+    const listItem = markdownListItem(line);
+    if (!comment && listItem) {
+      rawHtmlBlock = rawHtmlBlockStart(listItem.content);
+      if (rawHtmlBlock) {
+        rawHtmlBlock.containerIndent = listItem.contentIndent;
+        codeLines.add(index);
+        rawHtmlBlockLines.add(index);
+        visibleLines.push("");
+        if (!rawHtmlBlock.blankTerminated && rawHtmlBlock.end.test(listItem.content)) rawHtmlBlock = null;
+        continue;
+      }
+    }
     if (!comment && isIndentedCodeLine(line)) {
       if (isIndentedListHeading(lines, index)) {
         containerHeadingLines.add(index);
@@ -471,20 +490,21 @@ function markdownContext(lines) {
 
 function isIndentedListHeading(lines, index) {
   const line = lines[index];
-  if (!/^ {4,}#{1,6}\s+\S/.test(line)) return false;
-  const headingIndent = line.match(/^ */)[0].length;
+  const headingIndent = indentationColumns(line);
   let minimumContinuationIndent = Number.POSITIVE_INFINITY;
   for (let previous = index - 1; previous >= 0; previous -= 1) {
     const prior = lines[previous];
     if (prior.trim() === "") continue;
     const item = prior.match(/^( *)(?:[-+*]|\d{1,9}[.)])[ \t]+/);
     if (item) {
-      const contentIndent = item[0].replace(/\t/g, "    ").length;
+      const contentIndent = columnWidth(item[0]);
+      const heading = stripIndentColumns(line, contentIndent);
       return minimumContinuationIndent >= contentIndent
         && headingIndent >= contentIndent
-        && headingIndent < contentIndent + 4;
+        && headingIndent < contentIndent + 4
+        && /^ {0,3}#{1,6}(?:[ \t]+.*)?$/.test(heading);
     }
-    const priorIndent = prior.match(/^( *)/)[0].length;
+    const priorIndent = indentationColumns(prior);
     // Continuation paragraphs keep the containing list item active. An
     // unindented line ends that context; intermediate indented lines may be
     // multiple wrapped paragraph lines or a blank-line-separated block.
@@ -492,6 +512,48 @@ function isIndentedListHeading(lines, index) {
     minimumContinuationIndent = Math.min(minimumContinuationIndent, priorIndent);
   }
   return false;
+}
+
+function indentationColumns(value) {
+  let columns = 0;
+  for (const character of value) {
+    if (character === " ") columns += 1;
+    else if (character === "\t") columns += 4 - (columns % 4);
+    else break;
+  }
+  return columns;
+}
+
+function columnWidth(value) {
+  let columns = 0;
+  for (const character of value) {
+    if (character === " ") columns += 1;
+    else if (character === "\t") columns += 4 - (columns % 4);
+    else columns += 1;
+  }
+  return columns;
+}
+
+function stripIndentColumns(value, targetColumns) {
+  let columns = 0;
+  let index = 0;
+  while (index < value.length && columns < targetColumns) {
+    const character = value[index];
+    if (character !== " " && character !== "\t") break;
+    const nextColumns = character === " " ? columns + 1 : columns + 4 - (columns % 4);
+    if (nextColumns > targetColumns) {
+      return " ".repeat(nextColumns - targetColumns) + value.slice(index + 1);
+    }
+    columns = nextColumns;
+    index += 1;
+  }
+  return columns >= targetColumns ? value.slice(index) : value;
+}
+
+function markdownListItem(line) {
+  const match = line.match(/^( {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+)(.*)$/);
+  if (!match) return null;
+  return { content: match[2], contentIndent: columnWidth(match[1]) };
 }
 
 function rawHtmlBlockStart(line) {
