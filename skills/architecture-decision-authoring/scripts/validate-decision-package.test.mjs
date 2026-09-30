@@ -386,6 +386,26 @@ test("does not treat valid backtick or tilde fenced tables as the package table"
   }
 });
 
+test("does not treat fenced tables inside list or blockquote containers as the package table", async () => {
+  const table = [
+    "| Clause ID | Authority locator | Owner outcome | Authorization evidence | Proposal revision | Proposal locator | Source evidence locator(s) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    `| A | clause-id:A | Adopt | record:1 | ${proposalRevision} | Proposed decision | source:input.md#rule |`
+  ];
+  for (const embedded of [
+    ["- ```markdown", ...table.map((line) => `  ${line}`), "  ```"],
+    ["> ```markdown", ...table.map((line) => `> ${line}`), "> ```"],
+    ["> - ```markdown", ...table.map((line) => `>   ${line}`), ">   ```"]
+  ]) {
+    const dir = await root();
+    await writeValidAdoptPackage(dir);
+    await writeFile(join(dir, "traceability.md"), embedded.join("\n"));
+    const result = run(dir);
+    assert.equal(result.status, 1, `expected embedded example to be ignored: ${embedded[0]}`);
+    assert.match(result.stderr, /must contain the required traceability table header/);
+  }
+});
+
 test("does not let invalid backtick fence info mask visible Authority text", async () => {
   const dir = await root();
   await writeValidAdoptPackage(dir);

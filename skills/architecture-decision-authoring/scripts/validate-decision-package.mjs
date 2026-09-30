@@ -380,11 +380,26 @@ function markdownContext(lines) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (fence) {
-      codeLines.add(index);
-      visibleLines.push("");
-      const close = line.match(/^ {0,3}(`+|~+)\s*$/);
-      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
-      continue;
+      let fenceLine = line;
+      let outsideContainer = false;
+      if (fence.quote) {
+        const quoted = stripBlockquotePrefix(fenceLine);
+        if (quoted === null) outsideContainer = fenceLine.trim() !== "";
+        else fenceLine = quoted;
+      }
+      if (!outsideContainer && fence.containerIndent !== undefined && fenceLine.trim() !== "") {
+        if (indentationColumns(fenceLine) < fence.containerIndent) outsideContainer = true;
+        else fenceLine = stripIndentColumns(fenceLine, fence.containerIndent);
+      }
+      if (outsideContainer) {
+        fence = null;
+      } else {
+        codeLines.add(index);
+        visibleLines.push("");
+        const close = fenceLine.match(/^ {0,3}(`+|~+)\s*$/);
+        if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
+        continue;
+      }
     }
     if (rawHtmlBlock) {
       const blankLine = line.trim() === "";
@@ -479,10 +494,14 @@ function markdownContext(lines) {
     }
 
     visibleLines.push(visible);
-    const fenceMatch = visible.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    const container = markdownContainerContent(visible);
+    const fenceMatch = container.content.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (!htmlCommentLines.has(index) && fenceMatch && (fenceMatch[1][0] !== "`" || !fenceMatch[2].includes("`"))) {
       codeLines.add(index);
-      fence = { character: fenceMatch[1][0], length: fenceMatch[1].length };
+      fence = {
+        character: fenceMatch[1][0], length: fenceMatch[1].length,
+        containerIndent: container.containerIndent, quote: container.quote
+      };
     }
   }
   return { codeLines, visibleLines, comments, incompleteComment: comment, rawHtmlBlockLines, htmlCommentLines, ambiguousHtmlCommentLines, containerHeadingLines };
@@ -554,6 +573,33 @@ function markdownListItem(line) {
   const match = line.match(/^( {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+)(.*)$/);
   if (!match) return null;
   return { content: match[2], contentIndent: columnWidth(match[1]) };
+}
+
+function stripBlockquotePrefix(line) {
+  const match = line.match(/^ {0,3}>[ \t]?/);
+  return match ? line.slice(match[0].length) : null;
+}
+
+function markdownContainerContent(line) {
+  let content = line;
+  let containerIndent;
+  let quote = false;
+  while (true) {
+    const blockquote = stripBlockquotePrefix(content);
+    if (blockquote !== null) {
+      content = blockquote;
+      quote = true;
+      continue;
+    }
+    const item = markdownListItem(content);
+    if (item) {
+      content = item.content;
+      containerIndent = item.contentIndent;
+      continue;
+    }
+    break;
+  }
+  return { content, containerIndent, quote };
 }
 
 function rawHtmlBlockStart(line) {
