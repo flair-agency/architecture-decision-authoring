@@ -1401,3 +1401,33 @@ test("follows the pinned parser's table escaping for multiple backslashes before
     assert.equal(result.status, 0, result.stderr);
   }
 });
+
+test("rejects missing promisor objects without lazily fetching from the available remote", async () => {
+  for (const object of ["commit", "blob"]) {
+    const dir = await root();
+    await writePendingPackage(dir);
+    const repositoryRoot = join(dir, "..");
+    const record = JSON.parse(await readFile(join(dir, "adoption-record.json"), "utf8"));
+    const git = (args) => {
+      const result = spawnSync("git", args, { cwd: repositoryRoot, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+      return result.stdout.trim();
+    };
+    const objectId = object === "commit" ? record.proposal.revision
+      : git(["rev-parse", `${record.proposal.revision}:decision-package/proposal.md`]);
+    const remote = await mkdtemp(join(tmpdir(), "proposal-promisor-"));
+    git(["clone", "--bare", "--quiet", "--no-hardlinks", repositoryRoot, remote]);
+    git(["remote", "add", "origin", remote]);
+    git(["config", "remote.origin.promisor", "true"]);
+    git(["config", "remote.origin.partialclonefilter", "blob:none"]);
+    const localObject = join(repositoryRoot, ".git", "objects", objectId.slice(0, 2), objectId.slice(2));
+    await unlink(localObject);
+    // The remote contains the missing object; even an inherited opt-in must not allow retrieval.
+    const result = spawnSync(process.execPath, [validator, dir, repositoryRoot], {
+      encoding: "utf8", env: { ...process.env, GIT_NO_LAZY_FETCH: "0" }
+    });
+    assert.equal(result.status, 1, `${object}: ${result.stdout}\n${result.stderr}`);
+    assert.match(result.stderr, /locally available Git commit|missing from the local Git object database/);
+    await assert.rejects(readFile(localObject), { code: "ENOENT" });
+  }
+});

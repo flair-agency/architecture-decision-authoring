@@ -14,6 +14,7 @@ const errors = [];
 function git(args) {
   const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key)));
   environment.GIT_NO_REPLACE_OBJECTS = "1";
+  environment.GIT_NO_LAZY_FETCH = "1";
   const result = spawnSync("git", ["--no-replace-objects", ...args], {
     cwd: repositoryRoot, encoding: "buffer", env: environment, maxBuffer: 64 * 1024 * 1024
   });
