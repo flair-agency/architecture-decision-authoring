@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "authorities": [
+    {
+      "id": "synthetic-weekly-queue-amended",
+      "repository": "self",
+      "revision": "authority-revision",
+      "path": "decision-package/authority-set/authority.md"
+    }
+  ]
+}

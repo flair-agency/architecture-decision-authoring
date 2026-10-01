@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "status": "Decided",
+  "outcome": "Amend",
+  "proposal": {
+    "path": "proposal.md",
+    "revision": "e9c69a7cb9309688d395270b3a027db5c56f9c9d",
+    "sha256": "39b269ceb0fd967a85c7da7b5fd1e7ce9bc74d0516798bfe12fb36e78fe83105"
+  },
+  "owner": "fixture-owner (synthetic test identity only)",
+  "authorizationEvidence": "simulation:issue35-amend-snapshot",
+  "decisionDate": "2026-10-01",
+  "scope": "Synthetic weekly queue presentation only.",
+  "applicabilityConditions": "Only queue items with a readable created_on value; otherwise show unknown.",
+  "exceptions": "No age-based ranking, escalation, status change, or item closure.",
+  "adoptedContent": [],
+  "amendedContent": {
+    "path": "owner-approved-amendment.md",
+    "sha256": "4c09ad7ca651b636e564955563a63e7fabf20afc4522818772fed59824bad7d5"
+  }
+}

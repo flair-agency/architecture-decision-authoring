@@ -1,0 +1,8 @@
+{
+  "packageValidation": "pass",
+  "clauseTraceability": "not-verified",
+  "gatekeeperCompatibility": "not-run",
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified; synthetic fixture only",
+  "consumerActivation": "not-performed"
+}

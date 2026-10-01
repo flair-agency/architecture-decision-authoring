@@ -1,0 +1,13 @@
+{
+  "packageValidation": "pass",
+  "clauseTraceability": "not-verified",
+  "validationResultClaims": "not-verified",
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "not-run",
+    "pinnedRevision": null
+  },
+  "consumerActivation": "not-performed",
+  "errors": []
+}

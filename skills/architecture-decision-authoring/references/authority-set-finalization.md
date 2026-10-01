@@ -16,6 +16,17 @@ For `Adopt`, use only proposed content explicitly identified by the owner. For `
 
 For `Defer`, `Reject`, `Pending`, a missing gate field, or ambiguous adopted content, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member.
 
+The safest place to prepare a candidate is a fresh package directory. If a
+reused directory already contains output from an earlier successful run, stop
+and do not report the no-export result as complete while those artifacts remain
+in the active package. Move the known generated files
+(`authority-set/authority.md`, `authority-set/manifest.json`, `traceability.md`,
+and `validation-result.json`) outside that package directory, preserving
+unrelated or unidentified files. Then verify that no Authority member or
+manifest remains before reporting no-export. This is explicit manual
+quarantine, not an automatic cleanup mechanism; the read-only checker does not
+modify prior artifacts. Report any blocking or cleanup issue clearly.
+
 ## Successful package
 
 Produce a self-contained package with this minimum shape:
