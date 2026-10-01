@@ -1,0 +1,10 @@
+Source revision: 59b78e6178e57d8c89ef187fa998a18997b97191
+
+SHA-256  skills/architecture-decision-authoring/SKILL.md
+3455d42a1dd31526a878af6074a09ee1bf837ed68e2b7c352570feaa471a5330
+
+SHA-256  skills/architecture-decision-authoring/references/authority-set-finalization.md
+241bcbeda9c2f4c45c2f5cf4e5a499f721ff93c057bfa3e36c57b18b0098adc4
+
+SHA-256  skills/architecture-decision-authoring/scripts/validate-decision-package.mjs
+6a512fba251b49e5f38c4b9075bed7b3ba9d834aca685582d9a811d3e241a5de
