@@ -1,0 +1,1 @@
+SYNTHETIC UNRELATED FILE. Preserve this exact file while testing no-export quarantine.
