@@ -163,6 +163,45 @@ without clause IDs, legacy records without IDs, no-export outcomes, Proposal
 blob binding, and selector/path negatives. Those tests are separate from this
 single synthetic Adopt walkthrough.
 
+### Synthetic Skill negative rehearsals
+
+Two additional host-native agent executions followed this repository's Skill
+and finalization reference using fresh private clones at the exact Proposal
+commit. The agent task was `/root/minimal_slice_plan` (inherited model/effort:
+`gpt-6-luna`, `low`); neither run used a separate Codex CLI or registered UI
+Skill invocation. Full synthetic inputs and observed results are recorded at
+`/private/tmp/ada-issue33-skill-negative.H2fRd7/skill-result.md`.
+
+- With a fictional `Adopt` outcome, exact Proposal locator, and all other
+  decision fields but an empty `authorizationEvidence`, the Skill stopped
+  because the required evidence URL or record ID was absent. No Authority
+  member or manifest existed after the attempt.
+- With a fictional `Adopt` outcome but no `adoptedContent` locator, the Skill
+  stopped because the exact Proposal content was not identified. No Authority
+  member or manifest existed after the attempt.
+
+These inputs are synthetic and do not test owner authenticity. The retained
+agent report states that neither attempt had prior consumable artifacts; no
+separate pre-run snapshot was retained, so this could not be independently
+verified. They do not test stale-output cleanup or establish general publisher
+behavior.
+
+Five additional synthetic no-export trials started from a previously
+successful package in isolated copies of the fixture repository. The retained
+`trial-results.json` reports Skill dispositions for `Pending`, `Defer`,
+`Reject`, missing `authorizationEvidence`, and `Adopt` without an exact
+`adoptedContent` locator. In each trial, the prior `authority.md`, selector manifest,
+traceability file, and validation result were manually quarantined before the
+checker ran; this was operator cleanup, not automatic Skill or validator
+behavior. No Authority member or manifest remained in any trial package.
+The checker passed the three supported no-export outcomes and failed the two
+incomplete `Adopt` packages with errors identifying missing required evidence
+or the exact adopted-content locator, along with the absent export files.
+Trial inputs, quarantine snapshots, and checker reports
+are retained under `/private/tmp/ada-issue35-skill-verification.gGdEEY/stale-trials/`.
+These trials show the documented no-export disposition when stale outputs are
+manually removed; they do not demonstrate automatic stale-output cleanup.
+
 ## Scope limits and recreation
 
 The package validator command above ran after the fixture manifest was
