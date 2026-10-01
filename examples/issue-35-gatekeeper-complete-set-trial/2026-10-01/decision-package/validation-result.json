@@ -7,7 +7,7 @@
     "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
   },
   "selectorStructure": "pass",
-  "clauseTraceability": "pass",
+  "clauseTraceability": "not-verified",
   "semanticFidelity": "pending independent review",
   "ownerEvidenceAuthenticity": "not-verified",
   "gatekeeperCompatibility": {
@@ -19,7 +19,7 @@
     "executionContext": "fresh clone of the bundled fixture, materializing the committed member/manifest snapshot b93cee8429d7959d9b51518fa5ea65522e8c9d4e"
   },
   "consumerActivation": "not-performed",
-  "trialScope": "Exact adopted Proposal excerpts only: Required design paragraph 1 sentences 1–2 and sentence 4; bounded handling, maxFileBytes, and large-document migration are excluded.",
+  "trialScope": "The Authority member contains only the exact Proposal excerpt selected for this evidence trial (Required design paragraph 1 sentences 1–2 and sentence 4); the historical adoption covers the complete Required design paragraph by reference.",
   "sourceFixtureCloneValidation": {
     "status": "pass",
     "report": "../materializer/final-fixture-checker-report.json"
@@ -32,6 +32,6 @@
   "validationContext": "packageValidation and proposalBinding report the checked-in outer ADA repository copy (fail because its source commit is unavailable). Source-fixture checker and materializer results below apply to the bundled fixture clone.",
   "proposalBindingContext": "The checked-in outer copy references a commit unavailable in the ADA repository object database; the source-bound Proposal binding passes only in the bundled fixture clone.",
   "selectorStructureContext": "Gatekeeper v1 selector shape passes in the bundled fixture clone; this outer copy remains unvalidated as a package.",
-  "clauseTraceabilityContext": "A bounded independent comparison passed source and clause mapping; the package checker itself reports clauseTraceability as not-verified.",
+  "clauseTraceabilityContext": "The package checker reports clauseTraceability as not-verified. A separate public bounded comparison report records a manual observation of source and clause mapping; that observation does not upgrade the checker result or establish owner semantic acceptance.",
   "semanticFidelityContext": "The independent bounded comparison completed and passed the stated excerpt source/scope comparison. Semantic owner acceptance remains pending; this field is not that independent review result."
 }

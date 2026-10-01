@@ -1,6 +1,6 @@
 # Traceability
 
-This package represents only the exact Proposal excerpts listed in `adoption-record.json`. The historical `Adopt` applies by reference to the single proposed route in Issue #119; the listed sentences are a bounded trial excerpt from that route, not a separately itemized owner action. This 2026-10-01 trial instruction defines a bounded evidence exercise and is not a new owner action.
+The historical `Adopt` applies by reference to the complete Required design paragraph in the single proposed route in Issue #119, as recorded in `adoption-record.json`. The Authority member contains only the exact excerpts listed under that record’s `trialScope`; this is a bounded evidence selection from the adopted route, not a separately itemized owner action. This 2026-10-01 trial instruction defines a bounded evidence exercise and is not a new owner action.
 
 | Authority member locator | Exact adopted Proposal locator and supporting source | Historical owner outcome evidence | Current canonical context |
 | --- | --- | --- | --- |
