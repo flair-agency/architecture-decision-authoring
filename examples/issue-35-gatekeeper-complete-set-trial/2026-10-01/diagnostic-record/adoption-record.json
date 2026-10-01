@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "status": "Decided",
+  "outcome": "Adopt",
+  "proposal": {
+    "path": "proposal.md",
+    "revision": "a585445816b86f0dc556cd806a7bfb6c7d4eec65",
+    "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
+  },
+  "owner": "Owner identified in the public Gatekeeper Issue #119 outcome comment; identity not independently authenticated",
+  "authorizationEvidence": "https://github.com/flair-agency/architecture-gatekeeper/issues/119#issuecomment-5844031460",
+  "decisionDate": "2026-09-26",
+  "scope": "Historical owner outcome: Adopt the minimal versioned multi-document OWNER_ADDITION route proposed in Issue #119, represented by the complete Required design paragraph 1 of the exact Proposal.",
+  "applicabilityConditions": "The owner comment scopes the per-file-ceiling change to the new route, requires the canonical contract change to merge before implementation, and retains other runtime ceilings and explicit consumer-selected limits.",
+  "exceptions": "The owner explicitly states that this adoption does not deem current live-agency PR #112 eligible or accept PR #106. Owner identity and source authenticity are not independently authenticated by this evidence package.",
+  "adoptedContent": [
+    {
+      "proposalLocator": "proposal.md#L5: Required design, paragraph 1 (entire paragraph; adopted by reference)"
+    }
+  ],
+  "amendedContent": null,
+  "ownerCommentAdditionalTerms": "The preserved owner comment additionally specifies that Change B may modify exactly one existing self authority member; ordinary and B-specific eligibility reviews use the complete Authority Set selected by the previous base with exact authority IDs and provenance; missing, contradictory, or over-limit inputs fail closed; for the new route only, raise the runtime per-file ceiling from 131,072 to 262,144 bytes; retain other runtime ceilings and explicit consumer-selected limits; and preserve historical v0.5 G0 artifact meanings. The 262,144-byte value is stated in the owner comment, not in the Proposal.",
+  "trialScope": "Evidence-only trial extraction: Required design paragraph 1 sentences 1–2 and sentence 4 of the exact Issue #119 Proposal. This extraction is not a separate owner action or a partial adoption.",
+  "trialExclusions": "This trial does not export the Required design sentence on bounded handling or owner-approved migration, the Acceptance section, or tests, and does not exercise the owner-comment per-file-ceiling change. These are evidence-coverage limits; they do not narrow the historical adoption."
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "selfRepository": "flair-agency/architecture-decision-authoring",
+  "authorityRevision": "b93cee8429d7959d9b51518fa5ea65522e8c9d4e",
+  "manifestSha256": "fc5d6be5e3fba54bd216f37aa40ca9e4b45b02d909d82de161680457a4ad504c",
+  "setDigest": "06a3cd403c360c498281d603ae0f7bfbf27c5c5cf8bd88ec43960122f693f62d",
+  "members": [
+    {
+      "id": "issue-119-complete-set",
+      "repository": "flair-agency/architecture-decision-authoring",
+      "resolvedCommit": "b93cee8429d7959d9b51518fa5ea65522e8c9d4e",
+      "path": "examples/issue-35-gatekeeper-complete-set-trial/2026-10-01/decision-package/authority-set/authority.md",
+      "byteLength": 399,
+      "sha256": "9fc3c8138a8916e9a8a1291c59d6a294964b1b0d46e66fd926789d8b97b898aa"
+    }
+  ]
+}

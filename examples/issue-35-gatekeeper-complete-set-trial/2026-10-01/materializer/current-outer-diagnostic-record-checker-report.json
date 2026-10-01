@@ -1,0 +1,17 @@
+{
+  "packageValidation": "fail",
+  "clauseTraceability": "not-verified",
+  "validationResultClaims": "not-verified",
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "not-run",
+    "pinnedRevision": null
+  },
+  "consumerActivation": "not-performed",
+  "errors": [
+    "proposal.revision must identify a locally available Git commit",
+    "authority-set/authority.md must exist and be readable",
+    "authority-set/manifest.json must exist and be readable"
+  ]
+}
