@@ -2,7 +2,7 @@
 
 This is a partial, source-grounded representation of three exact sentences from the historical Gatekeeper Issue #119 Proposal. The public owner comment records `Adopt` for the proposed route on 2026-09-26. The package keeps that outcome and date. The 2026-10-01 trial authorization permits this bounded evidence exercise; it is not a new owner outcome or re-adoption.
 
-This evidence does not represent all of Issue #119, replace a consumer's complete Authority Set, amend canonical architecture, select consumer policy, or activate enforcement. It contains only public Issue #119 source material and a synthetic one-member compatibility fixture. No private consumer inputs or outputs are included.
+This evidence does not represent all of Issue #119, replace a consumer's complete Authority Set, amend canonical architecture, select consumer policy, or activate enforcement. The `decision-package/` directory at this outer repository path is an unvalidated reproduction copy because its Proposal commit is unavailable in the ADA repository object database. The bundled fixture clone contains the source-bound package and commit needed for its passing checker and materializer observations. It contains only public Issue #119 source material and a synthetic one-member compatibility fixture. No private consumer inputs or outputs are included.
 
 ## Preserved public sources
 
@@ -22,7 +22,7 @@ Explicitly outside this subset are the maximum-file-size change, large-document 
 
 ## Mechanical observations
 
-- The authoring package checker reported `packageValidation: pass`; its raw output is [`materializer/initial-checker-report.json`](materializer/initial-checker-report.json). The result leaves traceability and validation-result claims unverified, semantic fidelity pending, owner/evidence authenticity unverified, and consumer activation not performed.
+- The package checker reports `pass` for the source-bound package in a fresh clone of the bundled fixture; the result is [`materializer/final-fixture-checker-report.json`](materializer/final-fixture-checker-report.json), and the earlier raw result is [`materializer/initial-checker-report.json`](materializer/initial-checker-report.json). Running the checker against the `decision-package/` directory in this ADA repository reports `fail` because the Proposal revision commit is not in this repository's object database; that outer directory is therefore an unvalidated reproduction copy, not a passing package. The observed outer-copy result is [`materializer/outer-copy-checker-report.json`](materializer/outer-copy-checker-report.json). [`decision-package/validation-result.json`](decision-package/validation-result.json) records these contexts separately; the fixture-clone checker result leaves traceability and validation-result claims unverified, semantic fidelity pending, owner/evidence authenticity unverified, and consumer activation not performed.
 - The exact pinned Gatekeeper 0.5.1 materializer at commit `58bbdbb3119736e53a849388a025e74589ab8664` reported `pass` for the committed one-member fixture using profile `v1` and explicit test-only development limits within the published v1 bounds. The raw report and returned provenance are [`materializer/materializer-report.json`](materializer/materializer-report.json) and [`materializer/pinned-provenance.json`](materializer/pinned-provenance.json). The manifest digest is `fc5d6be5e3fba54bd216f37aa40ca9e4b45b02d909d82de161680457a4ad504c`; the single 399-byte member digest is `9fc3c8138a8916e9a8a1291c59d6a294964b1b0d46e66fd926789d8b97b898aa`.
 - This compatibility result does not execute a semantic reviewer, validate a consumer's complete multi-member review, test an acceptance route, prove policy selection, or demonstrate enforcement or activation. [`decision-package/validation-result.json`](decision-package/validation-result.json) reports these dimensions separately.
 
@@ -36,7 +36,7 @@ A separate read-only review task, `/root/public_trial_comparison` (`gpt-6-luna`,
 
 ## Reproduction
 
-The bundle [`fixture/issue-119-complete-set-data.bundle`](fixture/issue-119-complete-set-data.bundle) contains only public source and package fixture data, with a source-only byte-anchor commit and the committed one-member package snapshot; it contains no runtime source or private consumer material. From a fresh temporary directory:
+The bundle [`fixture/issue-119-complete-set-data.bundle`](fixture/issue-119-complete-set-data.bundle) contains public source, the one-member fixture package, and the final fixture-clone package-checker report; it contains no runtime source or private consumer material. From a fresh temporary directory:
 
 ```sh
 set -eu
@@ -61,4 +61,4 @@ node "$RUNTIME/src/prepare-authority-set.mjs" \
   --profile v1
 ```
 
-The fixture history separates the immutable source-byte anchor, `a585445816b86f0dc556cd806a7bfb6c7d4eec65`, from the member/manifest snapshot used by the materializer, `b93cee8429d7959d9b51518fa5ea65522e8c9d4e`. The final bundle branch `trial-final` points to `31ee4113fbd89bc2af0d9583a601e8da326ffe96`, which adds only clarified traceability narrative; it does not change the member, manifest, adoption outcome, source bytes, or materializer input. None of these fixture commits is an owner action. The materializer reads the `b93cee8` snapshot, while the adoption record binds the Proposal bytes at the `a585445` source anchor.
+The fixture history separates the immutable source-byte anchor, `a585445816b86f0dc556cd806a7bfb6c7d4eec65`, from the member/manifest snapshot used by the materializer, `b93cee8429d7959d9b51518fa5ea65522e8c9d4e`. The final bundle branch `trial-final` points to `bea442cc06c394736541a898bdd0586552eeac94`; the bundle is 11,453 bytes with SHA-256 `63e085d9f24962e9560b3ad5dfedf416eced8b9286a1d8e5ec1506bbf56eb962`. It preserves the separate fixture-clone checker result. The package validation record marks the outer ADA repository copy `fail` because the source revision is unavailable there, and records the separate bundle-clone `pass`. The fixture history preserves the Proposal, member, manifest, adoption outcome, and materializer input. None of these fixture commits is an owner action. The materializer reads the `b93cee8` snapshot, while the adoption record binds the Proposal bytes at the `a585445` source anchor.

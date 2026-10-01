@@ -1,7 +1,7 @@
 {
-  "packageValidation": "pass",
+  "packageValidation": "fail",
   "proposalBinding": {
-    "status": "pass",
+    "status": "fail",
     "revision": "a585445816b86f0dc556cd806a7bfb6c7d4eec65",
     "path": "proposal.md",
     "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
@@ -15,8 +15,23 @@
     "pinnedRevision": "58bbdbb3119736e53a849388a025e74589ab8664",
     "profile": "v1",
     "materializerReport": "../materializer/materializer-report.json",
-    "scope": "One committed member materialized. The result does not establish complete multi-member consumer review or enforcement."
+    "scope": "One committed member materialized. The result does not establish complete multi-member consumer review or enforcement.",
+    "executionContext": "fresh clone of the bundled fixture, materializing the committed member/manifest snapshot b93cee8429d7959d9b51518fa5ea65522e8c9d4e"
   },
   "consumerActivation": "not-performed",
-  "trialScope": "Exact adopted Proposal excerpts only: Required design paragraph 1 sentences 1\u20132 and sentence 4; bounded handling, maxFileBytes, and large-document migration are excluded."
+  "trialScope": "Exact adopted Proposal excerpts only: Required design paragraph 1 sentences 1–2 and sentence 4; bounded handling, maxFileBytes, and large-document migration are excluded.",
+  "sourceFixtureCloneValidation": {
+    "status": "pass",
+    "report": "../materializer/final-fixture-checker-report.json"
+  },
+  "outerRepositoryCopy": {
+    "status": "fail",
+    "classification": "unvalidated reproduction copy; direct package checker reports fail",
+    "reason": "The proposal revision commit is present in the bundled fixture history but is not locally available in the architecture-decision-authoring repository object database."
+  },
+  "validationContext": "packageValidation and proposalBinding report the checked-in outer ADA repository copy (fail because its source commit is unavailable). Source-fixture checker and materializer results below apply to the bundled fixture clone.",
+  "proposalBindingContext": "The checked-in outer copy references a commit unavailable in the ADA repository object database; the source-bound Proposal binding passes only in the bundled fixture clone.",
+  "selectorStructureContext": "Gatekeeper v1 selector shape passes in the bundled fixture clone; this outer copy remains unvalidated as a package.",
+  "clauseTraceabilityContext": "A bounded independent comparison passed source and clause mapping; the package checker itself reports clauseTraceability as not-verified.",
+  "semanticFidelityContext": "The independent bounded comparison completed and passed the stated excerpt source/scope comparison. Semantic owner acceptance remains pending; this field is not that independent review result."
 }
