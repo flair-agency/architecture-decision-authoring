@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "status": "Decided",
+  "outcome": "Amend",
+  "proposal": {
+    "path": "proposal.md",
+    "revision": "6501d2d55e2a083c8cb91645b274e16b73ea297b",
+    "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
+  },
+  "owner": "Owner identified by Architecture Gatekeeper Issue #119 comment 5844031460; identity not independently authenticated",
+  "authorizationEvidence": "Historical outcome: https://github.com/flair-agency/architecture-gatekeeper/issues/119#issuecomment-5844031460; trial representation authorization: explicit owner instruction relayed to coordinator on 2026-10-01, limited to an immutable snapshot and maxFileBytes-only trial",
+  "decisionDate": "2026-09-26",
+  "scope": "For this trial only: the runtime per-file ceiling for the new versioned multi-document OWNER_ADDITION route, limited to the owner-specified 131072-to-262144-byte clause. This trial does not alter canonical docs/architecture.md or replace the complete Authority Set.",
+  "applicabilityConditions": "Only for the new route. Other runtime ceilings and explicit consumer-selected limits remain in force; a lower consumer-selected limit remains binding.",
+  "exceptions": "No exception to historical v0.5 G0 meanings. No other route clause is evaluated, and no consumer selection, activation, enforcement, or canonical update is performed.",
+  "amendedContent": {
+    "path": "owner-approved-amendment.md",
+    "sha256": "ba7f59945d6c403a4c08067ae1f61876ebb21d2e8b595d137dba2bacd300d39b"
+  }
+}

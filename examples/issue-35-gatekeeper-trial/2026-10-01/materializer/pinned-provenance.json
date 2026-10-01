@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "selfRepository": "flair-agency/architecture-gatekeeper",
+  "authorityRevision": "5031c055d2851a9572de36a3fe923b7e0fcaf848",
+  "manifestSha256": "66722fec3386d09437a1841ce4dfa0b3dc3b923a1ba23515c181e49637aeadfe",
+  "setDigest": "4240d438ac82c2b1ac34900ffc905ef11f044429a53ae8bb7a4b5f6d6217c70d",
+  "members": [
+    {
+      "id": "issue-119-maxfile",
+      "repository": "flair-agency/architecture-gatekeeper",
+      "resolvedCommit": "5031c055d2851a9572de36a3fe923b7e0fcaf848",
+      "path": "issue-35/gatekeeper-119-maxfile/decision-package/authority-set/authority.md",
+      "byteLength": 162,
+      "sha256": "ba7f59945d6c403a4c08067ae1f61876ebb21d2e8b595d137dba2bacd300d39b"
+    }
+  ]
+}

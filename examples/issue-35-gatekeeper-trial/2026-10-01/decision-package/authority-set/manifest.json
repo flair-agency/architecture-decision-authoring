@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "authorities": [
+    {
+      "id": "issue-119-maxfile",
+      "repository": "self",
+      "revision": "authority-revision",
+      "path": "issue-35/gatekeeper-119-maxfile/decision-package/authority-set/authority.md"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "status": "pass",
+  "runtime": {
+    "package": "@flair-agency/architecture-gatekeeper",
+    "version": "0.5.1",
+    "sourceCommit": "58bbdbb3119736e53a849388a025e74589ab8664"
+  },
+  "input": {
+    "selfRepository": "flair-agency/architecture-gatekeeper",
+    "authorityRevision": "5031c055d2851a9572de36a3fe923b7e0fcaf848",
+    "manifestPath": "issue-35/gatekeeper-119-maxfile/decision-package/authority-set/manifest.json",
+    "manifestSha256": "66722fec3386d09437a1841ce4dfa0b3dc3b923a1ba23515c181e49637aeadfe",
+    "profile": "owner-addition-v2",
+    "affectedAuthority": {
+      "id": "issue-119-maxfile",
+      "path": "issue-35/gatekeeper-119-maxfile/decision-package/authority-set/authority.md"
+    }
+  },
+  "testOnlyLimits": {
+    "maxManifestBytes": 65536,
+    "maxMembers": 32,
+    "maxFileBytes": 262144,
+    "maxTotalBytes": 524288,
+    "maxPromptBytes": 1048576
+  },
+  "output": {
+    "provenanceVersion": 2,
+    "setDigest": "4240d438ac82c2b1ac34900ffc905ef11f044429a53ae8bb7a4b5f6d6217c70d",
+    "memberCount": 1,
+    "member": {
+      "id": "issue-119-maxfile",
+      "repository": "flair-agency/architecture-gatekeeper",
+      "resolvedCommit": "5031c055d2851a9572de36a3fe923b7e0fcaf848",
+      "path": "issue-35/gatekeeper-119-maxfile/decision-package/authority-set/authority.md",
+      "byteLength": 162,
+      "sha256": "ba7f59945d6c403a4c08067ae1f61876ebb21d2e8b595d137dba2bacd300d39b"
+    },
+    "authorityPromptSha256": "d36936d7b534ef3cfc009f83a10e51654f0ba09a4d263f8be77fbe13dc0b3fc1",
+    "authorityProvenanceSha256": "e86ff933f1083798c0b7339e69831ff5fcdf1e870ad57547bb205be3044167675"
+  },
+  "claimBoundary": "This records materialization of the supplied one-member fixture with explicit test-only limits. It does not prove the 262144-byte boundary, production consumer settings, full-set policy selection, owner authentication, semantic acceptance, or activation."
+}
