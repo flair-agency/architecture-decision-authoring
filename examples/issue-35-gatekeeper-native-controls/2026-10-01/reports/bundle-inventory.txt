@@ -1,7 +1,7 @@
 Bundle: fixture/issue-72-native-controls.bundle
-SHA-256: 90616da1f3915717dce4e93e3425c1dfb0ae6e6c189bcab1f7317bbe14679ea0
+SHA-256: 96183d4e4e710824aadfd301e10bbc8f8b5527b0e3dc3d05f5847583e26d6191
 Bundle ref: refs/heads/trial-final
-Fixture head: 2349080ad9aafc2798159e1eae1743e4bb70b5d4
+Fixture head: 269ff2880b977418cd434925d894be5ec6d50148
 Proposal byte-anchor commit: 09bab04e792cf956194da268bfcc17bcacee01e6
 Compatibility authority revision used by materializer: c440fdae1399bd5a08ad1c03a84f01b8a817ac5d
 Authority member path: decision-package/authority-set/authority.md
@@ -22,7 +22,7 @@ reports/gatekeeper-materializer-exit.txt	2	9a271f2a916b0b6ee6cecb2426f0b3206ef07
 reports/gatekeeper-provenance.json	702	950a6c14f0c850e5e43ce2f34913a26e28a78037c5c59c275b1a8846dfe3b565
 reports/package-checker-exit.txt	2	9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
 reports/package-checker.json	343	5a170df6bc03f58a8511d3efc857ba1426e0d2818ecc1a8618f329a0d1dd1308
-source-identities.json	1912	332ce6797de9e5acab99cce32514df91c38018f3ad285f31c4ab389d9d1b99f0
+source-identities.json	1913	90bcb68ec013f79ebee04ee085e22e20fd8ae99a1b4605b78966f4301ad8a1ac
 source/current-authority.md	73704	75e72a6b3b52f997277ce50bdfd775c5323d5ffea049d970814ac24309d33a51
 source/issue-72-proposal-snapshot.md	5371	7d045342f1cd6707f1ca0679d864608f93e2664d7c25e8d3d4175e5d8ef53296
 source/owner-outcome-comment.md	495	944cd1a04c45028566ea85b32c1536c091f3631f66143bf1807a7464a04a0a62
