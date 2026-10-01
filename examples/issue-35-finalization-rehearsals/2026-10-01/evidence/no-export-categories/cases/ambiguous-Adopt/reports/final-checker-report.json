@@ -1,0 +1,20 @@
+{
+  "packageValidation": "fail",
+  "clauseTraceability": "not-verified",
+  "validationResultClaims": "not-verified",
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "not-run",
+    "pinnedRevision": null
+  },
+  "consumerActivation": "not-performed",
+  "errors": [
+    "authority-set/authority.md must exist and be readable",
+    "authority-set/manifest.json must exist and be readable",
+    "traceability.md must exist and be readable",
+    "validation-result.json must exist and be readable",
+    "validation-result.json must contain a JSON object",
+    "Adopt requires adoptedContent identifying the adopted Proposal content"
+  ]
+}
