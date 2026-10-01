@@ -1,0 +1,45 @@
+{
+  "packageValidation": "fail",
+  "proposalBinding": {
+    "status": "fail",
+    "revision": "a585445816b86f0dc556cd806a7bfb6c7d4eec65",
+    "path": "proposal.md",
+    "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
+  },
+  "selectorStructure": "not-verified",
+  "clauseTraceability": "not-verified",
+  "semanticFidelity": "pending",
+  "ownerEvidenceAuthenticity": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "not-run",
+    "pinnedRevision": null,
+    "context": "No materialization was run for the current non-consumable diagnostic record; the preserved pinned materializer pass is a prior mechanical observation for the incomplete excerpt fixture."
+  },
+  "consumerActivation": "not-performed",
+  "trialScope": "The prior diagnostic excerpt selected Required design paragraph 1 sentences 1–2 and sentence 4. It omitted the adopted sentence on bounded large-document handling or owner-approved migration; no consumable Authority member or manifest remains.",
+  "sourceFixtureCloneValidation": {
+    "status": "fail",
+    "report": "../materializer/current-bundle-diagnostic-record-checker-report.json",
+    "classification": "current diagnostic record; not a consumable Authority Set"
+  },
+  "outerRepositoryCopy": {
+    "status": "fail",
+    "report": "../materializer/current-outer-diagnostic-record-checker-report.json",
+    "classification": "current diagnostic record; not a consumable Authority Set"
+  },
+  "validationContext": "This diagnostic record is not a consumable decision package. Current checks fail: the outer copy lacks its Proposal source commit; the bundled clone’s recorded Proposal anchor does not contain the Proposal at the renamed diagnostic-record path; neither current tree has an Authority member or manifest. Prior checker/materializer passes are historical mechanical observations for the incomplete excerpt fixture and do not validate a complete conversion.",
+  "proposalBindingContext": "The outer diagnostic copy cannot bind its Proposal revision because the source commit is unavailable in the ADA repository object database. In the bundled diagnostic clone, the historical anchor commit has the Proposal at the earlier decision-package path, not the current diagnostic-record path.",
+  "selectorStructureContext": "No active Authority member or manifest is present in the current diagnostic record.",
+  "clauseTraceabilityContext": "The package checker reports clause traceability as not-verified. The separate public bounded comparison covers the three-sentence excerpt only and does not establish completeness of the full adopted route.",
+  "semanticFidelityContext": "Owner semantic acceptance remains pending. The previous bounded comparison passed only source/clause fidelity for the excerpt; it does not establish full-route conversion.",
+  "historicalFixtureCloneObservation": {
+    "status": "pass",
+    "report": "../materializer/final-fixture-checker-report.json",
+    "context": "Unchanged raw mechanical observation from the earlier incomplete excerpt fixture; not a complete adopted-content package."
+  },
+  "historicalMaterializerObservation": {
+    "status": "pass",
+    "report": "../materializer/materializer-report.json",
+    "context": "Unchanged pinned v1 mechanical observation for the earlier one-member excerpt snapshot only; not a complete adopted-content conversion."
+  }
+}
