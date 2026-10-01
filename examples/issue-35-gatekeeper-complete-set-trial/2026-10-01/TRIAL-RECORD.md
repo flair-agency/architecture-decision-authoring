@@ -28,7 +28,7 @@ Outside this evidence subset are the proposal's bounded large-document handling 
 
 ## Separate private-trial aggregate (metadata only)
 
-A separate private trial mechanically selected one already-adopted private decision by comparing its original Proposal, explicitly recorded owner outcome, and current canonical Authority. Its private package checker, bounded independent scope/fidelity/source-bytes review, and pinned Gatekeeper 0.5.1 v1 materialization each reported `PASS`. No source, canonical authority, configuration, selection, or activation changed. Authenticity was not verified and owner semantic acceptance remains pending. The owner's acceptance or correction assessment is unconfirmed; this record makes no claim about whether the owner accepted or corrected the trial. Full artifacts remain in the private environment accessible to the owner. This aggregate includes no private inputs, outputs, paths, commit IDs, hashes, business rules, member text, or report contents. It does not establish general effectiveness or Authority Set replacement.
+A separate private-trial record reports a metadata-only exercise involving one previously adopted private decision. The public repository does not retain its private checker, comparison, or materializer artifacts, so those result statuses are `not-verified` here. No private inputs, outputs, paths, commit IDs, hashes, business rules, member text, or report contents are included. Full artifacts remain in the private environment accessible to the owner. Authenticity and owner semantic acceptance are unverified; the owner's acceptance or correction assessment is unconfirmed. This record makes no claim about whether the owner accepted or corrected the trial, general effectiveness, or Authority Set replacement.
 
 ## Independent bounded comparison
 
@@ -46,15 +46,13 @@ TRIAL_DIR=/private/tmp/gk119-complete-set-repro
 FIXTURE="$TRIAL_DIR/fixture"
 mkdir -p "$TRIAL_DIR"
 git clone -q --branch trial-final "$EVIDENCE/fixture/issue-119-complete-set-data.bundle" "$FIXTURE"
-if node "$ROOT/skills/architecture-decision-authoring/scripts/validate-decision-package.mjs" \
-  "$FIXTURE/examples/issue-35-gatekeeper-complete-set-trial/2026-10-01/diagnostic-record" "$FIXTURE"; then
-  echo "Unexpected success: diagnostic record must remain non-consumable" >&2
-  exit 1
-else
-  checker_status=$?
-  test "$checker_status" -ne 0
-  echo "Expected checker failure confirms the diagnostic record is non-consumable"
-fi
+CHECKER_REPORT="$TRIAL_DIR/current-diagnostic-checker-report.json"
+checker_status=0
+node "$ROOT/skills/architecture-decision-authoring/scripts/validate-decision-package.mjs" \
+  "$FIXTURE/examples/issue-35-gatekeeper-complete-set-trial/2026-10-01/diagnostic-record" "$FIXTURE" > "$CHECKER_REPORT" || checker_status=$?
+test "$checker_status" -eq 1
+cmp "$CHECKER_REPORT" "$EVIDENCE/materializer/current-bundle-diagnostic-record-checker-report.json"
+echo "Expected checker exit and exact failure report confirm the diagnostic record is non-consumable"
 ```
 
 To reproduce the earlier raw mechanical passes only, use a separate fixture clone and check out the prior incomplete-excerpt fixture commit `bea442cc06c394736541a898bdd0586552eeac94`. Its package checker and pinned 0.5.1 materializer observations are preserved in the linked raw reports. They are diagnostic mechanics results for an incomplete excerpt; they are not a valid conversion of the full adopted route, and they do not authorize consumer use.
