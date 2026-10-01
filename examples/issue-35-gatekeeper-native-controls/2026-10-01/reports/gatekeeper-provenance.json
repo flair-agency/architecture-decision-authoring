@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "selfRepository": "flair-agency/architecture-decision-authoring",
+  "authorityRevision": "c440fdae1399bd5a08ad1c03a84f01b8a817ac5d",
+  "manifestSha256": "9d644fa79dce9de8e84a6f2fc881f1db6ce82db3a2791d71842184ed48e35f42",
+  "setDigest": "424a9e5b35d5d1fc7b6fd875d4721f0587a37b6e1c6a16fbdb220e34d67f770e",
+  "members": [
+    {
+      "id": "issue-72-native-controls",
+      "repository": "flair-agency/architecture-decision-authoring",
+      "resolvedCommit": "c440fdae1399bd5a08ad1c03a84f01b8a817ac5d",
+      "path": "decision-package/authority-set/authority.md",
+      "byteLength": 587,
+      "sha256": "eb69510c74f3e34229fa1b76020d5e90e9386113e06f27849da1580da63a21e3"
+    }
+  ]
+}

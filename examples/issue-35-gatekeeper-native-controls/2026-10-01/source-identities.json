@@ -1,0 +1,34 @@
+{
+  "proposalSource": {
+    "url": "https://github.com/flair-agency/architecture-gatekeeper/issues/72",
+    "issueNumber": 72,
+    "createdAt": "2026-09-24T06:47:00Z",
+    "apiBodyUpdatedAt": "2026-09-25T09:04:00Z",
+    "apiBodyBytes": 5371,
+    "apiBodySha256": "7d045342f1cd6707f1ca0679d864608f93e2664d7c25e8d3d4175e5d8ef53296",
+    "originalGitRevision": null,
+    "originalGitBlob": null,
+    "historyAuthenticity": "not-verified; no edited timeline event was returned, and that absence does not authenticate body history."
+  },
+  "ownerOutcomeEvidence": {
+    "url": "https://github.com/flair-agency/architecture-gatekeeper/issues/72#issuecomment-5809329642",
+    "createdAt": "2026-09-24T06:57:17Z",
+    "bodyBytes": 495,
+    "bodySha256": "944cd1a04c45028566ea85b32c1536c091f3631f66143bf1807a7464a04a0a62",
+    "recording": "The Decided/Adopt fields normalize the explicit selection of the second Issue #72 option; the comment does not literally use the token Adopt. Owner identity/authenticity is not independently verified."
+  },
+  "currentAuthorityComparison": {
+    "repository": "flair-agency/architecture-gatekeeper",
+    "path": "docs/architecture.md",
+    "revision": "de13d2bcb0500999127a6ab148a5ab5ff7a87272",
+    "blob": "9c57f381e0595ad4f24f096362dd2c463bd7d34e",
+    "sha256": "75e72a6b3b52f997277ce50bdfd775c5323d5ffea049d970814ac24309d33a51",
+    "role": "comparison only; not proposal source or adoption evidence."
+  },
+  "placementAnchor": {
+    "revision": "09bab04e792cf956194da268bfcc17bcacee01e6",
+    "path": "decision-package/proposal.md",
+    "sha256": "7d045342f1cd6707f1ca0679d864608f93e2664d7c25e8d3d4175e5d8ef53296",
+    "meaning": "The exact issue snapshot was committed at decision-package/proposal.md in the new fixture repository to satisfy the existing package byte-binding check. This is not an original issue-body revision and does not constitute a new adoption."
+  }
+}

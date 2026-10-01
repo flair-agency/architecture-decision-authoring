@@ -1,0 +1,9 @@
+Bundle: fixture/issue-72-native-controls.bundle
+SHA-256: 48ed322f95f6b888c1d6c36f39fcfe4b0123f0a88eae2e9a30e8838796eeea44
+Bundle ref: refs/heads/trial-final
+Fixture head: 499a07c1d594152ef4375f6042ad15c83c660e21
+Proposal byte-anchor commit: 09bab04e792cf956194da268bfcc17bcacee01e6
+Compatibility authority revision used by materializer: c440fdae1399bd5a08ad1c03a84f01b8a817ac5d
+Authority member path: decision-package/authority-set/authority.md
+Authority member bytes: 587
+Authority member SHA-256: eb69510c74f3e34229fa1b76020d5e90e9386113e06f27849da1580da63a21e3
