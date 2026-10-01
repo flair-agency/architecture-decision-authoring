@@ -4,7 +4,7 @@
 
 Architecture Decision Authoring helps architecture owners and decision proposers turn scattered evidence, constraints, alternatives, and unresolved questions into reviewable decision proposals and, after an explicit owner outcome, into source-grounded Authority Sets selectable by Architecture Gatekeeper.
 
-The current v0.1.0 implementation is an experimental Proposal-authoring prototype. The Authority Set finalization endpoint is adopted for v0.2.0 but is not yet implemented or validated. The product never makes, adopts, or replaces an architecture owner's decision.
+The v0.1.0 implementation remains an experimental Proposal-authoring prototype. Current source also contains an experimental minimal v0.2.0 Authority Set finalization workflow and read-only package checker. A [synthetic walkthrough](examples/issue-33-finalization-rehearsal/rehearsal-record.md), one bounded synthetic-content assessment, and compatibility materialization against pinned Gatekeeper 0.5.1 exercise the mechanics; they do not authenticate real owner actions, verify consumer activation, or establish general effectiveness. The product never makes, adopts, or replaces an architecture owner's decision.
 
 The first end-to-end scope is one decision, one exact owner outcome, one local Markdown Authority member, and one Gatekeeper v1 selector with traceability. The project does not aim to generate a complete architecture, make decisions for owners, automatically approve proposals, or activate consumer policy.
 
@@ -20,7 +20,7 @@ Current work items: [Issues](https://github.com/flair-agency/architecture-decisi
 
 ## Skill prototype
 
-The [Architecture Decision Authoring Skill prototype](skills/architecture-decision-authoring/SKILL.md) currently implements only the Proposal-authoring stage. Its [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates intended use; it is not an automated or independent evaluation. Authority Set finalization is the next implementation slice. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
+The [Architecture Decision Authoring Skill](skills/architecture-decision-authoring/SKILL.md) supports Proposal authoring and an experimental minimal finalization workflow. The [read-only package checker](skills/architecture-decision-authoring/scripts/validate-decision-package.mjs) checks the bounded package mechanics; the [synthetic finalization walkthrough](examples/issue-33-finalization-rehearsal/rehearsal-record.md) records its scope and evidence. This example does not establish real owner adoption or consumer activation. The [curated bounded-decision walkthrough](examples/bounded-decision/run-record.md) demonstrates Proposal-authoring use. The canonical proposal template remains [docs/templates/architecture-decision-proposal.md](docs/templates/architecture-decision-proposal.md); the Skill's [bundled copy](skills/architecture-decision-authoring/assets/architecture-decision-proposal.md) is for distribution and must remain byte-identical to the canonical template.
 
 ### Install and invoke the Skill
 

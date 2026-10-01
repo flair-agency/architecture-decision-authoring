@@ -14,6 +14,8 @@ The adopted records are:
 
 - [0001 — Use a Markdown-first, source-mapped proposal contract](0001-markdown-first-proposal-contract.md), which preserves the initial pilot contract and rationale; and
 - [0002 — Produce a Gatekeeper-compatible Authority Set after owner adoption](0002-authority-set-final-outcome.md), which amends 0001's product endpoint while retaining the Proposal and owner-adoption boundary.
+- [0003 — Distinguish pending adoption from a decided outcome](0003-pending-adoption-record.md), which defines pending and decided adoption-record states and preserves valid legacy decided records.
+- [0004 — Bind a Proposal revision to committed repository bytes](0004-bind-proposal-revision-to-committed-bytes.md), which binds the packaged Proposal to its locally available committed bytes and digest.
 
 ## Repository bootstrap adoption rule
 
