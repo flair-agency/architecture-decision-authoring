@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "status": "Decided",
+  "outcome": "Adopt",
+  "proposal": {
+    "path": "proposal.md",
+    "revision": "a585445816b86f0dc556cd806a7bfb6c7d4eec65",
+    "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
+  },
+  "owner": "Owner identified in the public Gatekeeper Issue #119 outcome comment; identity not independently authenticated",
+  "authorizationEvidence": "https://github.com/flair-agency/architecture-gatekeeper/issues/119#issuecomment-5844031460",
+  "decisionDate": "2026-09-26",
+  "scope": "Partial evidence trial of the adopted complete-set review obligation, strict protected-base B scope, and preservation of v0.5 G0 boundaries, limited to Required design paragraph 1 sentences 1–2 and sentence 4 of the exact Issue #119 Proposal.",
+  "applicabilityConditions": "Represents only the exact selected Proposal sentences for the proposed v0.5.1 target route. Use as a development compatibility artifact only; it is not a consumer policy or complete Issue #119 package.",
+  "exceptions": "Does not represent the Required design sentence about bounded handling, maxFileBytes, large-document migration, or the Acceptance section; does not prove multi-member consumer materialization, actual eligibility review, consumer policy selection, canonical replacement, enforcement, or activation.",
+  "adoptedContent": [
+    {
+      "proposalLocator": "proposal.md#L5: Required design, paragraph 1, sentences 1–2"
+    },
+    {
+      "proposalLocator": "proposal.md#L5: Required design, paragraph 1, sentence 4"
+    }
+  ],
+  "amendedContent": null
+}

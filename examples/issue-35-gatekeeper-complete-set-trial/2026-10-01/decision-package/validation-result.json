@@ -1,0 +1,22 @@
+{
+  "packageValidation": "pass",
+  "proposalBinding": {
+    "status": "pass",
+    "revision": "a585445816b86f0dc556cd806a7bfb6c7d4eec65",
+    "path": "proposal.md",
+    "sha256": "5f340c1038c230f1ae04da4a6a9ab9d0d0af42ade832a2e5678f3fe3d1a94606"
+  },
+  "selectorStructure": "pass",
+  "clauseTraceability": "pass",
+  "semanticFidelity": "pending independent review",
+  "ownerEvidenceAuthenticity": "not-verified",
+  "gatekeeperCompatibility": {
+    "status": "pass",
+    "pinnedRevision": "58bbdbb3119736e53a849388a025e74589ab8664",
+    "profile": "v1",
+    "materializerReport": "../materializer/materializer-report.json",
+    "scope": "One committed member materialized. The result does not establish complete multi-member consumer review or enforcement."
+  },
+  "consumerActivation": "not-performed",
+  "trialScope": "Exact adopted Proposal excerpts only: Required design paragraph 1 sentences 1\u20132 and sentence 4; bounded handling, maxFileBytes, and large-document migration are excluded."
+}
