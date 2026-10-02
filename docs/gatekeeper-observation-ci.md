@@ -3,8 +3,8 @@
 This workflow runs a no-secret authorization preflight for matching pull
 request events targeting `main`. Only a valid, non-draft PR with author
 association `OWNER`, `MEMBER`, or `COLLABORATOR` proceeds to the semantic
-review observation. That model job is pinned to Architecture Gatekeeper v0.5.1 at commit
-`58bbdbb3119736e53a849388a025e74589ab8664`. It uses the `main` policy from
+review observation. That model job is pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
+`c6c45da24d755ddd51b3a595e614242f869ec3ad`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
@@ -141,12 +141,14 @@ Before merge, inspect the rendered workflow and confirm the five PR event
 types, `main` target, non-draft and author-association conditions, exact
 reusable-workflow SHA, permissions, secret mapping, and explicit
 policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
-`main` entry with the pinned Gatekeeper v0.5.1 policy resolver. Confirm that
+`main` entry with the pinned Gatekeeper v0.6.0-preview.2 policy resolver. Confirm that
 the Authority Set and the manifest, member, file, and total-byte limits match
 the existing committed configuration. Confirm that CI's prompt limit is
 131,072 bytes while local/manual remains 524,288 bytes, and that the schema
-restricts each `authorityIds` item to `authoring-product-contract`. The pinned
-runtime's `validateAuthoritySetDecision` separately checks exact complete-set
+restricts each `authorityIds` item to `authoring-product-contract`. The adopted
+schema keeps `findings` as strings, so this preview's optional inline PR comment
+route is not selected; the existing report and decision validation remain the
+configured behavior. The pinned runtime's `validateAuthoritySetDecision` separately checks exact complete-set
 cardinality and rejects missing, duplicate, or extra IDs. The same schema is
 used by local/manual/native review, so confirm those routes still accept the
 selected authority ID. Review the prompt for evidence/authority separation and

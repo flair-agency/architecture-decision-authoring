@@ -114,7 +114,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: flair-agency/architecture-gatekeeper/.github/workflows/architecture-gate.yml@58bbdbb3119736e53a849388a025e74589ab8664
+    uses: flair-agency/architecture-gatekeeper/.github/workflows/architecture-gate-consumer.yml@c6c45da24d755ddd51b3a595e614242f869ec3ad
     with:
       policy-path: .codex/gatekeeper/ci-policy.json
       prompt-path: .codex/gatekeeper/ci-prompt.md

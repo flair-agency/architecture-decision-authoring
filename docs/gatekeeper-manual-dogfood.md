@@ -4,17 +4,37 @@
 
 ## Fixed runtime and configuration
 
-This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.5.1`. The release tag `v0.5.1` was verified in the sibling `architecture-gatekeeper` repository at source commit `58bbdbb3119736e53a849388a025e74589ab8664`. Use only that exact release for this dogfood; do not use a floating version or an unpinned registry fallback. The runtime is configured for local/manual version 2 and one self authority: `authoring-product-contract` at the committed `docs/architecture.md` revision. The manifest identifies the self authority at the reviewed Git revision; no external authority is selected.
+This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-preview.2`, published from source commit `c6c45da24d755ddd51b3a595e614242f869ec3ad`. Use only this exact release for this dogfood; do not use a floating version or an unpinned registry fallback. The exact package is a repository-scoped development tool under `tools/gatekeeper-preview/`, with `package-lock.json` locking the GitHub Packages tarball and integrity. Install it with:
+
+```sh
+npm ci --prefix tools/gatekeeper-preview --registry=https://npm.pkg.github.com
+```
+
+This keeps the shared host-level Gatekeeper installation unchanged. The runtime is configured for local/manual version 2 and one self authority: `authoring-product-contract` at the committed `docs/architecture.md` revision. The manifest identifies the self authority at the reviewed Git revision; no external authority is selected.
 
 The consumer-owned prompt, output schema, deterministic decision validation, reviewer model/effort, limits, and timeout are in `.codex/gatekeeper/`. Their selection does not make the review an acceptance gate. The reviewer is configured as `gpt-6-sol` with `low` reasoning and a 180,000 ms review timeout.
 
-Use the already-installed exact package entry point `architecture-review` with a focused change description, for example:
+Use the project-scoped exact package entry point `tools/gatekeeper-preview/node_modules/.bin/architecture-review` with a focused change description, for example:
 
 ```sh
-architecture-review "Review the proposed change to [briefly identify changed files and intended responsibility]."
+tools/gatekeeper-preview/node_modules/.bin/architecture-review "Review the proposed change to [briefly identify changed files and intended responsibility]."
 ```
 
 The manual CLI runs a model review and validates its structured decision against the committed consumer configuration. It does not implement changes. Keep the input focused and identify the exact proposal/revision being examined.
+
+For a native Skill review, use the same project-scoped installation's `architecture-review-native` entry point. Prepare a private request with `prepare`, give its exact prompt, schema, model, and reasoning effort to a separate host-native review-only reviewer, save only the returned JSON decision, then pass it to `validate`:
+
+```sh
+review_dir="$(mktemp -d /private/tmp/ada-architecture-review.XXXXXX)"
+request_path="$review_dir/request.json"
+decision_path="$review_dir/decision.json"
+tools/gatekeeper-preview/node_modules/.bin/architecture-review-native prepare "$request_path" "Review the proposed change to [briefly identify changed files and intended responsibility]."
+# Have the host-native review-only reviewer save its returned JSON to "$decision_path".
+tools/gatekeeper-preview/node_modules/.bin/architecture-review-native validate "$request_path" "$decision_path"
+rm -rf "$review_dir"
+```
+
+Remove both private files after validation. Do not substitute the manual CLI for the native Skill reviewer. The host-installed `architecture-review` Skill's SHA-256 is `2fab19f48d022fd57d94fc7b3494c03aebb2a7d9f38ed022f58835a98e008a5a`; it byte-matches `skills/architecture-review/SKILL.md` at the pinned preview source commit. Both that Skill and `src/native-review.mjs` are unchanged between Gatekeeper v0.5.1 source `58bbdbb3119736e53a849388a025e74589ab8664` and preview source `c6c45da24d755ddd51b3a595e614242f869ec3ad`; the preview does not claim to correct the historical native-review nonresponse.
 
 ## Representative procedure
 
