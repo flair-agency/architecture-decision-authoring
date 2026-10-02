@@ -1,10 +1,18 @@
-# Manual Architecture Gatekeeper dogfood
+# Local Architecture Gatekeeper review
 
-**Purpose:** development feedback on whether a pinned, manual-only semantic review helps surface possible contract conflicts. These local results are not product acceptance, owner adoption, merge approval, or evidence that the contract itself is correct.
+**Purpose:** optional local development feedback on possible contract conflicts from a pinned semantic review. These results are diagnostic only; they are not product acceptance, owner adoption, merge approval, or evidence that the contract itself is correct.
 
 ## Fixed runtime and configuration
 
-This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-preview.2`, published from source commit `c6c45da24d755ddd51b3a595e614242f869ec3ad`. Use only this exact release for this dogfood; do not use a floating version or an unpinned registry fallback. The exact package is a repository-scoped development tool under `tools/gatekeeper-preview/`, with `package-lock.json` locking the GitHub Packages tarball and integrity. Install it with:
+This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-preview.2`, published from source commit `c6c45da24d755ddd51b3a595e614242f869ec3ad`. Use only this exact release for this local review; do not use a floating version or an unpinned registry fallback. The exact package is a repository-scoped development tool under `tools/gatekeeper-preview/`, with `package-lock.json` locking the GitHub Packages tarball and integrity.
+
+[GitHub Packages requires a personal access token (classic)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry) to install packages. Create one with `read:packages` and make it available to your shell as `GITHUB_PACKAGES_TOKEN`. Add this environment-variable reference to your user-level `~/.npmrc` (npm supports environment-variable substitution in `.npmrc`; do not put a token value in the repository or commit it):
+
+```ini
+//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+```
+
+Then install the exact lockfile contents with:
 
 ```sh
 npm ci --prefix tools/gatekeeper-preview --registry=https://npm.pkg.github.com
@@ -25,16 +33,19 @@ The manual CLI runs a model review and validates its structured decision against
 For a native Skill review, use the same project-scoped installation's `architecture-review-native` entry point. Prepare a private request with `prepare`, give its exact prompt, schema, model, and reasoning effort to a separate host-native review-only reviewer, save only the returned JSON decision, then pass it to `validate`:
 
 ```sh
-review_dir="$(mktemp -d /private/tmp/ada-architecture-review.XXXXXX)"
+set -eu
+# mktemp uses TMPDIR when set; the XXXXXX template works on macOS and GNU systems.
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/ada-architecture-review.XXXXXX")"
+trap 'rm -rf "$review_dir"' 0
+trap 'exit 1' HUP INT TERM
 request_path="$review_dir/request.json"
 decision_path="$review_dir/decision.json"
 tools/gatekeeper-preview/node_modules/.bin/architecture-review-native prepare "$request_path" "Review the proposed change to [briefly identify changed files and intended responsibility]."
 # Have the host-native review-only reviewer save its returned JSON to "$decision_path".
 tools/gatekeeper-preview/node_modules/.bin/architecture-review-native validate "$request_path" "$decision_path"
-rm -rf "$review_dir"
 ```
 
-Remove both private files after validation. Do not substitute the manual CLI for the native Skill reviewer. The host-installed `architecture-review` Skill's SHA-256 is `2fab19f48d022fd57d94fc7b3494c03aebb2a7d9f38ed022f58835a98e008a5a`; it byte-matches `skills/architecture-review/SKILL.md` at the pinned preview source commit. Both that Skill and `src/native-review.mjs` are unchanged between Gatekeeper v0.5.1 source `58bbdbb3119736e53a849388a025e74589ab8664` and preview source `c6c45da24d755ddd51b3a595e614242f869ec3ad`; the preview does not claim to correct the historical native-review nonresponse.
+The exit trap removes the private request and decision files on success, failure, or interruption. Do not substitute the manual CLI for the native Skill reviewer. The host-installed `architecture-review` Skill's SHA-256 is `2fab19f48d022fd57d94fc7b3494c03aebb2a7d9f38ed022f58835a98e008a5a`; it byte-matches `skills/architecture-review/SKILL.md` at the pinned preview source commit. Both that Skill and `src/native-review.mjs` are unchanged between Gatekeeper v0.5.1 source `58bbdbb3119736e53a849388a025e74589ab8664` and preview source `c6c45da24d755ddd51b3a595e614242f869ec3ad`; the preview does not claim to correct the historical native-review nonresponse.
 
 ## Representative procedure
 
@@ -46,7 +57,7 @@ Use a small, non-sensitive, reviewable proposal or change description and record
 4. A material expansion of product scope that the adopted contract does not settle. Check whether the review returns `OWNER_DECISION` and states the unresolved choice without selecting it.
 5. An isolated copy of the configuration with a missing or invalid authority selection. Check only the preparation/materialization path and confirm that execution remains incomplete rather than producing a semantic decision. Do not alter the committed authority selection merely to create this probe.
 
-These are suggested manual probes, not claims that any review has been executed. Do not modify the Skill, evaluation cases, expectations, or pilot artifacts as part of this dogfood.
+These are suggested manual probes, not claims that any review has been executed. Do not modify the Skill, evaluation cases, expectations, or pilot artifacts as part of this local review.
 
 ## Interpret results carefully
 
@@ -56,4 +67,4 @@ Record the reviewed commit, exact pinned runtime version, selected authority ID 
 
 ## Explicit non-scope
 
-This is manual-only, local dogfood. It adds no CI workflow, required check, hook, `OWNER_*` route, merge enforcement, or automatic follow-up. It does not amend `docs/architecture.md`, authorize architecture changes, adopt proposals, or change the standalone product contract. A later proposal to expand these boundaries requires owner review and canonical authority updates before implementation.
+This is an optional local development review. It adds no CI workflow, required check, hook, `OWNER_*` route, merge enforcement, or automatic follow-up. It does not amend `docs/architecture.md`, authorize architecture changes, adopt proposals, or change the standalone product contract. A later proposal to expand these boundaries requires owner review and canonical authority updates before implementation.
