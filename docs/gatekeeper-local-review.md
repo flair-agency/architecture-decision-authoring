@@ -8,7 +8,7 @@ This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-prev
 
 [GitHub Packages requires a personal access token (classic)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry) with `read:packages` to install packages. In a trusted terminal, make it available as an **unexported** shell variable named `GITHUB_PACKAGES_TOKEN`; do not run commands or shell startup hooks from the checkout while it is set. npm supports environment-variable substitution in `.npmrc` ([npm docs](https://docs.npmjs.com/cli/v11/configuring-npm/npmrc/)). Do not put a token value in the repository or commit it.
 
-The first bootstrap is pinned to package files from commit `401ad66901039b124e3eb0e00e34d1af51b2f30f`, because the current protected `main` predates these tooling files. Before using it, the maintainer must independently verify this exact commit and both package files as the approved bootstrap source; stop if that trust check is unavailable. Do not infer trust from a commit being a pull request head, and do not substitute the current checkout revision or a branch name. After the files are on protected `main`, use an independently verified immutable protected-base commit containing them.
+The first bootstrap is pinned to package files from commit `401ad66901039b124e3eb0e00e34d1af51b2f30f`, because the current protected `main` predates these tooling files. Before using it, the maintainer must independently verify this exact full commit and both package files as the approved bootstrap source; a successful fetch does not establish trust. If this commit is no longer available, use only an independently verified immutable protected-base commit that contains the package files, or stop if no such source is available. Do not infer trust from a commit being a pull request head, and do not substitute the current checkout revision or a branch name.
 
 Check Node before starting npm; this package requires Node 22 or newer. From the trusted terminal, copy only the package manifest and lockfile from the selected commit into a private temporary directory outside the checkout. Run npm there with lifecycle scripts disabled and a temporary project config. The unexported token is passed into the environment of the install process only, then unset; npm does not run any code from the checkout while the token is present.
 
@@ -22,7 +22,12 @@ fi
 
 checkout_root="$(git rev-parse --show-toplevel)"
 tool_source_revision=401ad66901039b124e3eb0e00e34d1af51b2f30f
-# Verify this exact source revision and its package files with the maintainer before use.
+# Independently verify this exact revision and files with the maintainer before use.
+# After protected main contains both files, replace with its verified full commit SHA.
+tool_source_remote=https://github.com/flair-agency/architecture-decision-authoring.git
+if ! git -C "$checkout_root" cat-file -e "${tool_source_revision}^{commit}" 2>/dev/null; then
+  git -C "$checkout_root" fetch --no-tags "$tool_source_remote" "$tool_source_revision"
+fi
 git -C "$checkout_root" cat-file -e "${tool_source_revision}^{commit}"
 runtime_dir="$(mktemp -d "${TMPDIR:-/tmp}/ada-gatekeeper-preview.XXXXXX")"
 cleanup_npm_auth() {
