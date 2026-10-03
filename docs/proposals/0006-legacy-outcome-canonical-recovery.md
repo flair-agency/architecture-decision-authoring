@@ -1,6 +1,6 @@
 # Architecture Decision Proposal 0006: Recover a valid pre-Git owner outcome
 
-> **Document status:** Proposed; owner decision pending  
+> **Document status:** Adopted — Option A; owner outcome recorded  
 > **Prepared:** 2026-10-04  
 > **Decision owner:** Repository owner  
 > **Review by / time bound:** None known
@@ -53,3 +53,9 @@ Should ADA allow Option A's narrowly bounded recovery for a valid, explicitly re
 - Authorized preparation/resumption problem and acceptance criteria: [ADA issue #65](https://github.com/flair-agency/architecture-decision-authoring/issues/65).
 - Existing optional export boundary and package integrity: [decision 0002](../decisions/0002-authority-set-final-outcome.md); [decision 0004](../decisions/0004-bind-proposal-revision-to-committed-bytes.md).
 - Release scope context, not decision authority: [ADA issue #69](https://github.com/flair-agency/architecture-decision-authoring/issues/69).
+
+## Recorded owner outcome — 2026-10-04
+
+The repository owner explicitly adopted Option A without amendment against the exact Proposal at commit `ba70d713f487c9e3cf6d0956fa8340f1ef772e55`, path `docs/proposals/0006-legacy-outcome-canonical-recovery.md`, blob `76fc81e0a70d3917be76696ae450d5d19f9153cd`, SHA-256 `11001fdede63f1f375db7a03e6d4fefa506b10bb30e59ca2aff6631cf58dae35`. Evidence record ID: `ADA-0006-OWNER-20261004; Codex chat 01a10366-9527-73f0-a545-cd9cbdce8ff5; explicit owner message adopting Option A without amendment`.
+
+The adopted locator is the complete Option A “Narrow recovery of an existing outcome” paragraph and its applicability/stop conditions above. The original proposal sections are retained as the historical recommendation and alternatives; their pending/proposed wording describes the pre-outcome revision, not the current owner outcome. This annotation is not a new review target or a change to the adopted normative wording. See [decision record 0006](../decisions/0006-legacy-outcome-canonical-recovery.md) for the exact owner instruction and canonical mapping. Implementation, verification and release remain separate.

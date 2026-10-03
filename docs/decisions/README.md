@@ -18,6 +18,8 @@ The adopted records are:
 - [0004 — Bind a Proposal revision to committed repository bytes](0004-bind-proposal-revision-to-committed-bytes.md), which binds the packaged Proposal to its locally available committed bytes and digest.
 - [0005 — Make canonical integration the normal completion handoff](0005-canonical-integration-handoff.md), which amends the product endpoint while retaining the optional Gatekeeper package and its existing integrity boundary.
 
+- [0006 — Recover a valid prior-process pre-Git Adopt](0006-legacy-outcome-canonical-recovery.md), which permits a narrowly bounded later Git binding while preserving exact prior content, owner evidence and the normal new-decision sequence.
+
 ## Repository bootstrap adoption rule
 
 This rule governs decisions about this repository's own product contract and artifacts. It does not govern decisions made by consumers of this product.
