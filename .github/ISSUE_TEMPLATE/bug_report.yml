@@ -1,30 +1,72 @@
 name: Bug report
-description: Report an issue in repository content or an existing prototype.
-title: "[Bug]: "
+description: Report a reproducible defect in an existing ADA artifact or workflow
+title: "Bug: "
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        This project is in the design and pre-pilot phase. Reports are handled on a best-effort basis, with no response-time guarantee.
-  - type: textarea
-    id: summary
+        Do not report vulnerabilities here. Follow SECURITY.md instead. Do not include private consumer authority, credentials, or personal data.
+  - type: input
+    id: version
     attributes:
-      label: What happened?
-      description: Describe the issue and where you encountered it.
+      label: Release or commit
+      description: Provide the exact release tag or immutable full commit SHA where the problem occurred.
+      placeholder: v0.2.0 or a full commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: route
+    attributes:
+      label: Affected route
+      options:
+        - Proposal authoring
+        - Owner outcome recording
+        - Finalization / Authority Set package
+        - Package validation / Gatekeeper compatibility
+        - Native Codex Skill
+        - Installation or documentation
+        - Other
     validations:
       required: true
   - type: textarea
-    id: reproduce
+    id: problem
     attributes:
-      label: Steps or context
-      description: Include steps, relevant context, and expected behavior.
+      label: Problem
+      description: State what is broken and who or which supported path is affected.
     validations:
-      required: false
+      required: true
   - type: textarea
-    id: evidence
+    id: reproduction
     attributes:
-      label: Evidence and references
-      description: Link relevant files, issues, or sources. Do not include secrets or personal data.
+      label: Reproduction
+      description: Provide the smallest safe steps, inputs and observed output. Redact private decision material and credentials.
     validations:
-      required: false
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior and outcome
+      description: Describe the observable behavior that would resolve this report.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_verification
+    attributes:
+      label: Acceptance and verification criteria
+      description: List separate observable criteria and how each can be verified.
+      placeholder: |
+        - [ ] Observable criterion — verify by ...
+        - [ ] Observable criterion — verify by ...
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and related work
+      description: Link existing issues or state that none are known. Do not invent owner-decision issues.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Remove credentials, private repository content, owner evidence and personal data.

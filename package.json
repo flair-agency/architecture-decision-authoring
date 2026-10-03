@@ -1,0 +1,15 @@
+{
+  "name": "architecture-decision-authoring-dev",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Development checks for the Architecture Decision Authoring Skill",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs skills/architecture-decision-authoring/scripts/validate-decision-package.test.mjs",
+    "codeql": "node scripts/codeql-local.mjs",
+    "archive:smoke": "node scripts/archive-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

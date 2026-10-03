@@ -1,0 +1,67 @@
+name: Release planning
+description: Propose release scope, evidence, and conditional planning assumptions
+title: "Release: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form records release planning, not architecture approval or publication. Keep unknowns explicit. Use existing project planning agreement for routine dates; a date update alone does not require a new architecture approval.
+  - type: textarea
+    id: outcome_scope
+    attributes:
+      label: Proposed outcome and scope
+      description: Summarize the intended result and link candidate issues. Separate included, excluded, deferred, and unresolved work.
+      placeholder: |
+        Intended outcome:
+        Candidate included issues / criteria:
+        Excluded or deferred work:
+        Dependencies or critical path (if known):
+    validations:
+      required: true
+  - type: textarea
+    id: work_state
+    attributes:
+      label: Active work and waiting items
+      description: Separate active implementation effort from calendar time waiting on dependencies or decisions. Date and source the estimate; unknown or unbounded waits should remain unknown.
+      placeholder: |
+        Estimate as-of (date / timezone / evidence source):
+        Active work (issues / active effort estimate):
+        Waiting (dependency / elapsed wait estimate / next check):
+  - type: textarea
+    id: evidence_unknowns
+    attributes:
+      label: Evidence, assumptions, and unknowns
+      description: Link dated evidence and distinguish observed facts from assumptions and unknowns. State what evidence is still needed.
+      placeholder: |
+        Observed evidence and revision/date:
+        Assumptions:
+        Unknowns or unresolved owner decisions:
+        Remaining verification / compatibility evidence:
+    validations:
+      required: true
+  - type: textarea
+    id: version_target
+    attributes:
+      label: Version, channel, and conditional target
+      description: Propose a version/channel and, only if useful, a conditional target date with assumptions. Neither is a commitment until agreed through project planning.
+      placeholder: |
+        Proposed version/channel and rationale:
+        Estimate as-of (date / timezone / source):
+        Shortest — date/timezone; active effort / elapsed time / assumptions (or unknown):
+        Target — date/timezone; active effort / elapsed time / evidence and assumptions (or unknown):
+        Conditional recovery / longest defensible bound — trigger, action/owner, active effort / elapsed time / target; if unbounded, say unknown:
+        Evidence or scope/capacity change that would reforecast:
+    validations:
+      required: true
+  - type: textarea
+    id: preview_recovery
+    attributes:
+      label: Preview feedback and recovery
+      description: Note preview purpose or why none is needed, known limitations, feedback source, and a bounded corrective or recovery path if applicable.
+      placeholder: |
+        Preview purpose/channel and limitations (or none and why):
+        Feedback evidence / affected revision:
+        Corrective release or recovery path (if needed):
+    validations:
+      required: true

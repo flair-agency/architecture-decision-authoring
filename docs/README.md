@@ -3,6 +3,8 @@
 This directory contains the canonical contract, adopted decision history, implementation-stage design materials, and evaluation guidance. Proposals and guidance do not by themselves establish adopted decisions.
 
 - [Product and artifact contract](architecture.md) — adopted purpose, responsibility boundary, Proposal contract, bounded post-adoption Authority Set endpoint, lifecycle, and downstream boundary.
+- [Development workflow](development.md) — repository checks, native review, and the non-publishing standalone Skill archive smoke.
+- [Release runbook](release.md) — freeze, review, archive verification, and explicit release publication/readback for the Skill.
 - [Architecture Decision Proposal template](templates/architecture-decision-proposal.md) — Markdown-first, source-mapped starting point; mark missing information instead of inventing it.
 - [Non-normative design views](design-views.md) — explanatory responsibility, concept/artifact, and lifecycle diagrams derived from the adopted contract in `architecture.md`.
 - [Decision records](decisions/README.md) — record guidance and status meanings.

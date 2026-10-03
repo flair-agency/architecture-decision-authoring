@@ -1,0 +1,92 @@
+# Adapted from flair-agency/architecture-gatekeeper .github/workflows/pr-description.yml
+# Source commit: 38e56232a7ce06ee431a5a2e25e85ddccb837daa.
+# Copyright (c) 2026 Flair Agency; MIT License (see repository LICENSE).
+name: PR description
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+# Metadata only: never check out or execute candidate code, request secrets,
+# write to the PR, or change protected architecture acceptance.
+permissions: {}
+
+concurrency:
+  group: pr-description-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  completeness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check delivery record
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const body = String(event.pull_request?.body ?? '');
+          // Ignore instructions and fenced examples: they are not completed fields.
+          const visible = [];
+          let fence = null;
+          for (const line of body.replace(/<!--[\s\S]*?(?:-->|$)/g, '').split(/\r?\n/)) {
+            if (fence) {
+              const closing = line.match(/^ {0,3}(`+|~+)[ \t]*$/);
+              if (closing && closing[1][0] === fence[0] && closing[1].length >= fence.length) fence = null;
+              continue;
+            }
+            const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+            if (opening && (opening[1][0] !== '`' || !opening[2].includes('`'))) {
+              fence = opening[1];
+              continue;
+            }
+            visible.push(line);
+          }
+          const text = visible.join('\n');
+          const headings = [...text.matchAll(/^## +([^\n]+?) *$/gm)];
+          const required = ['Outcome', 'Issue coverage', 'Verification', 'Remaining work', 'Authority and assurance'];
+          const optional = ['Third-party material'];
+          const errors = [];
+          const fields = {};
+          const order = headings.filter(h => required.includes(h[1])).map(h => h[1]);
+          if (order.length === required.length && order.some((name, index) => name !== required[index])) {
+            errors.push('Use the required sections in the template order.');
+          }
+          for (const name of [...required, ...optional]) {
+            const matches = headings.filter(h => h[1] === name);
+            if (optional.includes(name) && matches.length === 0) continue;
+            if (matches.length !== 1) {
+              errors.push(`Include exactly one ## ${name} section.`);
+              continue;
+            }
+            const h = matches[0];
+            const next = headings.find(other => other.index > h.index);
+            const value = text.slice(h.index + h[0].length, next?.index ?? text.length).trim();
+            fields[name] = value;
+            const content = value.replace(/^[-*] +\[[ xX]\] */gm, '').trim();
+            const optionalNone = name === 'Third-party material' && /^None[.!]?$/i.test(content);
+            if (!content || (!optionalNone && /^(?:N\/?A|None|TBD|TODO|_No response_|\.\.\.)[.!]?$/i.test(content))
+                || /^<[^>]+>$/.test(content)) errors.push(`Complete ## ${name}; explain non-applicable fields.`);
+          }
+          const hasIssue = value => /(?:^|[\s(])(?:[\w.-]+\/[\w.-]+)?#\d+\b|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+\b/.test(value ?? '');
+          const plainMarker = value => (value ?? '').trim()
+            .replace(/^(?:[-*+]\s+|\d+[.)]\s+)/, '')
+            .replace(/^\*\*(N\/?A|None)\*\*(?=$|\s)/i, '$1')
+            .replace(/^__(N\/?A|None)__(?=$|\s)/i, '$1')
+            .replace(/^\*(N\/?A|None)\*(?=$|\s)/i, '$1')
+            .replace(/^_(N\/?A|None)_(?=$|\s)/i, '$1')
+            .trim();
+          if (fields['Issue coverage'] && !hasIssue(fields['Issue coverage'])
+              && !/^N\/?A\b[\s:—-]+\S[\s\S]+/i.test(plainMarker(fields['Issue coverage']))) {
+            errors.push('Issue coverage needs an issue reference or N/A with a reason.');
+          }
+          if (fields['Remaining work'] && !hasIssue(fields['Remaining work'])
+              && !/^None\b[\s:—-]+\S[\s\S]+/i.test(plainMarker(fields['Remaining work']))) {
+            errors.push('Remaining work needs an owning issue reference or None with a reason.');
+          }
+          const summary = ['# PR description completeness', ...errors.map(e => `- ${e}`)];
+          if (!errors.length) summary.push('Required sections are populated. This does not verify claims, tests, authority, security, or acceptance.');
+          if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary.join('\n') + '\n');
+          for (const error of errors) console.error(error);
+          process.exitCode = errors.length ? 1 : 0;
+          JS

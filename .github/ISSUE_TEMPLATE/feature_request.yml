@@ -1,30 +1,54 @@
-name: Design proposal
-description: Propose a project capability or design direction for discussion.
-title: "[Proposal]: "
+name: Feature request
+description: Propose a focused improvement to the ADA authoring or artifact workflow
+title: "Feature: "
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        This project is in the design and pre-pilot phase. Submissions are proposals and do not establish adopted decisions.
+        A feature proposal does not adopt an architecture decision, authorize a consumer policy, or establish a release commitment.
   - type: textarea
     id: problem
     attributes:
-      label: Problem or use case
-      description: Who encounters what problem, and in what context?
+      label: Problem
+      description: Describe the user problem and context. Keep consumer-specific architecture decisions with their owners.
     validations:
       required: true
   - type: textarea
-    id: proposal
+    id: outcome
     attributes:
-      label: Proposed direction
-      description: Describe the outcome you suggest and alternatives considered.
+      label: Proposed outcome
+      description: State the observable user-facing result without assuming new trust, adoption, or acceptance guarantees.
     validations:
       required: true
   - type: textarea
-    id: evidence
+    id: scope
     attributes:
-      label: Evidence, assumptions, and open questions
-      description: Link supporting sources and identify what remains uncertain or needs owner input.
+      label: Scope
+      description: State what is in scope and out of scope, including affected workflow stages.
     validations:
-      required: false
+      required: true
+  - type: textarea
+    id: acceptance_verification
+    attributes:
+      label: Acceptance and verification criteria
+      description: List separate observable criteria. For each, state how completion will be verified and the relevant verification scope.
+      placeholder: |
+        - [ ] Observable criterion — verify by ... (scope: ...)
+        - [ ] Observable criterion — verify by ... (scope: ...)
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and related work
+      description: Link existing issues or state that none are known. Do not invent owner-decision issues.
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions, unknowns, and owner decisions
+      description: Separate observed facts from assumptions and unknowns. Link a real canonical owner decision or issue if one exists; do not resolve one here.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
