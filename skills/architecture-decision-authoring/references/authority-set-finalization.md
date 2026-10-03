@@ -20,6 +20,8 @@ Before producing an Authority Set, require all of:
 
 For `Adopt`, use only proposed content explicitly identified by the owner. For `Amend`, require the exact resulting normative content supplied or explicitly approved by the owner, preserve its content snapshot, and record its SHA-256 digest. Never invent an amendment or promote rationale, assumptions, options, unresolved choices, or generated wording into Authority.
 
+In the adoption record, set `proposal.path` to exactly `proposal.md`; keep `amendedContent.path` relative to the package root. Set `proposal.revision` to the full 40- or 64-character Git commit ID that is locally available and contains the Proposal blob at this package's repository-relative `proposal.md` placement. The committed blob, packaged Proposal bytes, and recorded `proposal.sha256` must agree. A displayed revision label or content digest alone is not a substitute for this Git reference. If the required commit or matching blob is unavailable, or any path, bytes, or digest mismatches, record the supported outcome and precise blocker and produce no Authority member or manifest; do not invent an ID or fetch Git objects. Run the bundled read-only package checker before reporting package validation as passing, and report its actual result.
+
 For `Defer`, `Reject`, `Pending`, a missing gate field, or ambiguous adopted content, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member.
 
 The safest place to prepare a candidate is a fresh package directory. If a
