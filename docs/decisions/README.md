@@ -16,6 +16,7 @@ The adopted records are:
 - [0002 — Produce a Gatekeeper-compatible Authority Set after owner adoption](0002-authority-set-final-outcome.md), which amends 0001's product endpoint while retaining the Proposal and owner-adoption boundary.
 - [0003 — Distinguish pending adoption from a decided outcome](0003-pending-adoption-record.md), which defines pending and decided adoption-record states and preserves valid legacy decided records.
 - [0004 — Bind a Proposal revision to committed repository bytes](0004-bind-proposal-revision-to-committed-bytes.md), which binds the packaged Proposal to its locally available committed bytes and digest.
+- [0005 — Make canonical integration the normal completion handoff](0005-canonical-integration-handoff.md), which amends the product endpoint while retaining the optional Gatekeeper package and its existing integrity boundary.
 
 ## Repository bootstrap adoption rule
 
