@@ -8,6 +8,8 @@ The v0.1.0 implementation remains an experimental Proposal-authoring prototype. 
 
 The first end-to-end scope is one decision, one exact owner outcome, one local Markdown Authority member, and one Gatekeeper v1 selector with traceability. The project does not aim to generate a complete architecture, make decisions for owners, automatically approve proposals, or activate consumer policy.
 
+Development checks and the standalone Skill archive rehearsal are documented in the [development workflow](docs/development.md). The [release runbook](docs/release.md) covers frozen-source review, archive verification, and release readback. The root npm manifest is private development tooling; consumers install the Skill directory, not an npm runtime package.
+
 ## Project status
 
 The current work is tracked in the [GitHub Project](https://github.com/orgs/flair-agency/projects/7) and through these milestones:

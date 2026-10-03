@@ -1,0 +1,51 @@
+name: Task
+description: Propose one focused, reviewable unit of work
+title: "Task: "
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Explain why this work is needed and which ADA workflow or artifact concern it addresses.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: State the observable result when this task is complete.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: State what is included and excluded, including affected files or workflow stages where known.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_verification
+    attributes:
+      label: Acceptance and verification criteria
+      description: List separate, observable criteria. For each, state verification method and scope.
+      placeholder: |
+        - [ ] Observable criterion — verify by ... (scope: ...)
+        - [ ] Observable criterion — verify by ... (scope: ...)
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and related work
+      description: Link existing issues or state that none are known.
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions, unknowns, and owner decisions (optional)
+      description: Keep assumptions and unknowns explicit. Link a real canonical decision or owner issue if relevant; do not invent one or resolve it here.
+  - type: input
+    id: owner
+    attributes:
+      label: Proposed maintainer (optional)
+      description: Name a maintainer only if already known; maintainers confirm assignment during triage.
