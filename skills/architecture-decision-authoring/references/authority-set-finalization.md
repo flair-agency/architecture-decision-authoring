@@ -2,6 +2,12 @@
 
 Use this workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be explicit: `Adopt`, `Amend`, `Defer`, or `Reject`.
 
+## Exact outcome handoff
+
+During the active review, keep the exact Proposal revision and its scope identifiable. When the owner gives an outcome, use the revision and scope clearly addressed in that conversation; do not require a redundant confirmation or repeated identifier when there is one unambiguous target and clear intent. If more than one revision or scope is active, the response is ambiguous, or it is unclear whether the owner means an older or newer revision, ask only for the missing target, scope, or intent. If the owner clearly names an older revision, retain that target. Never retarget a response about an older revision to a newer draft.
+
+A brief, source-grounded explanation, question, or request to draft a change is not an outcome. For an amendment, draft a separate revision, preserve the prior Proposal bytes, show the exact resulting normative text and its scope/condition/exception changes, and keep it Proposed until the owner explicitly approves that exact text. Do not treat the natural-language request itself as approval. Explanations and draft presentation do not mutate the prior Proposal, adoption record, or Authority. A new draft is a separate Proposal revision, and an explicit owner outcome is recorded under the existing gate below. These steps introduce no additional identity or approval layer.
+
 ## Finalization gate
 
 Before producing an Authority Set, require all of:
