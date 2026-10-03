@@ -2,6 +2,12 @@
 
 Use this workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be explicit: `Adopt`, `Amend`, `Defer`, or `Reject`.
 
+## Exact outcome handoff
+
+During the active review, keep the exact Proposal revision and its scope identifiable. When the owner gives an outcome, use the revision and scope clearly addressed in that conversation; do not require a redundant confirmation or repeated identifier when there is one unambiguous target and clear intent. If more than one revision or scope is active, the response is ambiguous, or it is unclear whether the owner means an older or newer revision, ask only for the missing target, scope, or intent. If the owner clearly names an older revision, retain that target. Never retarget a response about an older revision to a newer draft.
+
+A brief, source-grounded explanation, question, or request to draft a change is not an outcome. For an amendment, draft a separate revision, preserve the prior Proposal bytes, show the exact resulting normative text and its scope/condition/exception changes, and keep it Proposed until the owner explicitly approves that exact text. Do not treat the natural-language request itself as approval. Explanations and draft presentation do not mutate the prior Proposal, adoption record, or Authority. A new draft is a separate Proposal revision, and an explicit owner outcome is recorded under the existing gate below. These steps introduce no additional identity or approval layer.
+
 ## Finalization gate
 
 Before producing an Authority Set, require all of:
@@ -13,6 +19,8 @@ Before producing an Authority Set, require all of:
 - unambiguous normative content covered by the outcome.
 
 For `Adopt`, use only proposed content explicitly identified by the owner. For `Amend`, require the exact resulting normative content supplied or explicitly approved by the owner, preserve its content snapshot, and record its SHA-256 digest. Never invent an amendment or promote rationale, assumptions, options, unresolved choices, or generated wording into Authority.
+
+In the adoption record, set `proposal.path` to exactly `proposal.md`; keep `amendedContent.path` relative to the package root. Set `proposal.revision` to the full 40- or 64-character Git commit ID that is locally available and contains the Proposal blob at this package's repository-relative `proposal.md` placement. The committed blob, packaged Proposal bytes, and recorded `proposal.sha256` must agree. A displayed revision label or content digest alone is not a substitute for this Git reference. If the required commit or matching blob is unavailable, or any path, bytes, or digest mismatches, record the supported outcome and precise blocker and produce no Authority member or manifest; do not invent an ID or fetch Git objects. Run the bundled read-only package checker before reporting package validation as passing, and report its actual result.
 
 For `Defer`, `Reject`, `Pending`, a missing gate field, or ambiguous adopted content, record the supported outcome and blockers but produce no `authority-set/manifest.json` or Authority member.
 
@@ -62,7 +70,7 @@ Do not claim to authenticate the owner or evidence unless a separate trusted mec
 
 `authority.md` carries the normative meaning. Include scope, conditions, exceptions, and review or expiry bounds when adopted. Exclude proposal rationale and alternatives unless the owner explicitly adopted them as normative content.
 
-For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. Do not rewrite, normalize, annotate, or add clause wording inside that member. If required context is absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Verify byte equality before writing the consumable manifest.
+For `Amend`, the exported Authority member bytes must exactly match the owner-approved content snapshot and its recorded SHA-256 digest. The snapshot need not be a separately supplied file: when the owner explicitly approves exact normative wording in the identified Proposal and its exact bytes and boundaries are unambiguous, preserve that byte sequence unchanged as the snapshot, compute its digest, and verify any digest the owner supplied. Do not request duplicate wording or reconfirmation solely to create a snapshot. If the approved wording, boundaries, or bytes are ambiguous, or cannot be isolated without normalization, stop and request a precise owner-approved replacement snapshot. If required context is absent from the approved snapshot, stop and request an owner-approved replacement snapshot rather than modifying it. Do not rewrite, normalize, annotate, or add clause wording inside the Authority member. Verify byte equality before writing the consumable manifest.
 
 ### Selector
 
