@@ -6,7 +6,8 @@
 - **Outcome:** Amend the product endpoint proposed in Proposal 0005
 - **Authorization evidence:** [Explicit owner outcome](https://github.com/flair-agency/architecture-decision-authoring/issues/69#issuecomment-5972202033)
 - **Target:** [`docs/architecture.md`](../architecture.md), product endpoint and lifecycle
-- **Proposal reviewed:** [`docs/proposals/0005-canonical-integration-and-artifact-lifecycle.md`](../proposals/0005-canonical-integration-and-artifact-lifecycle.md), SHA-256 `6644ac4c4f5428bcb962098846e6b901f90ec5f21a530e506b646ac5240ef2cc`
+- **Original Proposal review target:** Exact Proposal bytes with SHA-256 `6644ac4c4f5428bcb962098846e6b901f90ec5f21a530e506b646ac5240ef2cc`; the owner supplied the amendment before commit `3db7ab89c75f8f611ad234834dab30203ec7badb` was created. That later commit [preserves those original bytes for history](https://github.com/flair-agency/architecture-decision-authoring/blob/3db7ab89c75f8f611ad234834dab30203ec7badb/docs/proposals/0005-canonical-integration-and-artifact-lifecycle.md); it was not the revision reviewed or adopted.
+- **Current amended outcome record:** [`docs/proposals/0005-canonical-integration-and-artifact-lifecycle.md`](../proposals/0005-canonical-integration-and-artifact-lifecycle.md)
 
 ## Owner-specified amendment
 
@@ -47,7 +48,7 @@ Decision record [0002](0002-authority-set-final-outcome.md) remains historical a
 ## Source mapping
 
 - Owner-specified endpoint amendment and authorization: [ADA issue #69 owner comment](https://github.com/flair-agency/architecture-decision-authoring/issues/69#issuecomment-5972202033).
-- Exact reviewed Proposal revision: [Proposal 0005](../proposals/0005-canonical-integration-and-artifact-lifecycle.md), SHA-256 recorded above.
+- Original review target: exact Proposal content identified by SHA-256 `6644ac4c4f5428bcb962098846e6b901f90ec5f21a530e506b646ac5240ef2cc`; the [commit `3db7ab89c75f8f611ad234834dab30203ec7badb`](https://github.com/flair-agency/architecture-decision-authoring/blob/3db7ab89c75f8f611ad234834dab30203ec7badb/docs/proposals/0005-canonical-integration-and-artifact-lifecycle.md) is a later historical preservation of those bytes, not the reviewed/adopted revision. See the [current amended outcome record](../proposals/0005-canonical-integration-and-artifact-lifecycle.md).
 - Prior optional package endpoint and owner boundary: [decision record 0002](0002-authority-set-final-outcome.md) and [current adoption record contract](0003-pending-adoption-record.md).
 - Proposal Git/blob/digest requirement: [decision record 0004](0004-bind-proposal-revision-to-committed-bytes.md).
 

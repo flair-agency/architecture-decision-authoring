@@ -1,6 +1,6 @@
 ---
 name: architecture-decision-authoring
-description: Draft a source-grounded proposal for one architecture decision, support progressive owner review and exact outcome handoff, or finalize an explicitly owner-adopted proposal into a bounded Gatekeeper-compatible Authority Set. It never decides, adopts, or activates policy for the owner.
+description: Draft source-grounded architecture proposals; after an explicit owner outcome, prepare canonical-integration handoffs and optional Gatekeeper Authority Set exports. It does not decide or adopt architecture, create or merge PRs, or activate policy for the owner.
 ---
 
 # Architecture Decision Authoring
@@ -43,7 +43,7 @@ A requested revision or rerun creates a new proposal or revision for review. Do 
 
 ## Canonical integration handoff
 
-For a consumer with existing canonical authority, the normal completion path is a reviewed, PR-ready change to that authority. Before requesting the owner's outcome, prepare and commit the exact Proposal in the consumer repository at a repository-relative path chosen under its existing conventions. Follow the user's intent and repository instructions for branch or worktree use and required reviews; do not impose a universal branch or worktree requirement. Record the actual full commit ID, path, blob, and digest. Do not invent or fetch Git objects or substitute different Proposal bytes.
+For a consumer with existing canonical authority, the normal completion path is a reviewed, PR-ready change to that authority. Before requesting the owner's outcome, prepare and commit the exact Proposal in the consumer repository at a repository-relative path chosen under its existing conventions. Follow the user's intent and repository instructions for branch or worktree use and required reviews; do not impose a universal branch or worktree requirement. Before committing, prevent repository-controlled hooks from running, using an isolated environment that excludes them or disabling the repository's hook path for that command. Run required consumer checks through separately trusted means and do not silently skip them; if they cannot be run that way, report the concrete blocker. Record the actual full commit ID, path, blob, and digest. Do not invent or fetch Git objects or substitute different Proposal bytes.
 
 Present that committed Proposal revision for the authorized owner's explicit outcome. Bind the outcome to the exact revision, scope, and adopted content locators. When there is one clear target and intent, do not ask for a redundant approval or confirmation. After an explicit `Adopt` or approved `Amend`, integrate only that adopted content into the existing canonical authority on the same working branch. Preserve source and Proposal provenance, scope, conditions, and exceptions; map clauses to the existing structure without inferring semantic changes, silently resolving conflicts, or inventing a new canonical hierarchy. For `Defer`, `Reject`, pending or missing adoption, or ambiguous adopted content, do not integrate.
 
