@@ -2,6 +2,10 @@
 
 This is an optional interoperability path, used when requested or when the consumer cannot select its canonical authority directly. The normal completion path for a consumer with existing canonical authority is the [canonical integration handoff](../SKILL.md#canonical-integration-handoff). Use this export workflow only after an authorized owner has acted on one exact Proposal revision. The outcome must be explicit: `Adopt`, `Amend`, `Defer`, or `Reject`.
 
+## Resume an interrupted export
+
+Use the [resumption brief](../SKILL.md#resume-an-interrupted-decision) to reconcile the exact owner target, supported outcome, existing package placement, and checks actually completed. Canonical integration does not imply that an export was requested or produced. Before reusing a package, inspect its current bytes and recorded Git binding; do not report an old validation as covering changed files. Complete the existing finalization gate and checker for the current candidate. For a resumed no-export outcome with stale generated files, follow the manual quarantine instructions below; preserve unrelated files and do not claim no-export while an active Authority member or manifest remains.
+
 ## Exact outcome handoff
 
 During the active review, keep the exact Proposal revision and its scope identifiable. When the owner gives an outcome, use the revision and scope clearly addressed in that conversation; do not require a redundant confirmation or repeated identifier when there is one unambiguous target and clear intent. If more than one revision or scope is active, the response is ambiguous, or it is unclear whether the owner means an older or newer revision, ask only for the missing target, scope, or intent. If the owner clearly names an older revision, retain that target. Never retarget a response about an older revision to a newer draft.
