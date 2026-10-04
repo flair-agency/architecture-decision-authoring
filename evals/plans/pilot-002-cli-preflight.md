@@ -25,6 +25,8 @@ Configuration loading rejected the key before model dispatch. The synthetic inst
 
 This verifies rejection of this particular output-cap key in this CLI version. It does not show that all possible cap mechanisms are absent, that an instruction-only length request is a hard cap, or that the original 8,192-token output target is met. No successful non-case transport smoke has occurred.
 
+Separate read-only `codex features list` checks accepted the six feature-disable overrides used below and reported those features false. `codex -c web_search='"disabled"' features list` also accepted the explicit hosted-search override without model dispatch. Hosted web search is a separate setting from `browser_use`; both controls are specified below. Configuration inventory is not proof of generation-time enforcement or backend limits.
+
 Input assembly was separately performed without a model call, using the exact published source `4421e05b48b67963bc95ecb2c86590fd4c1a0252`. Only the four public Cedar Cart revision `input/` files were read. The baseline prompt body is the bytes between its two standalone `---` delimiter lines. Each bundle contains that body, the same labelled source snapshots and the canonical template once; the Skill arm appends only the frozen Skill instructions once. No `expected.md`, protocol, rubric, plan, earlier output or owner note is supplied.
 
 | Prepared input | UTF-8 bytes | SHA-256 |
@@ -40,7 +42,7 @@ Byte sizes are not token measurements or runtime caps. The raw public-input-only
 From a checkout with the published Git objects locally available, this reads only those Git blobs and writes to a fresh operating-system temporary directory. It does not fetch, invoke a model, execute checkout hooks, use expectations or alter the checkout. Missing objects are a blocker, not a reason to substitute another source.
 
 ```sh
-prepared_dir="$(mktemp -d "${TMPDIR:-/tmp}/ada-public-rehearsal.XXXXXX")"
+prepared_dir="$(mktemp -d "${TMPDIR:-/tmp}/ada-public-rehearsal.XXXXXX")" || exit 1
 python3 - "$prepared_dir" <<'PY'
 from pathlib import Path
 import hashlib, re, subprocess, sys
@@ -87,7 +89,7 @@ codex exec --strict-config --ignore-user-config --ignore-rules \
   --ephemeral --skip-git-repo-check -C "$empty_session_dir" --sandbox read-only \
   --disable shell_tool --disable browser_use --disable computer_use \
   --disable apps --disable plugins --disable multi_agent \
-  -m gpt-6.1-sol -c model_reasoning_effort='"xhigh"' --json \
+  -m gpt-6.1-sol -c model_reasoning_effort='"xhigh"' -c web_search='"disabled"' --json \
   --output-last-message "$output_file" - < "$verified_input_file" \
   > "$event_file" 2> "$private_error_file"
 ```
