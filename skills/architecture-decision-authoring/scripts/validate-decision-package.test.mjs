@@ -216,6 +216,36 @@ test("rejects a missing local commit", async (t) => {
   assert.notEqual(runValidator(data).status, 0);
 });
 
+test("reports a malformed Proposal revision as JSON without coercing its type", async (t) => {
+  const data = await fixture(t, "Adopt");
+  data.record.proposal.revision = [data.record.proposal.revision];
+  const recordPath = path.join(data.packageRoot, "adoption-record.json");
+  await writeFile(recordPath, JSON.stringify(data.record, null, 2));
+  const before = await readFile(recordPath);
+  const result = runValidator(data);
+  assert.equal(result.status, 1);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.packageValidation, "fail");
+  assert.match(report.errors.join(" "), /proposal\.revision must be a full/);
+  assert.equal(result.stderr, "");
+  assert.deepEqual(await readFile(recordPath), before);
+});
+
+test("reports a malformed amendment digest as JSON without coercing its type", async (t) => {
+  const data = await fixture(t, "Amend");
+  data.record.amendedContent.sha256 = [data.record.amendedContent.sha256];
+  const recordPath = path.join(data.packageRoot, "adoption-record.json");
+  await writeFile(recordPath, JSON.stringify(data.record, null, 2));
+  const before = await readFile(recordPath);
+  const result = runValidator(data);
+  assert.equal(result.status, 1);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.packageValidation, "fail");
+  assert.match(report.errors.join(" "), /amendedContent\.sha256 must be a SHA-256/);
+  assert.equal(result.stderr, "");
+  assert.deepEqual(await readFile(recordPath), before);
+});
+
 test("rejects a non-regular Proposal input without reading it", async (t) => {
   const data = await fixture(t, "Adopt");
   const proposalPath = path.join(data.packageRoot, "proposal.md");

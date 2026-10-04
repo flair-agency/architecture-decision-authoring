@@ -139,7 +139,8 @@ async function validateProposalReference(record, proposalBytes) {
     return;
   }
   if (proposal.path !== "proposal.md") fail('proposal.path must be "proposal.md"');
-  if (typeof proposal.revision !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(proposal.revision)) {
+  const validRevision = typeof proposal.revision === "string" && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(proposal.revision);
+  if (!validRevision) {
     fail("proposal.revision must be a full 40- or 64-character Git commit ID");
   }
   if (typeof proposal.sha256 !== "string" || !/^[a-f0-9]{64}$/i.test(proposal.sha256)) {
@@ -148,7 +149,7 @@ async function validateProposalReference(record, proposalBytes) {
     fail("packaged Proposal bytes do not match proposal.sha256");
   }
 
-  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(proposal.revision ?? "")) return;
+  if (!validRevision) return;
   const revision = proposal.revision.toLowerCase();
   const commit = git(["rev-parse", "--verify", "--end-of-options", `${revision}^{commit}`]);
   if (!commit || commit.toString("utf8").trim().toLowerCase() !== revision) {
@@ -297,7 +298,7 @@ async function main() {
     } else {
       const amendedPath = packageFile(record.amendedContent.path, "amendedContent.path");
       const snapshot = amendedPath ? await readFileRequired(amendedPath, "amendedContent snapshot") : null;
-      if (!/^[a-f0-9]{64}$/i.test(record.amendedContent.sha256 ?? "")) {
+      if (typeof record.amendedContent.sha256 !== "string" || !/^[a-f0-9]{64}$/i.test(record.amendedContent.sha256)) {
         fail("amendedContent.sha256 must be a SHA-256 digest");
       } else if (snapshot && digest(snapshot) !== record.amendedContent.sha256.toLowerCase()) {
         fail("amendedContent snapshot does not match its SHA-256 digest");
