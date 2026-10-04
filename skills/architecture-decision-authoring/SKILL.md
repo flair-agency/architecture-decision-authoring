@@ -16,6 +16,18 @@ Choose the mode from the requested outcome and available evidence:
 
 Do not silently substitute an Authority Set for canonical integration. If a concrete prerequisite or authorization is unavailable, identify it precisely and do not claim the integration handoff is complete.
 
+## Scope broad repository input
+
+When the user supplies or explicitly identifies repository context and asks which decision to work on, first return a bounded inventory and a recommended next question. Read only the task-authorized sources; a repository input does not authorize unrelated discovery, repository writes, or bulk authoring. If the user already names one question, use this intake only as needed for that question.
+
+Record the repository revision and the inspected paths or supplied issue/document snapshots, with source locators and their coverage limits. Distinguish committed content from working changes and external snapshots when relevant. Name unread, unavailable, stale or conflicting sources; do not call a bounded sample a complete repository assessment. An authority label or issue status alone does not establish adoption.
+
+Separate existing decisions supported by owner evidence, unadopted proposals, unresolved architecture choices, and implementation/status tasks. Keep the seven statement classifications below. Group duplicate references and related questions by the architectural choice they concern; multiple files or issues may support one choice, while one issue may contain independent choices. Explain dependencies, importance and suggested priority from the supplied goals and evidence, marking uncertain judgments as proposed. Do not infer priority from issue count or silently resolve conflicting authority.
+
+Present one bounded next question with its affected boundary, existing canonical target when evidenced, source basis, dependencies, and the reason to address it next. Keep other candidates visible as deferred or unresolved; do not create a Proposal, package or outcome for every candidate. Recommend a next question when the supplied goal and evidence support it. Ask only for an owner choice that materially prevents selecting scope or preserving meaning; otherwise continue the requested work on that one question. If the goal or priority cannot be resolved, provide the useful inventory and concrete alternatives without inventing a selection or waiting in a one-turn workflow.
+
+The inventory is an orientation to source material, not a new mandatory artifact or evidence schema. Deliver it under the user's requested output convention, keeping it concise and linking details rather than multiplying files. Intake alone does not authorize a Proposal commit, owner-outcome request, canonical integration or export. After selecting a question, follow the requested mode and the existing sequence and gates below.
+
 ## Work the decision
 
 1. Identify the single decision question, affected boundary, scope, applicability conditions, exceptions, and time bounds. If the request combines independent decisions, focus on the one the user prioritizes and record the others as unresolved or ask which to address when materially necessary.
