@@ -1,15 +1,16 @@
 # Optional Architecture Gatekeeper CI observation
 
 This owner-directed observation runs a no-secret authorization preflight for
-matching pull request events targeting `main`. Before the existing author
-association gate, it requires the workflow repository ID, the event
-repository ID, and the pull request's base repository ID to be valid positive
-integers that agree. The head repository ID must also be valid; if it differs
-from the base repository ID, the PR is a Fork and is denied even when its
-author association is `OWNER`, `MEMBER`, or `COLLABORATOR`. Missing, malformed,
-or contradictory repository identity fails closed. Only a same-repository,
-valid, non-draft PR with author association `OWNER`, `MEMBER`, or
-`COLLABORATOR` proceeds to the semantic review observation. That model job is
+matching pull request events targeting `main`. The owner selected same-repository
+PR admission independently of author association, while retaining the Fork
+prohibition. The workflow repository ID, event repository ID, and pull request's
+base repository ID must be valid positive integers that agree. The head
+repository ID must also be valid and equal the base ID; a different ID is a
+Fork and is denied regardless of author association. Missing, malformed, or
+contradictory repository identity fails closed. Only valid, non-draft,
+same-repository PRs targeting `main` proceed to the semantic review observation.
+This prepared broadening is blocked from merge and activation until the hard
+spend prerequisite below is fulfilled. That model job is
 pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
 `c6c45da24d755ddd51b3a595e614242f869ec3ad`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
@@ -23,9 +24,10 @@ unchanged.
 The no-secret preflight runs for each configured PR event. It reads only the
 GitHub event JSON file and the platform-provided repository ID, validates the
 expected event shape, repository identity, and target base,
-and checks that `draft` is a JSON boolean and the author association is an
-exact recognized GitHub value. Draft, Fork, wrong-base, and
-external/non-allowlisted PRs complete the preflight with `allowed=false` and a
+and checks that `draft` is a JSON boolean. Author association is diagnostic
+only: recognized values are printed, while missing, malformed, or unknown
+values print the fixed `UNKNOWN` label without changing admission. Draft,
+Fork, and wrong-base PRs complete the preflight with `allowed=false` and a
 fixed reason; they skip the model job. Malformed identity fails the preflight
 and the diagnostic job reports invalid or missing propagation; the model
 remains skipped. A separate no-secret diagnostic job validates and reports the
@@ -36,10 +38,9 @@ a successful diagnostic job. Malformed JSON or missing, wrong-type, or
 unrecognized required fields fail the preflight visibly and cannot start the
 model job. The preflight and diagnostic jobs have no token permissions,
 perform no checkout/API call, and receive no secrets.
-The recognized `MANNEQUIN` association is denied like other non-allowlisted
-associations; arbitrary unknown association strings remain malformed input.
-A collaborator association is allowed even if that collaborator is outside
-the organization.
+The pinned Codex Action separately checks the execution actor's repository
+write access. This caller change does not bypass or configure that upstream
+actor gate; passing the caller preflight does not prove model execution.
 
 ## Meaning and limits
 
@@ -84,8 +85,14 @@ workflow can create or update its marker-owned pull-request comment.
 The pinned reusable workflow already uses per-PR concurrency and
 `cancel-in-progress`, so a newer run for the same PR cancels the older one.
 This reduces overlapping work but does not impose a provider or account spend
-ceiling. Before broadening the author-association gate, verify that hard spend
-limits are configured and active in the OpenAI provider/account settings.
+ceiling. Before merging or activating this broadening of caller admission, verify that
+hard spend limits are configured and active in the OpenAI provider/account
+settings. The owner confirmed that these limits are not configured. This is
+an unfulfilled prerequisite: retain the change as a Draft and do not merge,
+activate it, or claim activation readiness until the prerequisite is fulfilled.
+This preparation does not configure provider limits or grant additional secret
+access. The owner's same-repository admission choice does not satisfy the
+independent spend prerequisite.
 
 ## Bootstrap and records
 
@@ -148,7 +155,7 @@ design remains unverified until a later protected-base run.
 ## Focused checks
 
 Before merge, inspect the rendered workflow and confirm the five PR event
-types, `main` target, non-draft and author-association conditions, exact
+types, `main` target, non-draft and same-repository identity conditions, exact
 reusable-workflow SHA, permissions, secret mapping, and explicit
 policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
 `main` entry with the pinned Gatekeeper v0.6.0-preview.2 policy resolver. Confirm that
@@ -167,10 +174,10 @@ either the validated semantic outcome or the specific incomplete failure; do
 not infer rollout success from workflow presence alone.
 
 The post-merge smoke should confirm that each configured PR event starts the
-no-secret preflight and output diagnostic; draft and external-author PRs
+no-secret preflight and output diagnostic; draft and Fork PRs
 should report a fixed skip reason and not start the model job, while an
-eligible non-draft member PR should report propagated `allowed=true` and start
-it. If the model job is skipped, inspect the diagnostic output before
+eligible non-draft same-repository PR should report propagated `allowed=true`.
+The separate upstream actor gate may still prevent model execution. If the model job is skipped, inspect the diagnostic output before
 attributing a cause. A commit update should exercise `synchronize`,
 and edits to the PR description or base branch should exercise `edited` (a
 retarget to `main` should start an observation). Confirm the run uses the

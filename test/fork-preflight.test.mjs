@@ -45,19 +45,23 @@ function evaluate(value, expectedRepositoryId = '1379218762') {
   return JSON.parse(output);
 }
 
-test('same-repository OWNER/MEMBER/COLLABORATOR author associations keep the existing admission rule', () => {
-  for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
-    assert.equal(evaluate(event({ association })).allowed, 'true');
-    assert.equal(evaluate(event({ association })).reason, 'eligible');
+test('same-repository admission is independent of author association', () => {
+  for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIRST_TIME_CONTRIBUTOR', 'MANNEQUIN', 'NONE', 'unrecognized', null, 42]) {
+    const result = evaluate(event({ association }));
+    assert.equal(result.allowed, 'true');
+    assert.equal(result.reason, 'eligible');
+    assert.ok(['OWNER', 'MEMBER', 'COLLABORATOR', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIRST_TIME_CONTRIBUTOR', 'MANNEQUIN', 'NONE', 'UNKNOWN'].includes(result.association));
   }
-  assert.equal(evaluate(event({ association: 'CONTRIBUTOR' })).allowed, 'false');
-  assert.equal(evaluate(event({ association: 'CONTRIBUTOR' })).reason, 'author_association');
+  const missingAssociation = event();
+  delete missingAssociation.pull_request.author_association;
+  assert.equal(evaluate(missingAssociation).association, 'UNKNOWN');
+  assert.equal(evaluate(missingAssociation).allowed, 'true');
   assert.equal(evaluate(event({ draft: true })).reason, 'draft');
   assert.equal(evaluate(event({ baseRef: 'release' })).reason, 'wrong_base');
 });
 
 test('an original Fork is denied even when its author association is allowlisted', () => {
-  for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
+  for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR', 'CONTRIBUTOR', 'unrecognized', null]) {
     const result = evaluate(event({ headId: 987654321, association }));
     assert.equal(result.allowed, 'false');
     assert.equal(result.reason, 'fork');
@@ -108,6 +112,7 @@ test('the actual diagnostic step accepts explicit denials and fails closed on ba
   assert.notEqual(diagnose({ reason: '' }).status, 0);
   assert.notEqual(diagnose({ result: 'failure', allowed: '', reason: '' }).status, 0);
   assert.notEqual(diagnose({ allowed: 'true', reason: 'fork' }).status, 0);
+  assert.notEqual(diagnose({ reason: 'author_association' }).status, 0);
   assert.match(workflow, /architecture-gate-observe:\s+needs: \[authorize, diagnose-authorization\]/);
   assert.match(workflow, /needs\.authorize\.outputs\.allowed == 'true' && needs\.diagnose-authorization\.result == 'success'/);
 });
