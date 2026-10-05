@@ -1,9 +1,16 @@
 # Optional Architecture Gatekeeper CI observation
 
-This workflow runs a no-secret authorization preflight for matching pull
-request events targeting `main`. Only a valid, non-draft PR with author
-association `OWNER`, `MEMBER`, or `COLLABORATOR` proceeds to the semantic
-review observation. That model job is pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
+This owner-directed observation runs a no-secret authorization preflight for
+matching pull request events targeting `main`. Before the existing author
+association gate, it requires the workflow repository ID, the event
+repository ID, and the pull request's base repository ID to be valid positive
+integers that agree. The head repository ID must also be valid; if it differs
+from the base repository ID, the PR is a Fork and is denied even when its
+author association is `OWNER`, `MEMBER`, or `COLLABORATOR`. Missing, malformed,
+or contradictory repository identity fails closed. Only a same-repository,
+valid, non-draft PR with author association `OWNER`, `MEMBER`, or
+`COLLABORATOR` proceeds to the semantic review observation. That model job is
+pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
 `c6c45da24d755ddd51b3a595e614242f869ec3ad`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
@@ -14,11 +21,14 @@ bytes to bound this observation's request size; local configuration remains
 unchanged.
 
 The no-secret preflight runs for each configured PR event. It reads only the
-GitHub event JSON file, validates the expected event shape and target base,
+GitHub event JSON file and the platform-provided repository ID, validates the
+expected event shape, repository identity, and target base,
 and checks that `draft` is a JSON boolean and the author association is an
-exact recognized GitHub value. Draft and external/non-allowlisted PRs complete
-the preflight with `allowed=false` and a fixed reason; they skip the model
-job. A separate no-secret diagnostic job validates and reports the
+exact recognized GitHub value. Draft, Fork, wrong-base, and
+external/non-allowlisted PRs complete the preflight with `allowed=false` and a
+fixed reason; they skip the model job. Malformed identity fails the preflight
+and the diagnostic job reports invalid or missing propagation; the model
+remains skipped. A separate no-secret diagnostic job validates and reports the
 authorization job's propagated `result`, `allowed`, and `reason` values. It
 runs even when authorization fails, and fails visibly for missing or invalid
 outputs. The model job requires successful authorization, `allowed=true`, and
