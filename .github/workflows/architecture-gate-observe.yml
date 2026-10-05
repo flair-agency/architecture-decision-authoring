@@ -18,35 +18,46 @@ jobs:
     steps:
       - id: authorize
         shell: bash
+        env:
+          EXPECTED_REPOSITORY_ID: ${{ github.repository_id }}
         run: |
           set -euo pipefail
 
           gate_json="$(jq -er '
             def invalid: error("invalid pull_request_target event payload");
+            def valid_id: type == "number" and . > 0 and floor == . and . <= 9007199254740991;
             if type != "object" then invalid
             elif (.action | type) != "string" then invalid
             elif (.action | IN("opened", "synchronize", "reopened", "ready_for_review", "edited") | not) then invalid
             elif (.pull_request | type) != "object" then invalid
             elif (.pull_request.base | type) != "object" then invalid
+            elif (.pull_request.base.repo | type) != "object" then invalid
+            elif (.pull_request.head | type) != "object" then invalid
+            elif (.pull_request.head.repo | type) != "object" then invalid
             elif (.pull_request.base.ref | type) != "string" then invalid
             elif (.pull_request.draft | type) != "boolean" then invalid
-            elif (.pull_request.author_association | type) != "string" then invalid
-            elif (.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "MANNEQUIN", "NONE") | not) then invalid
+            elif (env.EXPECTED_REPOSITORY_ID | test("^[1-9][0-9]*$") | not) then invalid
+            elif (.repository.id | valid_id | not) then invalid
+            elif (.pull_request.base.repo.id | valid_id | not) then invalid
+            elif (.pull_request.head.repo.id | valid_id | not) then invalid
+            elif (.repository.id | tostring) != env.EXPECTED_REPOSITORY_ID then invalid
+            elif (.pull_request.base.repo.id | tostring) != env.EXPECTED_REPOSITORY_ID then invalid
             else
               . as $event
-              | ($event.pull_request.author_association as $association
-                | ($event.pull_request.base.ref == "main"
-                   and $event.pull_request.draft == false
-                   and ($association | IN("OWNER", "MEMBER", "COLLABORATOR")))) as $allowed
+              | ($event.pull_request.head.repo.id == $event.pull_request.base.repo.id) as $same_repository
+              | ($event.pull_request.base.ref == "main"
+                 and $event.pull_request.draft == false
+                 and $same_repository) as $allowed
               | {
                   allowed: ($allowed | tostring),
-                  reason: (if $event.pull_request.base.ref != "main" then "wrong_base"
+                  reason: (if ($same_repository | not) then "fork"
+                           elif $event.pull_request.base.ref != "main" then "wrong_base"
                            elif $event.pull_request.draft then "draft"
-                           elif ($event.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR") | not) then "author_association"
                            else "eligible" end),
                   action: $event.action,
                   draft: ($event.pull_request.draft | tostring),
-                  association: $event.pull_request.author_association,
+                  association: (if ($event.pull_request.author_association | IN("OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "MANNEQUIN", "NONE"))
+                                then $event.pull_request.author_association else "UNKNOWN" end),
                   base: (if $event.pull_request.base.ref == "main" then "main" else "other" end)
                 }
             end
@@ -91,7 +102,7 @@ jobs:
             propagation_status="invalid"
           elif [[ "$ALLOWED" == "true" && "$REASON" != "eligible" ]]; then
             propagation_status="invalid"
-          elif [[ "$ALLOWED" == "false" && ! "$REASON" =~ ^(draft|wrong_base|author_association)$ ]]; then
+          elif [[ "$ALLOWED" == "false" && ! "$REASON" =~ ^(draft|wrong_base|fork)$ ]]; then
             propagation_status="invalid"
           elif [[ "$ALLOWED" != "true" && "$ALLOWED" != "false" ]]; then
             propagation_status="invalid"
