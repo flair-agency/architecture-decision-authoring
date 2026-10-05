@@ -9,8 +9,8 @@ repository ID must also be valid and equal the base ID; a different ID is a
 Fork and is denied regardless of author association. Missing, malformed, or
 contradictory repository identity fails closed. Only valid, non-draft,
 same-repository PRs targeting `main` proceed to the semantic review observation.
-This prepared broadening is blocked from merge and activation until the hard
-spend prerequisite below is fulfilled. That model job is
+The spend prerequisite and its owner-reported confirmation are recorded below.
+That model job is
 pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
 `c6c45da24d755ddd51b3a595e614242f869ec3ad`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
@@ -85,14 +85,16 @@ workflow can create or update its marker-owned pull-request comment.
 The pinned reusable workflow already uses per-PR concurrency and
 `cancel-in-progress`, so a newer run for the same PR cancels the older one.
 This reduces overlapping work but does not impose a provider or account spend
-ceiling. Before merging or activating this broadening of caller admission, verify that
-hard spend limits are configured and active in the OpenAI provider/account
-settings. The owner confirmed that these limits are not configured. This is
-an unfulfilled prerequisite: retain the change as a Draft and do not merge,
-activate it, or claim activation readiness until the prerequisite is fulfilled.
-This preparation does not configure provider limits or grant additional secret
-access. The owner's same-repository admission choice does not satisfy the
-independent spend prerequisite.
+ceiling. Before merging or activating a broadening of caller admission, require
+confirmation that hard spend limits are configured and active in the OpenAI
+provider/account settings. On 2026-10-05 the owner reported replacing the
+repository's `OPENAI_API_KEY`, setting the monthly limit to USD 20, and saving
+`Enforce a hard limit` as ON. This satisfies the confirmation prerequisite on
+owner-reported evidence; no independent provider settings or secret-value
+readback was performed. The monthly amount alone would not establish hard
+limit enforcement. This repository change does not configure provider limits
+or grant additional secret access. Reaching the cap can prevent model execution
+or cause a provider error; such a run is incomplete, not a semantic `PASS`.
 
 ## Bootstrap and records
 
@@ -187,3 +189,29 @@ inspect one incomplete path, such as a deliberately unavailable secret in a
 controlled test repository, to verify it remains a failed/incomplete run
 rather than a semantic result. These checks do not make the status required or
 establish that any proposal was adopted.
+
+
+## Post-merge same-repository verification
+
+After an authorized merge, use an ordinary configured event on a valid,
+non-draft same-repository PR targeting `main`. Record the exact protected
+caller revision, PR/event base and head identities, run ID and attempt, and
+pinned reusable workflow revision separately. Inspect actual authorization
+and diagnostic logs for `allowed=true reason=eligible`; workflow success or
+this preflight alone is not a completed model review. The pinned Codex Action's
+separate execution-actor write-access check remains applicable.
+
+Confirm that the model job starts, produces a structured decision, passes the
+configured schema and deterministic decision validation, and completes
+successfully before reporting a semantic outcome. Preserve authority provenance,
+reviewed revision, model/effort and the returned `PASS`, `BLOCK`, or
+`OWNER_DECISION`; a completed decision is optional feedback, not adoption or
+merge acceptance. If the job skips or fails, record its exact stage and reason
+without inventing a decision. An invalid or unavailable key, provider cap,
+actor rejection, timeout or malformed response leaves execution incomplete.
+
+Keep Fork-denial verification separate: a different valid head repository ID
+must yield `allowed=false reason=fork`, with the model job skipped. An
+allowlisted author or an eligible actor does not override that restriction.
+The existing post-#79 Fork run is evidence for the unchanged identity guard;
+new hosted verification is not implied by this documentation update.
