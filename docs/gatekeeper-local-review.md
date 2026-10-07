@@ -4,11 +4,11 @@
 
 ## Fixed runtime and configuration
 
-This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-preview.2`, published from source commit `c6c45da24d755ddd51b3a595e614242f869ec3ad`. Use only this exact release for this local review; do not use a floating version or an unpinned registry fallback. The package and lock files are in `tools/gatekeeper-preview/`.
+This guide pins the runtime to `@flair-agency/architecture-gatekeeper@0.6.0-preview.3`, published from source commit `3f71fece350c3b5004cc81a7cb2253569a91e6b5`. Use only this exact release for this local review; do not use a floating version or an unpinned registry fallback. The package and lock files are in `tools/gatekeeper-preview/`.
 
 [GitHub Packages requires a personal access token (classic)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry) with `read:packages` to install packages. In a trusted terminal, make it available as an **unexported** shell variable named `GITHUB_PACKAGES_TOKEN`; do not run commands or shell startup hooks from the checkout while it is set. npm supports environment-variable substitution in `.npmrc` ([npm docs](https://docs.npmjs.com/cli/v11/configuring-npm/npmrc/)). Do not put a token value in the repository or commit it.
 
-The first bootstrap is pinned to package files from commit `401ad66901039b124e3eb0e00e34d1af51b2f30f`, because the current protected `main` predates these tooling files. Before using it, the maintainer must independently verify this exact full commit and both package files as the approved bootstrap source; a successful fetch does not establish trust. If this commit is no longer available, use only an independently verified immutable protected-base commit that contains the package files, or stop if no such source is available. Do not infer trust from a commit being a pull request head, and do not substitute the current checkout revision or a branch name.
+Choose an independently verified immutable ADA commit containing both preview.3 package files. After this update is merged, use its protected-main commit; before merge, the maintainer must explicitly approve the exact candidate commit and both files for bootstrap. Set `APPROVED_TOOL_SOURCE_REVISION` to that full commit SHA in the trusted terminal. Do not substitute a branch name, infer approval from a PR head, or fall back to older package files. A successful fetch does not establish trust.
 
 Check Node before starting npm; this package requires Node 22 or newer. From the trusted terminal, copy only the package manifest and lockfile from the selected commit into a private temporary directory outside the checkout. Run npm there with lifecycle scripts disabled and a temporary project config. The unexported token is passed into the environment of the install process only, then unset; npm does not run any code from the checkout while the token is present.
 
@@ -21,9 +21,11 @@ if [ "$node_major" -lt 22 ]; then
 fi
 
 checkout_root="$(git rev-parse --show-toplevel)"
-tool_source_revision=401ad66901039b124e3eb0e00e34d1af51b2f30f
-# Independently verify this exact revision and files with the maintainer before use.
-# After protected main contains both files, replace with its verified full commit SHA.
+tool_source_revision="${APPROVED_TOOL_SOURCE_REVISION:?Set the independently approved full ADA commit SHA}"
+case "$tool_source_revision" in
+  *[!0-9a-f]*|"") exit 1 ;;
+esac
+test "${#tool_source_revision}" = 40 || test "${#tool_source_revision}" = 64
 tool_source_remote=https://github.com/flair-agency/architecture-decision-authoring.git
 if ! git -C "$checkout_root" cat-file -e "${tool_source_revision}^{commit}" 2>/dev/null; then
   git -C "$checkout_root" fetch --no-tags "$tool_source_remote" "$tool_source_revision"
@@ -80,7 +82,9 @@ decision_path="$review_dir/decision.json"
 "$runtime_bin/architecture-review-native" validate "$request_path" "$decision_path"
 ```
 
-The exit trap removes the private request and decision files on success, failure, or interruption. Do not substitute the manual CLI for the native Skill reviewer. The host-installed `architecture-review` Skill's SHA-256 is `2fab19f48d022fd57d94fc7b3494c03aebb2a7d9f38ed022f58835a98e008a5a`; it byte-matches `skills/architecture-review/SKILL.md` at the pinned preview source commit. Both that Skill and `src/native-review.mjs` are unchanged between Gatekeeper v0.5.1 source `58bbdbb3119736e53a849388a025e74589ab8664` and preview source `c6c45da24d755ddd51b3a595e614242f869ec3ad`; the preview does not claim to correct the historical native-review nonresponse.
+The exit trap removes the private request and decision files and the session directory on success, failure, or interruption. Allocate this directory through the trusted host, restrict it to the current user, and pass an uncreated request filename to `prepare` (which uses exclusive creation). Before cleanup, retain the exact prepared inputs and reviewer-returned decision in a separate access-controlled diagnostic record. Do not substitute the manual CLI for the native Skill reviewer.
+
+Use the `architecture-review` Skill from the same pinned source commit; its SHA-256 is `9568f9d8c2d08bb09ff759a414e03bb7251f501deffa8a71e70a8c60b040698a`. A host installation of the earlier Skill is not a byte match: preview.3 adds host-owned private-directory cleanup and rejects Gemini settings in the Codex-native adapter. Follow the pinned instructions when using preview.3; updating a shared host Skill is a separate installation action. This runtime update does not select Gemini, preview lifecycle routes, owner-addition, or owner-amendment for ADA, and does not claim to correct the historical native-review nonresponse.
 
 ## Representative procedure
 
