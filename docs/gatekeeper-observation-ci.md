@@ -11,8 +11,8 @@ contradictory repository identity fails closed. Only valid, non-draft,
 same-repository PRs targeting `main` proceed to the semantic review observation.
 The spend prerequisite and its owner-reported confirmation are recorded below.
 That model job is
-pinned to Architecture Gatekeeper v0.6.0-preview.2 at commit
-`c6c45da24d755ddd51b3a595e614242f869ec3ad`. It uses the `main` policy from
+pinned to Architecture Gatekeeper v0.6.0-preview.3 at commit
+`3f71fece350c3b5004cc81a7cb2253569a91e6b5`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
@@ -44,24 +44,14 @@ actor gate; passing the caller preflight does not prove model execution.
 
 ## Meaning and limits
 
-The workflow is optional feedback, not a required check or merge-acceptance
-rule. A completed `PASS`, `BLOCK`, or `OWNER_DECISION` is a semantic review
-against the selected authority at the recorded revision. It does not approve
-the pull request, authenticate owner approval, adopt a proposal, or update
-canonical architecture. Branch protection and any future required-check
-decision are outside this change and remain unresolved owner choices.
-The reusable workflow exposes an `accept` job/check for its own policy result;
-this caller does not configure that check as required. Its presence or result
-alone does not change the repository's merge policy.
+The owner has selected `architecture-gate-observe / accept` as a required check on `main`, alongside `completeness`, with strict status checks. GitHub protection readback on 2026-10-07 confirmed both checks from App 15368. This runtime update preserves that existing requirement; it does not create a new waiver or acceptance route. A completed `PASS`, `BLOCK`, or `OWNER_DECISION` is a semantic review against the selected authority at the recorded revision. The configured accept check controls merge eligibility, but does not authenticate owner approval, adopt a proposal, or update canonical architecture. Local/native review remains diagnostic feedback and cannot replace the protected CI check.
 
 An unavailable secret, policy or authority, workflow error, reviewer timeout,
 malformed response, or schema/validation failure leaves the review incomplete.
 Incomplete execution is not converted to a semantic decision. There is no
 fallback route and no `continue-on-error`. The pinned reporter writes a job
 summary; a pull-request comment delivery error is reported as a warning and
-does not by itself invalidate an otherwise completed review. The workflow may
-fail visibly; because it is not configured as a required check, that failure
-does not itself block merging.
+does not by itself invalidate an otherwise completed review. The workflow may fail visibly; an unsuccessful required accept check prevents ordinary merge eligibility. Do not bypass it or translate incomplete execution into acceptance.
 
 Top-level permissions are empty. The authorization preflight has empty
 permissions, runs no actions, does not check out pull-request code, and reads
@@ -160,7 +150,7 @@ Before merge, inspect the rendered workflow and confirm the five PR event
 types, `main` target, non-draft and same-repository identity conditions, exact
 reusable-workflow SHA, permissions, secret mapping, and explicit
 policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
-`main` entry with the pinned Gatekeeper v0.6.0-preview.2 policy resolver. Confirm that
+`main` entry with the pinned Gatekeeper v0.6.0-preview.3 policy resolver. Confirm that
 the Authority Set and the manifest, member, file, and total-byte limits match
 the existing committed configuration. Confirm that CI's prompt limit is
 131,072 bytes while local/manual remains 524,288 bytes, and that the schema
@@ -205,8 +195,7 @@ Confirm that the model job starts, produces a structured decision, passes the
 configured schema and deterministic decision validation, and completes
 successfully before reporting a semantic outcome. Preserve authority provenance,
 reviewed revision, model/effort and the returned `PASS`, `BLOCK`, or
-`OWNER_DECISION`; a completed decision is optional feedback, not adoption or
-merge acceptance. If the job skips or fails, record its exact stage and reason
+`OWNER_DECISION`; a completed decision is not owner adoption. Merge eligibility additionally requires the protected accept check and the repository’s other requirements. If the job skips or fails, record its exact stage and reason
 without inventing a decision. An invalid or unavailable key, provider cap,
 actor rejection, timeout or malformed response leaves execution incomplete.
 

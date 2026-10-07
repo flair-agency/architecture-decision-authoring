@@ -3,6 +3,6 @@
   "private": true,
   "description": "Repository-scoped development tooling for the pinned Architecture Gatekeeper preview",
   "devDependencies": {
-    "@flair-agency/architecture-gatekeeper": "0.6.0-preview.2"
+    "@flair-agency/architecture-gatekeeper": "0.6.0-preview.3"
   }
 }
