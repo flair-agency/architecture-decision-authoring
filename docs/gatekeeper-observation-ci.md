@@ -11,8 +11,8 @@ contradictory repository identity fails closed. Only valid, non-draft,
 same-repository PRs targeting `main` proceed to the semantic review observation.
 The spend prerequisite and its owner-reported confirmation are recorded below.
 That model job is
-pinned to Architecture Gatekeeper v0.6.0-preview.3 at commit
-`3f71fece350c3b5004cc81a7cb2253569a91e6b5`. It uses the `main` policy from
+pinned to Architecture Gatekeeper v0.6.0-preview.5 at commit
+`d6f0b6dccaab967a1c885615d2253b902e47f684`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
@@ -150,7 +150,7 @@ Before merge, inspect the rendered workflow and confirm the five PR event
 types, `main` target, non-draft and same-repository identity conditions, exact
 reusable-workflow SHA, permissions, secret mapping, and explicit
 policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
-`main` entry with the pinned Gatekeeper v0.6.0-preview.3 policy resolver. Confirm that
+`main` entry with the pinned Gatekeeper v0.6.0-preview.5 policy resolver. Confirm that
 the Authority Set and the manifest, member, file, and total-byte limits match
 the existing committed configuration. Confirm that CI's prompt limit is
 131,072 bytes while local/manual remains 524,288 bytes, and that the schema
