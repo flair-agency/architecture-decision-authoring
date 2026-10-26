@@ -1,11 +1,12 @@
 {
-  "version": 2,
+  "version": 6,
   "default": {
     "mode": "local-only"
   },
   "branches": {
     "main": {
       "mode": "enforced",
+      "provider": "codex",
       "model": "gpt-6-sol",
       "reasoningEffort": "low",
       "authorityManifestPath": ".codex/gatekeeper/authorities.json",
