@@ -11,8 +11,8 @@ contradictory repository identity fails closed. Only valid, non-draft,
 same-repository PRs targeting `main` proceed to the semantic review observation.
 The spend prerequisite and its owner-reported confirmation are recorded below.
 That model job is
-pinned to Architecture Gatekeeper v0.6.0-preview.3 at commit
-`3f71fece350c3b5004cc81a7cb2253569a91e6b5`. It uses the `main` policy from
+pinned to Architecture Gatekeeper v0.6.0 at commit
+`bd34451f10d9b6dd113fe30d78c62e0c6756a8e4`. It uses the `main` policy from
 the protected base, the protected prompt, schema and validation files, and the
 protected Authority Set. The selected model is `gpt-6-sol` with `low`
 reasoning. The default policy is `local-only`; the `main` entry is explicitly
@@ -41,6 +41,12 @@ perform no checkout/API call, and receive no secrets.
 The pinned Codex Action separately checks the execution actor's repository
 write access. This caller change does not bypass or configure that upstream
 actor gate; passing the caller preflight does not prove model execution.
+
+## Selected configuration profile
+
+CI policy format is v6. The protected `main` entry explicitly selects `provider: "codex"` for the existing ordinary enforced Authority Set review, retaining `gpt-6-sol` / `low` and the original limits, prompt, schema and validators. The default is a bare `{ "mode": "local-only" }`, without provider or model fields. Local configuration remains v2 with explicit Codex reviewer settings; local and CI format versions are independent.
+
+This follows the [fixed 0.6.0 compatibility table](https://github.com/flair-agency/architecture-gatekeeper/blob/bd34451f10d9b6dd113fe30d78c62e0c6756a8e4/docs/integration-reference.md#policy-v6-compatibility-and-explicit-owner-selections). No owner-addition, owner-amendment, preview procedure, provider switch, App or Queue is selected. The consumer reusable workflow is retained; the self-only protected-PR amendment route must not be copied into this consumer.
 
 ## Meaning and limits
 
@@ -150,7 +156,7 @@ Before merge, inspect the rendered workflow and confirm the five PR event
 types, `main` target, non-draft and same-repository identity conditions, exact
 reusable-workflow SHA, permissions, secret mapping, and explicit
 policy/prompt/schema/validation paths. Parse the policy JSON and resolve its
-`main` entry with the pinned Gatekeeper v0.6.0-preview.3 policy resolver. Confirm that
+`main` entry with the pinned Gatekeeper v0.6.0 policy resolver. Confirm that
 the Authority Set and the manifest, member, file, and total-byte limits match
 the existing committed configuration. Confirm that CI's prompt limit is
 131,072 bytes while local/manual remains 524,288 bytes, and that the schema
